@@ -5,7 +5,7 @@ import { RiRobot2Line, RiEyeLine, RiEyeOffLine, RiGoogleLine, RiLockLine, RiMail
 import './Auth.css';
 
 const GOOGLE_ENABLED = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function Login() {
   const { login } = useAuth();
@@ -30,7 +30,7 @@ export default function Login() {
   }
 
   function handleGoogle() {
-    window.location.href = `${API_URL}/auth/google`;
+    window.location.href = `${API_URL}/api/v1/auth/google`;
   }
 
   return (
