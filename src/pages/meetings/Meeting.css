@@ -1,0 +1,42 @@
+.meetings-page { display: flex; flex-direction: column; gap: var(--space-5); }
+.status-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn { padding: 6px 14px; border-radius: var(--radius-full); font-size: 13px; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; transition: all var(--transition); }
+.filter-btn:hover { border-color: var(--color-brand); color: var(--color-brand); }
+.filter-btn.active { background: var(--color-brand); color: white; border-color: var(--color-brand); }
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 600px) { .form-grid-2 { grid-template-columns: 1fr; } }
+.meetings-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.meeting-card { overflow: hidden; transition: box-shadow var(--transition); }
+.meeting-card:hover { box-shadow: var(--shadow-md); }
+.meeting-header { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5); cursor: pointer; }
+.meeting-icon { width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--color-brand-light); color: var(--color-brand); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.meeting-info { flex: 1; min-width: 0; }
+.meeting-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.meeting-meta { display: flex; gap: 14px; margin-top: 4px; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; }
+.meeting-meta span { display: flex; align-items: center; gap: 4px; }
+.ai-badge { color: var(--color-brand) !important; font-weight: 500; }
+.meeting-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.status-select { padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; }
+.meeting-expanded { border-top: 1px solid var(--border); padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); background: var(--bg-secondary); }
+.meeting-description { font-size: 14px; color: var(--text-secondary); }
+.transcript-section { display: flex; flex-direction: column; gap: 8px; }
+.ai-summary { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.ai-summary-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: linear-gradient(135deg, #eef2ff, #f0fdf4); border-bottom: 1px solid var(--border); font-weight: 600; font-size: 14px; color: var(--color-brand-dark); }
+[data-theme='dark'] .ai-summary-header { background: linear-gradient(135deg, #1e1b4b, #052e16); color: #a5b4fc; }
+.ai-section { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.ai-section:last-child { border-bottom: none; }
+.ai-section h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 8px; }
+.ai-section p { font-size: 14px; color: var(--text-primary); line-height: 1.6; }
+.ai-section ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.ai-section ul li { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: var(--text-primary); }
+.check-icon { color: var(--color-success); flex-shrink: 0; margin-top: 2px; }
+.alert-icon { color: var(--color-warning); flex-shrink: 0; margin-top: 2px; }
+.action-items { display: flex; flex-direction: column; gap: 8px; }
+.action-item { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 10px 12px; border-left: 3px solid var(--border); }
+.action-item.priority-high { border-left-color: var(--color-danger); }
+.action-item.priority-medium { border-left-color: var(--color-warning); }
+.action-item.priority-low { border-left-color: var(--color-info); }
+.action-item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.action-task { font-size: 14px; color: var(--text-primary); flex: 1; }
+.action-item-meta { display: flex; gap: 12px; margin-top: 6px; font-size: 12px; color: var(--text-muted); }
+.spin { animation: spin 1s linear infinite; }

@@ -1,0 +1,161 @@
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 50%, #f0fdf4 100%);
+  padding: 24px;
+}
+[data-theme='dark'] .auth-page {
+  background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 50%, #052e16 100%);
+}
+
+.auth-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--shadow-lg);
+}
+.auth-card-wide { max-width: 580px; }
+
+/* Brand */
+.auth-brand { text-align: center; margin-bottom: 24px; }
+.auth-logo {
+  width: 56px; height: 56px;
+  background: var(--color-brand);
+  border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 28px;
+  margin: 0 auto 12px;
+}
+.auth-brand h1 { font-size: 22px; font-weight: 800; color: var(--text-primary); }
+.auth-brand p { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+
+/* Error */
+.auth-error {
+  background: #fee2e2; color: #991b1b;
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius-md);
+  padding: 10px 14px; font-size: 14px;
+  margin-bottom: 16px;
+}
+[data-theme='dark'] .auth-error { background: #7f1d1d; color: #fca5a5; border-color: #991b1b; }
+
+/* Google button */
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
+}
+.btn-google:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+.btn-google svg { font-size: 18px; color: #ea4335; }
+
+/* Divider */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.auth-divider::before, .auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Form */
+.auth-form { display: flex; flex-direction: column; gap: 16px; }
+.auth-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 0; }
+@media (max-width: 560px) { .auth-form-grid { grid-template-columns: 1fr; } }
+
+/* Input with icon */
+.input-icon-wrapper { position: relative; }
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 16px;
+  pointer-events: none;
+}
+.input-with-icon { padding-left: 38px; }
+
+/* Password */
+.password-input { position: relative; }
+.password-input .form-input { padding-right: 42px; }
+.password-toggle {
+  position: absolute; right: 10px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted); font-size: 16px;
+  background: none; border: none; cursor: pointer;
+}
+.password-toggle:hover { color: var(--text-primary); }
+
+/* Strength bar */
+.strength-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.strength-segments { display: flex; gap: 4px; flex: 1; }
+.strength-segment {
+  height: 4px;
+  flex: 1;
+  border-radius: 2px;
+  transition: background 0.3s ease;
+  background: var(--border);
+}
+
+/* Forgot */
+.auth-forgot { text-align: right; font-size: 13px; margin-top: -6px; }
+
+/* Submit */
+.auth-submit { width: 100%; justify-content: center; padding: 12px; font-size: 15px; }
+
+/* Terms */
+.auth-terms {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-top: -4px;
+}
+.auth-terms a { color: var(--color-brand); }
+
+/* Switch */
+.auth-switch { text-align: center; font-size: 13px; color: var(--text-secondary); margin-top: 20px; }
+
+/* Sent info */
+.sent-info {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  text-align: center;
+}

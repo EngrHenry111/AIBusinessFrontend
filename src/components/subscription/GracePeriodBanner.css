@@ -1,0 +1,22 @@
+.grace-banner { width: 100%; padding: 12px 20px; position: sticky; top: 0; z-index: 100; }
+.grace-banner.warning { background: linear-gradient(135deg, #fef3c7, #fde68a); border-bottom: 1px solid #fcd34d; }
+.grace-banner.urgent { background: linear-gradient(135deg, #fee2e2, #fecaca); border-bottom: 1px solid #fca5a5; }
+[data-theme='dark'] .grace-banner.warning { background: linear-gradient(135deg, #451a03, #78350f); border-color: #92400e; }
+[data-theme='dark'] .grace-banner.urgent { background: linear-gradient(135deg, #450a0a, #7f1d1d); border-color: #991b1b; }
+.grace-banner-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; max-width: 1400px; margin: 0 auto; flex-wrap: wrap; }
+.grace-banner-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+.grace-icon { font-size: 18px; flex-shrink: 0; color: #92400e; }
+.grace-banner.urgent .grace-icon { color: #991b1b; }
+[data-theme='dark'] .grace-icon { color: #fbbf24; }
+[data-theme='dark'] .grace-banner.urgent .grace-icon { color: #fca5a5; }
+.grace-text { font-size: 14px; color: #78350f; line-height: 1.4; }
+.grace-banner.urgent .grace-text { color: #7f1d1d; }
+[data-theme='dark'] .grace-text { color: #fde68a; }
+[data-theme='dark'] .grace-banner.urgent .grace-text { color: #fecaca; }
+.grace-banner-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.grace-renew-btn { display: flex; align-items: center; gap: 6px; padding: 7px 16px; background: #d97706; color: white; border: none; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; transition: background var(--transition); white-space: nowrap; }
+.grace-renew-btn:hover { background: #b45309; }
+.grace-banner.urgent .grace-renew-btn { background: #dc2626; }
+.grace-banner.urgent .grace-renew-btn:hover { background: #b91c1c; }
+.grace-dismiss { width: 28px; height: 28px; border-radius: 50%; background: rgba(0,0,0,0.1); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #78350f; transition: background var(--transition); }
+.grace-dismiss:hover { background: rgba(0,0,0,0.2); }

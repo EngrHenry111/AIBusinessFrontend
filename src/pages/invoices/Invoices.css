@@ -1,0 +1,44 @@
+.invoices-page { display: flex; flex-direction: column; gap: var(--space-5); }
+.invoice-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--space-4); }
+@media (max-width:768px) { .invoice-stats { grid-template-columns: repeat(2,1fr); } }
+.invoice-stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4); display: flex; flex-direction: column; gap: 4px; }
+.invoice-stat-card .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.invoice-stat-card .stat-value { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+.invoice-stat-card .stat-value.danger { color: var(--color-danger); }
+.invoice-stat-card .stat-value.success { color: var(--color-success); }
+.status-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn { padding: 6px 14px; border-radius: var(--radius-full); font-size: 13px; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; transition: all var(--transition); }
+.filter-btn:hover { border-color: var(--color-brand); color: var(--color-brand); }
+.filter-btn.active { background: var(--color-brand); color: white; border-color: var(--color-brand); }
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width:600px) { .form-grid-2 { grid-template-columns: 1fr; } }
+.items-table { display: flex; flex-direction: column; gap: 8px; }
+.items-header { display: grid; grid-template-columns: 3fr 1fr 1fr 1fr 36px; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-muted); padding: 0 4px; }
+.item-row { display: grid; grid-template-columns: 3fr 1fr 1fr 1fr 36px; gap: 8px; align-items: center; }
+.item-total { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.invoice-subtotal { text-align: right; margin-top: 12px; font-size: 15px; color: var(--text-secondary); }
+.invoices-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.invoice-card { overflow: hidden; transition: box-shadow var(--transition); }
+.invoice-card:hover { box-shadow: var(--shadow-md); }
+.overdue-card { border-color: #fca5a5; }
+[data-theme='dark'] .overdue-card { border-color: #7f1d1d; }
+.invoice-header { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5); cursor: pointer; flex-wrap: wrap; }
+.invoice-num { display: flex; flex-direction: column; min-width: 120px; }
+.inv-number { font-size: 13px; font-weight: 700; color: var(--color-brand); }
+.inv-customer { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+.invoice-dates { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--text-muted); flex: 1; }
+.invoice-dates span { display: flex; align-items: center; gap: 4px; }
+.overdue-tag { color: var(--color-danger) !important; font-weight: 600; }
+.invoice-amount { font-size: 18px; font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+.invoice-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.status-select { padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; }
+.invoice-expanded { border-top: 1px solid var(--border); padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); background: var(--bg-secondary); }
+.inv-items h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 10px; }
+.inv-total-row { display: flex; justify-content: flex-end; gap: 24px; padding: 10px 16px; font-size: 15px; color: var(--text-secondary); border-top: 2px solid var(--border); margin-top: 4px; }
+.inv-notes { font-size: 13px; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 14px; }
+.ai-reminder { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.ai-reminder-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: linear-gradient(135deg,#eef2ff,#f0fdf4); border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--color-brand-dark); }
+[data-theme='dark'] .ai-reminder-header { background: linear-gradient(135deg,#1e1b4b,#052e16); color: #a5b4fc; }
+.reminder-hint { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--text-muted); }
+.reminder-text { padding: 14px; font-size: 13px; line-height: 1.7; white-space: pre-wrap; font-family: var(--font-sans); color: var(--text-primary); max-height: 300px; overflow-y: auto; }
+.spin { animation: spin 1s linear infinite; }

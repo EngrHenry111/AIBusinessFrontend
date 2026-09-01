@@ -1,0 +1,6 @@
+.notfound-page { min-height: 60vh; display: flex; align-items: center; justify-content: center; }
+.notfound-content { text-align: center; }
+.notfound-number { font-size: 120px; font-weight: 900; color: var(--color-brand); opacity: 0.15; line-height: 1; margin-bottom: 16px; }
+.notfound-content h1 { font-size: 28px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+.notfound-content p { font-size: 15px; color: var(--text-muted); margin-bottom: 28px; }
+.notfound-actions { display: flex; gap: 12px; justify-content: center; }
