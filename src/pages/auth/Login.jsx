@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { API_ORIGIN } from '../../services/api';
 import { RiRobot2Line, RiEyeLine, RiEyeOffLine, RiGoogleLine, RiLockLine, RiMailLine } from 'react-icons/ri';
 import './Auth.css';
 
 const GOOGLE_ENABLED = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function Login() {
   const { login } = useAuth();
@@ -30,7 +30,7 @@ export default function Login() {
   }
 
   function handleGoogle() {
-    window.location.href = `${API_URL}/api/v1/auth/google`;
+    window.location.href = `${API_ORIGIN}/api/v1/auth/google`;
   }
 
   return (

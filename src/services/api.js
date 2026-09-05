@@ -1,13 +1,21 @@
 import axios from 'axios';
 
-// In production: uses VITE_API_URL env var
-// In development: uses Vite proxy (empty string = relative URL)
-const BASE_URL = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL}/api/v1`
-  : '/api/v1';
+// Resolve the backend origin from VITE_API_URL. Tolerates a trailing slash or an
+// accidental `/api/v1` suffix so the value works no matter how it's entered.
+// When unset (local dev) we fall back to a relative URL and let the Vite proxy
+// forward `/api` to localhost:5000.
+const RAW_API_URL = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+export const API_ORIGIN = RAW_API_URL.replace(/\/api\/v1$/, '');
+export const API_BASE = API_ORIGIN ? `${API_ORIGIN}/api/v1` : '/api/v1';
+
+// Surface the resolved URL so a misconfigured deploy is obvious in the console.
+if (import.meta.env.DEV || import.meta.env.VITE_DEBUG_API) {
+  // eslint-disable-next-line no-console
+  console.info('[api] requests go to', API_BASE);
+}
 
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE,
   withCredentials: true,
   timeout: 60000,
 });
@@ -29,7 +37,7 @@ api.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) throw new Error('No refresh token');
-        const { data } = await axios.post(`${BASE_URL}/auth/refresh-token`, { refreshToken });
+        const { data } = await axios.post(`${API_BASE}/auth/refresh-token`, { refreshToken });
         localStorage.setItem('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);
         original.headers.Authorization = `Bearer ${data.accessToken}`;

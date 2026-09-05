@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { API_ORIGIN } from '../../services/api';
 import { RiRobot2Line, RiGoogleLine, RiEyeLine, RiEyeOffLine } from 'react-icons/ri';
 import './Auth.css';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function Register() {
   const { register } = useAuth();
@@ -31,7 +30,7 @@ export default function Register() {
   }
 
   function handleGoogle() {
-    window.location.href = `${API_URL}/api/v1/auth/google`;
+    window.location.href = `${API_ORIGIN}/api/v1/auth/google`;
   }
 
   const f = (field, value) => setForm(p => ({ ...p, [field]: value }));

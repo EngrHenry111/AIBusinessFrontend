@@ -71,8 +71,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${API_URL}/api/v1
-        VITE_SOCKET_URL: ${API_URL}
+        # Backend origin only — the app appends /api/v1 itself.
+        VITE_API_URL: ${API_URL}
     container_name: businessai-frontend
     restart: unless-stopped
     ports:

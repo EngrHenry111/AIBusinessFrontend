@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { messageService } from '../../services';
+import { API_ORIGIN } from '../../services/api';
 import { io } from 'socket.io-client';
 import {
   RiSendPlane2Line, RiSearchLine, RiTeamLine,
@@ -10,7 +11,7 @@ import {
 import toast from 'react-hot-toast';
 import './Messages.css';
 
-const API_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
+const SOCKET_URL = API_ORIGIN || 'http://localhost:5000';
 
 export default function Messages() {
   const { user } = useAuth();
@@ -31,7 +32,7 @@ export default function Messages() {
 
   // Setup Socket.io
   useEffect(() => {
-    const socket = io(API_URL, {
+    const socket = io(SOCKET_URL, {
       auth: { token: localStorage.getItem('accessToken') },
       transports: ['websocket', 'polling'],
     });
