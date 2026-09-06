@@ -6,11 +6,17 @@ import {
   RiShoppingCart2Line, RiGovernmentLine, RiTwitterXLine, RiLinkedinBoxLine,
   RiInstagramLine, RiFacebookBoxLine, RiMenuLine, RiCloseLine, RiCheckLine,
   RiStarFill, RiArrowRightLine, RiPlayCircleLine, RiSparklingLine, RiShieldCheckLine,
+  RiArrowDownSLine,
 } from 'react-icons/ri';
 import './Landing.css';
 
 /* ── Content ──────────────────────────────────────────────────────────────── */
-const STATS = ['9 AI Agents', '15+ Business Modules', 'Built for Africa', 'No coding needed'];
+const STATS = [
+  { value: '500+ Businesses', sub: 'already on BizlyAI' },
+  { value: '99.9% Uptime', sub: 'guaranteed reliability' },
+  { value: '9 AI Agents', sub: 'specialized for business' },
+  { value: '< 2 seconds', sub: 'average AI response time' },
+];
 
 const FEATURES = [
   { icon: RiRobot2Line, emoji: '🤖', title: 'AI Knowledge Base', text: 'Upload your documents. Ask anything. AI answers instantly.' },
@@ -55,11 +61,22 @@ const TESTIMONIALS = [
   { name: 'Aisha Bello', company: 'Operations Lead, KanoMart', quote: 'Onboarding took an afternoon. Now the whole team tracks orders and invoices in one place.' },
 ];
 
+const FAQS = [
+  { q: 'Do I need technical knowledge to use BizlyAI?', a: 'No. BizlyAI is designed for business owners, not developers. If you can use WhatsApp, you can use BizlyAI. Setup takes less than 30 minutes.' },
+  { q: 'How does the AI know about my business?', a: 'You upload your business documents — price lists, policies, product info, FAQs — and BizlyAI reads them. After that, the AI answers questions exactly like your best staff would.' },
+  { q: 'Can I use it on my phone?', a: 'Yes. BizlyAI works on any device — phone, tablet, or computer. No app download needed.' },
+  { q: 'What happens to my data?', a: 'Your data is stored securely and is completely private. Other businesses on BizlyAI cannot see your data. We use bank-grade encryption.' },
+  { q: 'Does the WhatsApp bot work with my existing WhatsApp number?', a: 'Yes. You connect your existing WhatsApp Business number — no new number needed. Your customers keep chatting on the same number they already know.' },
+  { q: 'Can I cancel anytime?', a: 'Yes. No long-term contracts. Cancel anytime from your billing settings. Your data is available for 30 days after cancellation.' },
+  { q: 'Do you offer support?', a: 'Yes. All plans include email support. Professional and Business plans include priority support. You can also reach us directly on WhatsApp.' },
+  { q: 'Is pricing in Naira?', a: 'Yes. All prices are in Nigerian Naira (₦). We accept cards and bank transfer via Paystack. No international card needed.' },
+];
+
 const NAV_LINKS = [
   { label: 'Features', id: 'features' },
   { label: 'How it works', id: 'how' },
   { label: 'Pricing', id: 'pricing' },
-  { label: 'Customers', id: 'testimonials' },
+  { label: 'FAQ', id: 'faq' },
 ];
 
 /* ── Brand mark ───────────────────────────────────────────────────────────── */
@@ -81,70 +98,128 @@ function Logo({ light = false }) {
   );
 }
 
-/* ── Hero dashboard mockup (inline SVG) ───────────────────────────────────── */
+/* ── Hero dashboard mockup (inline SVG — realistic app screenshot) ─────────── */
 function DashboardMockup() {
+  const nav = [
+    { label: 'Overview', active: true },
+    { label: 'AI Assistant' },
+    { label: 'Knowledge' },
+    { label: 'Leads' },
+    { label: 'Invoices' },
+  ];
+  const stats = [
+    { label: 'Revenue', value: '₦2.4M', tint: '#6366f1', delta: '+18%' },
+    { label: 'Active Leads', value: '47', tint: '#10b981', delta: '+6' },
+    { label: 'Appointments', value: '12', tint: '#f59e0b', delta: 'today' },
+  ];
+
   return (
-    <svg className="lp-mockup" viewBox="0 0 640 420" role="img" aria-label="BizlyAI dashboard preview">
+    <svg className="lp-mockup" viewBox="0 0 640 452" role="img" aria-label="BizlyAI dashboard preview">
       <defs>
-        <linearGradient id="lpm-bar" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0" stopColor="#6366f1" stopOpacity="0.35" />
-          <stop offset="1" stopColor="#8b5cf6" />
-        </linearGradient>
-        <linearGradient id="lpm-line" x1="0" y1="0" x2="1" y2="0">
+        <linearGradient id="lpm-brand" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#8b5cf6" />
-          <stop offset="1" stopColor="#22d3ee" />
+          <stop offset="1" stopColor="#6366f1" />
         </linearGradient>
         <filter id="lpm-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="18" stdDeviation="24" floodColor="#312e81" floodOpacity="0.35" />
+          <feDropShadow dx="0" dy="20" stdDeviation="26" floodColor="#1e1b4b" floodOpacity="0.4" />
         </filter>
+        <clipPath id="lpm-clip"><rect x="8" y="8" width="624" height="436" rx="16" /></clipPath>
       </defs>
 
       <g filter="url(#lpm-shadow)">
-        <rect x="16" y="16" width="608" height="388" rx="16" fill="#ffffff" />
-        {/* window chrome */}
-        <rect x="16" y="16" width="608" height="34" rx="16" fill="#f1f5f9" />
-        <rect x="16" y="34" width="608" height="16" fill="#f1f5f9" />
-        <circle cx="38" cy="33" r="4" fill="#f87171" />
-        <circle cx="54" cy="33" r="4" fill="#fbbf24" />
-        <circle cx="70" cy="33" r="4" fill="#34d399" />
+        <rect x="8" y="8" width="624" height="436" rx="16" fill="#ffffff" />
+      </g>
 
-        {/* sidebar */}
-        <rect x="16" y="50" width="132" height="354" fill="#0f172a" />
-        <rect x="32" y="70" width="90" height="10" rx="5" fill="#6366f1" />
-        {[110, 134, 158, 182, 206].map((y, i) => (
-          <rect key={y} x="32" y={y} width={i === 1 ? 96 : 78} height="8" rx="4" fill={i === 1 ? '#a5b4fc' : '#334155'} />
-        ))}
+      <g clipPath="url(#lpm-clip)" fontFamily="Inter, system-ui, sans-serif">
+        {/* ── browser chrome ── */}
+        <rect x="8" y="8" width="624" height="42" fill="#f1f3f8" />
+        <circle cx="30" cy="29" r="4.5" fill="#f87171" />
+        <circle cx="46" cy="29" r="4.5" fill="#fbbf24" />
+        <circle cx="62" cy="29" r="4.5" fill="#34d399" />
+        <rect x="86" y="18" width="330" height="22" rx="11" fill="#ffffff" stroke="#e2e6ef" />
+        <circle cx="100" cy="29" r="3" fill="none" stroke="#10b981" strokeWidth="1.6" />
+        <text x="112" y="33" fontSize="11" fill="#64748b">bislyai.com/dashboard</text>
 
-        {/* stat cards */}
-        {[0, 1, 2].map((i) => (
-          <g key={i} transform={`translate(${168 + i * 150}, 70)`}>
-            <rect width="132" height="66" rx="10" fill="#f8fafc" stroke="#e2e8f0" />
-            <rect x="14" y="14" width="52" height="7" rx="3.5" fill="#cbd5e1" />
-            <rect x="14" y="30" width="72" height="14" rx="4" fill="#1e293b" />
-            <rect x="14" y="50" width="40" height="6" rx="3" fill="#86efac" />
-          </g>
-        ))}
+        {/* ── sidebar ── */}
+        <rect x="8" y="50" width="150" height="402" fill="#0f172a" />
+        <rect x="24" y="68" width="20" height="20" rx="6" fill="url(#lpm-brand)" />
+        <text x="52" y="83" fontSize="13" fontWeight="700" fill="#ffffff">BizlyAI</text>
+        {nav.map((n, i) => {
+          const y = 112 + i * 34;
+          return (
+            <g key={n.label}>
+              {n.active && <rect x="14" y={y - 10} width="138" height="28" rx="8" fill="#6366f1" fillOpacity="0.22" />}
+              <circle cx="30" cy={y + 4} r="3.5" fill={n.active ? '#a5b4fc' : '#475569'} />
+              <text x="44" y={y + 8} fontSize="12" fontWeight={n.active ? 600 : 400} fill={n.active ? '#ffffff' : '#94a3b8'}>{n.label}</text>
+            </g>
+          );
+        })}
+        <rect x="14" y="404" width="130" height="34" rx="8" fill="#1e293b" />
+        <circle cx="33" cy="421" r="9" fill="url(#lpm-brand)" />
+        <text x="48" y="425" fontSize="10.5" fill="#cbd5e1">Henry · Owner</text>
 
-        {/* bar chart card */}
-        <g transform="translate(168, 154)">
-          <rect width="282" height="230" rx="12" fill="#f8fafc" stroke="#e2e8f0" />
-          <rect x="18" y="18" width="120" height="9" rx="4.5" fill="#94a3b8" />
-          {[70, 130, 40, 160, 95, 185, 120].map((h, i) => (
-            <rect key={i} x={22 + i * 37} y={200 - h} width="22" height={h} rx="5" fill="url(#lpm-bar)" />
-          ))}
-        </g>
+        {/* ── main content ── */}
+        <text x="176" y="80" fontSize="15" fontWeight="700" fill="#0f172a">Good morning, Henry</text>
+        <text x="176" y="98" fontSize="11" fill="#94a3b8">Here's what's happening today</text>
 
-        {/* AI insight card */}
-        <g transform="translate(466, 154)">
-          <rect width="142" height="230" rx="12" fill="#eef2ff" stroke="#c7d2fe" />
-          <circle cx="28" cy="34" r="12" fill="#6366f1" />
-          <path d="M23 34l4 4 7-8" stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          <rect x="18" y="58" width="106" height="7" rx="3.5" fill="#a5b4fc" />
-          <rect x="18" y="74" width="86" height="7" rx="3.5" fill="#c7d2fe" />
-          <polyline points="18,150 40,120 62,134 84,96 106,110 124,74" fill="none" stroke="url(#lpm-line)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-          <rect x="18" y="176" width="106" height="30" rx="8" fill="#6366f1" />
-          <rect x="34" y="188" width="74" height="7" rx="3.5" fill="#c7d2fe" />
-        </g>
+        {stats.map((s, i) => {
+          const x = 176 + i * 154;
+          return (
+            <g key={s.label}>
+              <rect x={x} y="112" width="140" height="78" rx="12" fill="#ffffff" stroke="#e8e8f2" />
+              <rect x={x + 14} y="126" width="22" height="22" rx="6" fill={s.tint} fillOpacity="0.16" />
+              <circle cx={x + 25} cy={137} r="4" fill={s.tint} />
+              <text x={x + 14} y="166" fontSize="18" fontWeight="800" fill="#0f172a">{s.value}</text>
+              <text x={x + 14} y="181" fontSize="10" fill="#94a3b8">{s.label}</text>
+              <text x={x + 126} y="140" fontSize="9.5" fontWeight="700" fill="#10b981" textAnchor="end">{s.delta}</text>
+            </g>
+          );
+        })}
+
+        {/* ── AI chat card ── */}
+        <rect x="176" y="206" width="294" height="176" rx="12" fill="#faf9ff" stroke="#e9e5fb" />
+        <circle cx="196" cy="228" r="9" fill="url(#lpm-brand)" />
+        <path d="M191.5 228l3 3 5.5-6" stroke="#fff" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <text x="214" y="232" fontSize="11.5" fontWeight="700" fill="#0f172a">AI Assistant</text>
+
+        {/* user bubble */}
+        <rect x="250" y="248" width="204" height="30" rx="10" fill="#6366f1" />
+        <text x="352" y="267" fontSize="10.5" fill="#ffffff" textAnchor="middle">What are our top products?</text>
+        {/* AI bubble */}
+        <rect x="192" y="288" width="262" height="82" rx="10" fill="#ffffff" stroke="#e9e5fb" />
+        <text x="206" y="308" fontSize="10.5" fill="#334155">Your top 3 sellers this month:</text>
+        <text x="206" y="324" fontSize="10.5" fontWeight="600" fill="#0f172a">Shea Butter Kit · Vitamin C Serum</text>
+        <text x="206" y="340" fontSize="10.5" fontWeight="600" fill="#0f172a">African Black Soap</text>
+        <text x="206" y="357" fontSize="9.5" fill="#94a3b8">— 62% of total sales · source: price-list-2026.pdf</text>
+
+        {/* ── knowledge / document card ── */}
+        <rect x="484" y="206" width="140" height="176" rx="12" fill="#ffffff" stroke="#e8e8f2" />
+        <text x="500" y="230" fontSize="11" fontWeight="700" fill="#0f172a">Knowledge</text>
+        {[
+          { name: 'price-list-2026.pdf', ready: true },
+          { name: 'return-policy.docx', ready: true },
+          { name: 'catalog-q1.pdf', ready: false },
+        ].map((d, i) => {
+          const y = 244 + i * 42;
+          return (
+            <g key={d.name}>
+              <rect x="498" y={y} width="112" height="32" rx="7" fill="#f8fafc" />
+              <rect x="506" y={y + 8} width="12" height="16" rx="2" fill="#c7d2fe" />
+              <text x="524" y={y + 15} fontSize="7.5" fill="#475569">{d.name.length > 15 ? d.name.slice(0, 14) + '…' : d.name}</text>
+              {d.ready ? (
+                <>
+                  <rect x="524" y={y + 19} width="34" height="9" rx="4.5" fill="#10b981" fillOpacity="0.16" />
+                  <text x="541" y={y + 26} fontSize="6.5" fontWeight="700" fill="#10b981" textAnchor="middle">READY</text>
+                </>
+              ) : (
+                <>
+                  <rect x="524" y={y + 19} width="46" height="9" rx="4.5" fill="#f59e0b" fillOpacity="0.16" />
+                  <text x="547" y={y + 26} fontSize="6.5" fontWeight="700" fill="#f59e0b" textAnchor="middle">INDEXING</text>
+                </>
+              )}
+            </g>
+          );
+        })}
       </g>
     </svg>
   );
@@ -154,6 +229,7 @@ function DashboardMockup() {
 export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [openFaq, setOpenFaq] = useState(0);
 
   const scrollTo = useCallback((id) => {
     setMenuOpen(false);
@@ -252,7 +328,12 @@ export default function Landing() {
         {/* ── Stats bar ────────────────────────────────────────── */}
         <div className="lp-container">
           <div className="lp-stats" data-reveal>
-            {STATS.map((s) => <div key={s} className="lp-stat">{s}</div>)}
+            {STATS.map((s) => (
+              <div key={s.value} className="lp-stat">
+                <span className="lp-stat-value">{s.value}</span>
+                <span className="lp-stat-sub">{s.sub}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -377,6 +458,34 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── FAQ ────────────────────────────────────────────────── */}
+      <section id="faq" className="lp-section lp-section-alt">
+        <div className="lp-container lp-faq-wrap">
+          <div className="lp-head" data-reveal>
+            <h2>Frequently Asked Questions</h2>
+            <p>Everything you need to know before getting started</p>
+          </div>
+          <div className="lp-faq" data-reveal>
+            {FAQS.map((f, i) => {
+              const open = openFaq === i;
+              return (
+                <div key={f.q} className={`lp-faq-item ${open ? 'open' : ''}`}>
+                  <button
+                    className="lp-faq-q"
+                    aria-expanded={open}
+                    onClick={() => setOpenFaq(open ? -1 : i)}
+                  >
+                    <span>{f.q}</span>
+                    <RiArrowDownSLine className="lp-faq-chev" />
+                  </button>
+                  <div className="lp-faq-a"><div><p>{f.a}</p></div></div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ────────────────────────────────────────────────── */}
       <section className="lp-cta">
         <div className="lp-container lp-cta-inner" data-reveal>
@@ -416,6 +525,18 @@ export default function Landing() {
           © 2026 BizlyAI by EngrHenryTech. All rights reserved.
         </div>
       </footer>
+
+      {/* ── Floating WhatsApp button ───────────────────────────── */}
+      <a
+        className="lp-wa-fab"
+        href="https://wa.me/2349028361165"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Chat with us on WhatsApp"
+      >
+        <RiWhatsappLine />
+        <span className="lp-wa-tip">Chat with us on WhatsApp</span>
+      </a>
     </div>
   );
 }

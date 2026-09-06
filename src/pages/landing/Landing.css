@@ -147,9 +147,11 @@ html { scroll-behavior: smooth; }
   border-radius: var(--lp-radius); overflow: hidden; box-shadow: var(--lp-shadow);
 }
 .lp-stat {
-  background: #fff; color: var(--lp-ink); padding: 22px 18px; text-align: center;
-  font-weight: 700; font-size: 15px;
+  background: #fff; color: var(--lp-ink); padding: 22px 16px; text-align: center;
+  display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center;
 }
+.lp-stat-value { font-weight: 800; font-size: clamp(1.15rem, 2vw, 1.4rem); letter-spacing: -0.02em; line-height: 1.15; }
+.lp-stat-sub { font-size: 0.78rem; font-weight: 500; color: var(--lp-ink-mute); }
 
 /* ── Sections ──────────────────────────────────────────────────────────── */
 .lp-section { padding: 96px 0; }
@@ -258,6 +260,63 @@ html { scroll-behavior: smooth; }
 .lp-footer-links button:hover, .lp-footer-links a:hover { color: #fff; }
 .lp-footer-bottom { margin-top: 40px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.82rem; color: #64748b; }
 
+/* ── FAQ (pure-CSS accordion) ──────────────────────────────────────────── */
+.lp-faq-wrap { max-width: 780px; }
+.lp-faq { display: flex; flex-direction: column; gap: 12px; }
+.lp-faq-item {
+  background: #fff; border: 1px solid var(--lp-border); border-radius: 14px;
+  overflow: hidden; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.lp-faq-item.open { border-color: #c7d2fe; box-shadow: var(--lp-shadow); }
+.lp-faq-q {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 18px 20px; background: none; border: none; cursor: pointer; text-align: left;
+  font-size: 0.98rem; font-weight: 650; color: var(--lp-ink); font-family: inherit;
+}
+.lp-faq-chev { font-size: 1.4em; color: var(--lp-brand); flex-shrink: 0; transition: transform 0.3s ease; }
+.lp-faq-item.open .lp-faq-chev { transform: rotate(180deg); }
+.lp-faq-a {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lp-faq-item.open .lp-faq-a { grid-template-rows: 1fr; }
+.lp-faq-a > div { overflow: hidden; min-height: 0; }
+.lp-faq-a p {
+  padding: 0 20px 20px; margin: 0; font-size: 0.94rem; line-height: 1.65; color: var(--lp-ink-mute);
+}
+
+/* ── Floating WhatsApp button ──────────────────────────────────────────── */
+.lp-wa-fab {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  width: 56px; height: 56px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #25d366; color: #fff; font-size: 30px;
+  box-shadow: 0 8px 24px -4px rgba(37, 211, 102, 0.55);
+  transition: transform 0.18s ease, box-shadow 0.2s ease;
+}
+.lp-wa-fab:hover { transform: scale(1.08); box-shadow: 0 12px 30px -4px rgba(37, 211, 102, 0.7); }
+.lp-wa-fab::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  border: 2px solid #25d366; animation: lp-wa-pulse 2s ease-out infinite;
+}
+@keyframes lp-wa-pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  70% { transform: scale(1.9); opacity: 0; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+.lp-wa-tip {
+  position: absolute; right: calc(100% + 14px); top: 50%; transform: translateY(-50%) translateX(6px);
+  white-space: nowrap; background: var(--lp-ink); color: #fff;
+  font-size: 12.5px; font-weight: 600; padding: 8px 12px; border-radius: 9px;
+  opacity: 0; pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.lp-wa-tip::after {
+  content: ''; position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+  border: 6px solid transparent; border-left-color: var(--lp-ink);
+}
+.lp-wa-fab:hover .lp-wa-tip { opacity: 1; transform: translateY(-50%) translateX(0); }
+@media (prefers-reduced-motion: reduce) { .lp-wa-fab::after { animation: none; } }
+
 /* ── Responsive ────────────────────────────────────────────────────────── */
 @media (max-width: 980px) {
   .lp-nav-links, .lp-nav-cta { display: none; }
@@ -274,6 +333,9 @@ html { scroll-behavior: smooth; }
 @media (max-width: 720px) {
   .lp-hero { padding-bottom: 90px; }
   .lp-section { padding: 68px 0; }
+  .lp-wa-fab { width: 48px; height: 48px; font-size: 26px; bottom: 18px; right: 18px; }
+  .lp-wa-tip { display: none; }
+  .lp-faq-q { font-size: 0.92rem; padding: 16px; }
   .lp-cta { padding: 64px 0; }
   .lp-grid-3, .lp-grid-4, .lp-steps { grid-template-columns: 1fr; }
   .lp-stats { grid-template-columns: repeat(2, 1fr); }
