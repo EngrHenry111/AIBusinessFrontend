@@ -175,6 +175,14 @@
 @media (max-width: 768px) {
   .topbar { left: 0; }
   .search-kbd { display: none; }
+  .topbar-menu { display: flex !important; }
+  .topbar-search { max-width: 160px; }
+  .avatar-info { display: none; }
+  .notif-dropdown { width: 280px; right: -60px; }
+}
+
+@media (min-width: 769px) {
+  .topbar-menu { display: none; }
 }
 
 /* Notification bell */

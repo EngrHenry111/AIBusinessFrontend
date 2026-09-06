@@ -31,12 +31,12 @@ const NAV_ITEMS = [
   { label: 'Settings', icon: RiSettings4Line, path: '/settings' },
 ];
 
-export default function Sidebar({ collapsed, onToggle }) {
+export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const { user, company, logout } = useAuth();
   const location = useLocation();
 
   return (
-    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
       {/* Header */}
       <div className="sidebar-header">
         <div className="sidebar-brand">
@@ -72,6 +72,7 @@ export default function Sidebar({ collapsed, onToggle }) {
               key={item.path}
               to={item.path}
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={() => onClose && onClose()}
               title={collapsed ? item.label : undefined}
             >
               <Icon className="nav-icon" />

@@ -42,6 +42,7 @@ export default function AppLayout({ children }) {
         collapsed={collapsed}
         onToggle={() => setCollapsed(v => !v)}
         mobileOpen={mobileOpen}
+        onClose={() => setMobileOpen(false)}
       />
 
       <main className={`app-main ${collapsed ? 'sidebar-collapsed' : ''}`}>
