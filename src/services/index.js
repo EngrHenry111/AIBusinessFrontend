@@ -176,12 +176,17 @@ export const notificationService = {
   getAll: () => api.get('/notifications'),
 };
 
-// ─── Admin ────────────────────────────────────────────────────────────────────
+// ─── Admin (super_admin only) ─────────────────────────────────────────────────
 export const adminService = {
   getStats: () => api.get('/admin/stats'),
+  getRevenue: () => api.get('/admin/revenue'),
+  getHealth: () => api.get('/admin/health'),
   getCompanies: (params) => api.get('/admin/companies', { params }),
+  getCompany: (id) => api.get(`/admin/companies/${id}`),
   getUsers: (params) => api.get('/admin/users', { params }),
   suspendCompany: (id) => api.patch(`/admin/companies/${id}/suspend`),
   activateCompany: (id) => api.patch(`/admin/companies/${id}/activate`),
   updatePlan: (id, plan) => api.patch(`/admin/companies/${id}/plan`, { plan }),
+  broadcast: (data) => api.post('/admin/broadcast', data),
+  getAuditLogs: (params) => api.get('/admin/audit-logs', { params }),
 };
