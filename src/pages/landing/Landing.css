@@ -23,8 +23,8 @@ html { scroll-behavior: smooth; }
 }
 
 .landing *, .landing *::before, .landing *::after { box-sizing: border-box; }
-.landing a { text-decoration: none; color: inherit; }
-.landing a:hover { text-decoration: none; }
+/* Reset link decoration only — never colour, so .lp-btn* variants win */
+.landing a, .landing a:hover { text-decoration: none; }
 .landing h1, .landing h2, .landing h3 { line-height: 1.15; letter-spacing: -0.02em; margin: 0; }
 .landing p { margin: 0; }
 
