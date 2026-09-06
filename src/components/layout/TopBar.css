@@ -23,8 +23,18 @@
   min-width: 0;
 }
 
-/* Hamburger — hidden on desktop, shown on mobile via the media query below */
-.topbar-menu { display: none; align-items: center; justify-content: center; color: var(--text-primary); }
+/* Hamburger — hidden on desktop, shown on mobile via the media query below.
+   flex-shrink:0 so it can never be squeezed out on narrow screens (~320px). */
+.topbar-menu {
+  display: none;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--text-primary);
+}
 .topbar-menu svg { width: 24px; height: 24px; color: var(--text-primary); fill: currentColor; }
 .topbar-menu:hover { color: var(--text-primary); }
 
@@ -176,12 +186,19 @@
 .dropdown-item svg { font-size: 16px; }
 
 @media (max-width: 768px) {
-  .topbar { left: 0; }
+  .topbar { left: 0; padding: 0 var(--space-3); gap: var(--space-2); }
+  .topbar-left { gap: var(--space-2); }
   .search-kbd { display: none; }
-  .topbar-menu { display: inline-flex; }
-  .topbar-search { max-width: 160px; }
+  .topbar-menu { display: flex; }
+  /* Search yields space first; the hamburger + right-side icons stay put */
+  .topbar-search { max-width: 160px; min-width: 0; flex-shrink: 1; }
   .avatar-info { display: none; }
   .notif-dropdown { width: 280px; right: -60px; }
+}
+
+/* Very narrow phones (~320px): drop the search box so nav always fits */
+@media (max-width: 380px) {
+  .topbar-search { display: none; }
 }
 
 /* Notification bell */
