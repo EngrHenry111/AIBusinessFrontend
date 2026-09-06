@@ -24,7 +24,9 @@
 }
 
 /* Hamburger — hidden on desktop, shown on mobile via the media query below */
-.topbar-menu { display: none; font-size: 20px; color: var(--text-secondary); }
+.topbar-menu { display: none; align-items: center; justify-content: center; color: var(--text-primary); }
+.topbar-menu svg { width: 24px; height: 24px; color: var(--text-primary); fill: currentColor; }
+.topbar-menu:hover { color: var(--text-primary); }
 
 .topbar-search {
   display: flex;
