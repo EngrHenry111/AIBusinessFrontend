@@ -517,8 +517,8 @@ export default function Landing() {
             <button onClick={() => scrollTo('pricing')}>Pricing</button>
             <button onClick={() => scrollTo('testimonials')}>About</button>
             <a href="mailto:henryengrakpan@gmail.com">Contact</a>
-            <a href="#privacy">Privacy</a>
-            <a href="#terms">Terms</a>
+            <Link to="/privacy">Privacy</Link>
+            <Link to="/terms">Terms</Link>
           </nav>
         </div>
         <div className="lp-container lp-footer-bottom">

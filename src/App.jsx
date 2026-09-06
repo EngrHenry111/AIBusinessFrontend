@@ -13,6 +13,8 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import GoogleCallback from './pages/auth/GoogleCallback';
 import Landing from './pages/landing/Landing';
+import Privacy from './pages/legal/Privacy';
+import Terms from './pages/legal/Terms';
 import NotFound from './pages/notfound/NotFound';
 
 // Lazy-load all app pages
@@ -83,6 +85,10 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/reset-password/:token" element={<PublicRoute><ResetPassword /></PublicRoute>} />
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
+
+      {/* Public legal pages — no auth */}
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
 
       {/* Protected app routes */}
       <Route path="/*" element={
