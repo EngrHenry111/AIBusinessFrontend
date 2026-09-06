@@ -12,6 +12,7 @@ import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import GoogleCallback from './pages/auth/GoogleCallback';
+import Landing from './pages/landing/Landing';
 import NotFound from './pages/notfound/NotFound';
 
 // Lazy-load all app pages
@@ -66,6 +67,13 @@ function PublicRoute({ children }) {
   return children;
 }
 
+// Root "/" — public marketing page when logged out, dashboard when logged in
+function RootRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <PageLoader />;
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Landing />;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -113,7 +121,7 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<RootRoute />} />
     </Routes>
   );
 }
