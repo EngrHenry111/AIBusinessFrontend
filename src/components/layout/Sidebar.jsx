@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { whatsappService } from '../../services';
 import {
   RiDashboardLine, RiRobot2Line, RiFileTextLine, RiUserLine,
   RiCalendarLine, RiMoneyDollarCircleLine, RiBarChartLine,
@@ -36,6 +37,23 @@ const NAV_ITEMS = [
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const { user, company, logout } = useAuth();
   const location = useLocation();
+  const [waNeedsHuman, setWaNeedsHuman] = useState(0);
+
+  // Poll for WhatsApp conversations waiting on a human
+  useEffect(() => {
+    let alive = true;
+    const check = async () => {
+      try {
+        const { data } = await whatsappService.getConversations({ filter: 'human' });
+        if (alive) setWaNeedsHuman(data.counts?.human || 0);
+      } catch { /* ignore */ }
+    };
+    check();
+    const iv = setInterval(check, 45000);
+    return () => { alive = false; clearInterval(iv); };
+  }, []);
+
+  const badgeFor = (item) => (item.path === '/whatsapp' && waNeedsHuman > 0 ? waNeedsHuman : item.badge);
 
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
@@ -79,9 +97,11 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
             >
               <Icon className="nav-icon" />
               {!collapsed && <span className="nav-label">{item.label}</span>}
-              {item.badge && !collapsed && (
-                <span className="nav-badge">{item.badge}</span>
-              )}
+              {badgeFor(item) ? (
+                <span className={`nav-badge ${collapsed ? 'nav-badge-dot' : ''}`}>
+                  {collapsed ? '' : badgeFor(item)}
+                </span>
+              ) : null}
             </NavLink>
           );
         })}

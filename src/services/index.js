@@ -155,6 +155,13 @@ export const whatsappService = {
   initialize: () => api.post('/whatsapp/initialize'),
   disconnect: () => api.post('/whatsapp/disconnect'),
   sendTest: (phone) => api.post('/whatsapp/send-test', { phone }),
+  getConversations: (params) => api.get('/whatsapp/conversations', { params }),
+  getConversation: (id) => api.get(`/whatsapp/conversations/${id}`),
+  sendMessage: (id, message) => api.post(`/whatsapp/conversations/${id}/message`, { message }),
+  takeover: (id) => api.post(`/whatsapp/conversations/${id}/takeover`),
+  resolve: (id) => api.post(`/whatsapp/conversations/${id}/resolve`),
+  sendToAI: (id) => api.post(`/whatsapp/conversations/${id}/send-to-ai`),
+  getQR: () => api.get('/whatsapp/qr'),
 };
 
 // ─── Messages ─────────────────────────────────────────────────────────────────

@@ -146,6 +146,19 @@
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 10px;
+  margin-left: auto;
+}
+
+/* Collapsed sidebar — show the badge as a dot on the icon corner */
+.nav-badge-dot {
+  position: absolute;
+  top: 4px;
+  left: 26px;
+  min-width: 8px;
+  height: 8px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--bg-card);
 }
 
 /* Footer */
