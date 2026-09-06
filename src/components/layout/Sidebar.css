@@ -212,15 +212,27 @@
   font-size: 18px;
 }
 
-/* Mobile */
+/* Mobile — off-canvas drawer that slides in from the left */
 @media (max-width: 768px) {
   .sidebar {
+    width: var(--sidebar-width);
     transform: translateX(-100%);
+    transition: transform var(--transition-slow);
     z-index: 300;
     box-shadow: var(--shadow-lg);
   }
 
+  /* Never collapse the drawer on mobile — it's full width or off-screen */
+  .sidebar.collapsed {
+    width: var(--sidebar-width);
+  }
+
   .sidebar.mobile-open {
     transform: translateX(0);
+  }
+
+  /* The desktop collapse toggle is meaningless inside the mobile drawer */
+  .sidebar-toggle {
+    display: none;
   }
 }

@@ -13,7 +13,7 @@ import './TopBar.css';
 const NOTIF_ICONS = { warning: RiAlertLine, success: RiCheckLine, info: RiInformationLine };
 const NOTIF_COLORS = { warning: '#f59e0b', success: '#10b981', info: '#6366f1' };
 
-export default function TopBar({ onMenuToggle }) {
+export default function TopBar({ onMenuToggle, mobileOpen = false }) {
   const { user, company, logout } = useAuth();
   const { isDark, toggle } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -80,7 +80,13 @@ export default function TopBar({ onMenuToggle }) {
   return (
     <header className="topbar">
       <div className="topbar-left">
-        <button className="btn btn-ghost btn-icon topbar-menu" onClick={onMenuToggle}>
+        <button
+          type="button"
+          className="btn btn-ghost btn-icon topbar-menu"
+          onClick={onMenuToggle}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileOpen}
+        >
           <RiMenuLine />
         </button>
         <form className="topbar-search" onSubmit={handleSearch}>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate, useLocation, useNavigate as useNavigate_ } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from './Sidebar';
@@ -15,6 +15,23 @@ export default function AppLayout({ children }) {
   const { subscriptionState } = useAuth();
   const location = useLocation();
 
+  // Close the mobile drawer whenever the route changes
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+
+  // Lock background scroll while the mobile drawer is open
+  useEffect(() => {
+    document.body.classList.toggle('mobile-nav-open', mobileOpen);
+    return () => document.body.classList.remove('mobile-nav-open');
+  }, [mobileOpen]);
+
+  // Close the drawer on Escape
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setMobileOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mobileOpen]);
+
   // Soft block — expired subscription
   const isExpired = subscriptionState === 'expired' || subscriptionState === 'suspended';
   const isAllowedPage = ALLOWED_EXPIRED.some(p => location.pathname.startsWith(p));
@@ -22,9 +39,15 @@ export default function AppLayout({ children }) {
   if (isExpired && !isAllowedPage) {
     return (
       <div className="app-layout">
-        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(v => !v)} mobileOpen={mobileOpen} />
+        {mobileOpen && <div className="mobile-overlay" onClick={() => setMobileOpen(false)} />}
+        <Sidebar
+          collapsed={collapsed}
+          onToggle={() => setCollapsed(v => !v)}
+          mobileOpen={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+        />
         <main className={`app-main ${collapsed ? 'sidebar-collapsed' : ''}`}>
-          <TopBar onMenuToggle={() => setMobileOpen(v => !v)} />
+          <TopBar onMenuToggle={() => setMobileOpen(v => !v)} mobileOpen={mobileOpen} />
           <div className="app-content">
             {/* Import lazily to avoid circular deps */}
             <SubscriptionExpiredInline />
@@ -46,7 +69,7 @@ export default function AppLayout({ children }) {
       />
 
       <main className={`app-main ${collapsed ? 'sidebar-collapsed' : ''}`}>
-        <TopBar onMenuToggle={() => setMobileOpen(v => !v)} />
+        <TopBar onMenuToggle={() => setMobileOpen(v => !v)} mobileOpen={mobileOpen} />
         {/* Grace period warning banner — shown 7 days before suspension */}
         <GracePeriodBanner />
         <div className="app-content">

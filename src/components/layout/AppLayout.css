@@ -4,11 +4,15 @@
   inset: 0;
   background: rgba(0,0,0,0.5);
   z-index: 250;
+  animation: fadeIn 0.2s ease;
 }
 
 @media (max-width: 768px) {
   .mobile-overlay { display: block; }
 }
+
+/* Lock background scroll while the mobile drawer is open */
+body.mobile-nav-open { overflow: hidden; }
 
 /* App layout base */
 .app-layout {
@@ -32,19 +36,9 @@
   padding: var(--space-6);
 }
 
-/* Mobile */
+/* Mobile ( .topbar-menu visibility lives in TopBar.css ) */
 @media (max-width: 768px) {
   .app-content {
     padding: var(--space-4);
-  }
-
-  .topbar-menu {
-    display: flex !important;
-  }
-}
-
-@media (min-width: 769px) {
-  .topbar-menu {
-    display: none;
   }
 }
