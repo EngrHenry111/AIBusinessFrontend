@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { invoiceService } from '../../services';
+import { invoiceService, portalService } from '../../services';
+import { useAuth } from '../../context/AuthContext';
 import {
   RiAddLine, RiMoneyDollarCircleLine, RiRobot2Line, RiDeleteBinLine,
   RiCalendarLine, RiLoader4Line, RiArrowDownSLine, RiArrowUpSLine,
-  RiMailLine, RiAlertLine, RiCheckLine, RiTimeLine, RiDownloadLine
+  RiMailLine, RiAlertLine, RiCheckLine, RiTimeLine, RiDownloadLine,
+  RiShareForwardLine
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './Invoices.css';
@@ -20,6 +22,8 @@ const EMPTY_FORM = {
 };
 
 export default function Invoices() {
+  const { company } = useAuth();
+  const companyId = company?.id || company?._id;
   const [invoices, setInvoices] = useState([]);
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +31,7 @@ export default function Invoices() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [expanded, setExpanded] = useState(null);
   const [draftingReminder, setDraftingReminder] = useState(null);
+  const [sharingId, setSharingId] = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => { loadInvoices(); }, [statusFilter]);
@@ -91,6 +96,25 @@ export default function Invoices() {
       toast.success('AI reminder drafted');
     } catch { toast.error('Failed to draft reminder'); }
     finally { setDraftingReminder(null); }
+  }
+
+  async function handleSharePortal(inv) {
+    const email = inv.customer?.email;
+    if (!email) { toast.error('Add a customer email to this invoice first'); return; }
+    if (!companyId) { toast.error('Could not resolve your company'); return; }
+    setSharingId(inv._id);
+    try {
+      await portalService.requestAccess(email, companyId);
+      toast.success(`Portal link sent to ${email}!`);
+    } catch (err) {
+      toast.error(
+        err.response?.status === 404
+          ? `${email} has no records to share yet`
+          : err.response?.data?.message || 'Failed to send portal link'
+      );
+    } finally {
+      setSharingId(null);
+    }
   }
 
   async function handleDelete(id) {
@@ -259,6 +283,11 @@ export default function Invoices() {
                     <button className="btn btn-ghost btn-icon btn-sm"
                       onClick={()=>handleDraftReminder(inv)} disabled={draftingReminder===inv._id} title="AI Draft Reminder">
                       {draftingReminder===inv._id ? <RiLoader4Line className="spin" /> : <RiRobot2Line />}
+                    </button>
+                    <button className="btn btn-ghost btn-icon btn-sm"
+                      onClick={()=>handleSharePortal(inv)} disabled={sharingId===inv._id || !inv.customer?.email}
+                      title={inv.customer?.email ? `Email portal link to ${inv.customer.email}` : 'No customer email on file'}>
+                      {sharingId===inv._id ? <RiLoader4Line className="spin" /> : <RiShareForwardLine />}
                     </button>
                     <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>handleDelete(inv._id)} title="Delete">
                       <RiDeleteBinLine />

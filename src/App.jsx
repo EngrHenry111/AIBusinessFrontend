@@ -15,6 +15,8 @@ import GoogleCallback from './pages/auth/GoogleCallback';
 import Landing from './pages/landing/Landing';
 import Privacy from './pages/legal/Privacy';
 import Terms from './pages/legal/Terms';
+import PortalLogin from './pages/portal/PortalLogin';
+import Portal from './pages/portal/Portal';
 import NotFound from './pages/notfound/NotFound';
 
 // Lazy-load all app pages
@@ -89,6 +91,10 @@ function AppRoutes() {
       {/* Public legal pages — no auth */}
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
+
+      {/* Customer portal — magic-link auth, no user account */}
+      <Route path="/portal/login" element={<PortalLogin />} />
+      <Route path="/portal" element={<Portal />} />
 
       {/* Protected app routes */}
       <Route path="/*" element={

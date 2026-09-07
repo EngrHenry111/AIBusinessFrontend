@@ -1,4 +1,5 @@
-import api from './api';
+import axios from 'axios';
+import api, { API_BASE } from './api';
 
 // ─── Auth ──────────────────────────────────────────────────────────────────────
 export const authService = {
@@ -184,6 +185,18 @@ export const searchService = {
 // ─── Notifications ────────────────────────────────────────────────────────────
 export const notificationService = {
   getAll: () => api.get('/notifications'),
+};
+
+// ─── Customer Portal (magic-link, no user auth) ──────────────────────────────
+export const portalService = {
+  requestAccess: (email, companyId) => api.post('/portal/request', { email, companyId }),
+  verifyToken: (token) => axios.get(`${API_BASE}/portal/verify`, { params: { token } }),
+  getData: (portalToken) =>
+    axios.get(`${API_BASE}/portal/data`, {
+      headers: { Authorization: `Bearer ${portalToken}` },
+    }),
+  invoicePdfUrl: (id, portalToken) =>
+    `${API_BASE}/portal/invoices/${id}/pdf?token=${encodeURIComponent(portalToken)}`,
 };
 
 // ─── Admin (super_admin only) ─────────────────────────────────────────────────
