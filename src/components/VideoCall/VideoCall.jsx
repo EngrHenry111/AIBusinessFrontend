@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { appointmentService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import {
-  RiCloseLine, RiTimeLine, RiFileCopyLine, RiGroupLine, RiLoader4Line, RiLogoutBoxRLine,
+  RiCloseLine, RiTimeLine, RiFileCopyLine, RiLoader4Line,
+  RiExternalLinkLine, RiCloseCircleLine, RiVideoLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './VideoCall.css';
@@ -18,22 +19,26 @@ const fmtTimer = (s) => {
 export default function VideoCall({ appointment, roomUrl, onClose }) {
   const { user } = useAuth();
   const [seconds, setSeconds] = useState(0);
-  const [participants, setParticipants] = useState(null);
-  const [leaving, setLeaving] = useState(false);
+  const [ending, setEnding] = useState(false);
   const startedAt = useRef(Date.now());
+  const openedOnce = useRef(false);
 
-  // Jitsi room with our preferred config baked into the URL hash.
-  // NOTE: no lobby/waiting-room params — on the public meet.jit.si server an
-  // anonymous first-joiner isn't a real moderator, so autoKnock leaves guests
-  // stuck with nobody able to admit them. The unguessable room name
-  // (BizlyAI-<appointmentId>) is the access boundary. A true gated waiting room
-  // needs Jitsi-as-a-Service (JaaS) with a signed moderator JWT.
+  const roomName = (roomUrl || '').split('/').filter(Boolean).pop() || 'video room';
   const userName = user?.name || 'Host';
+
+  // The call runs in a real browser tab (no iframe → no time limit). Config
+  // params only tune the UX; the room is the same as the shared link.
   const jitsiUrl = roomUrl
     ? `${roomUrl}#userInfo.displayName="${userName}"&config.prejoinPageEnabled=false&config.startWithAudioMuted=false&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.TOOLBAR_BUTTONS=["microphone","camera","hangup","chat","fullscreen"]`
     : null;
 
-  // Timer counting up
+  function openCallTab() {
+    if (!jitsiUrl) return;
+    const w = window.open(jitsiUrl, '_blank', 'noopener');
+    if (!w) toast.error('Allow pop-ups for bislyai.com, then click "Open call"');
+  }
+
+  // Timer
   useEffect(() => {
     const t = setInterval(() => {
       setSeconds(Math.floor((Date.now() - startedAt.current) / 1000));
@@ -41,36 +46,21 @@ export default function VideoCall({ appointment, roomUrl, onClose }) {
     return () => clearInterval(t);
   }, []);
 
-  // Best-effort participant count from the Jitsi iframe's postMessages.
-  // A plain embed doesn't emit these reliably, so this stays "—" until it does.
+  // Launch the call tab once, right after the card mounts
   useEffect(() => {
-    const onMsg = (e) => {
-      if (typeof e.origin === 'string' && !/jit\.si|jitsi/.test(e.origin)) return;
-      const d = e.data || {};
-      const name = d.name || d.event || d.action;
-      if (name === 'participantJoined') setParticipants((p) => (p || 1) + 1);
-      else if (name === 'participantLeft') setParticipants((p) => Math.max(1, (p || 2) - 1));
-      else if (name === 'videoConferenceJoined') setParticipants((p) => p || 1);
-      else if (typeof d.numberOfParticipants === 'number') setParticipants(d.numberOfParticipants);
-    };
-    window.addEventListener('message', onMsg);
-    return () => window.removeEventListener('message', onMsg);
+    if (openedOnce.current || !jitsiUrl) return;
+    openedOnce.current = true;
+    openCallTab();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Lock body scroll while the call is open
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
-
-  async function handleLeave() {
-    if (leaving) return;
-    setLeaving(true);
+  async function handleEnd() {
+    if (ending) return;
+    setEnding(true);
     try {
       await appointmentService.endVideoCall(appointment._id);
     } catch {
-      // Close the UI regardless — the room expires on its own after 2h.
+      // Close the card regardless — the room expires on its own.
     }
     onClose?.();
   }
@@ -96,46 +86,31 @@ export default function VideoCall({ appointment, roomUrl, onClose }) {
   }
 
   return (
-    <div className="vc-overlay" role="dialog" aria-label="Video call">
-      <header className="vc-header">
-        <div className="vc-title">
-          <span className="vc-live"><span className="vc-live-dot" /> LIVE</span>
-          <span className="vc-appt-name" title={appointment.title}>{appointment.title}</span>
-        </div>
+    <div className="vc-card" role="dialog" aria-label="Active video call">
+      <div className="vc-card-head">
+        <span className="vc-status"><span className="vc-dot" /> Call in progress</span>
+        <button className="vc-x" onClick={handleEnd} aria-label="End call"><RiCloseLine /></button>
+      </div>
 
-        <div className="vc-center">
-          <span className="vc-timer"><RiTimeLine /> {fmtTimer(seconds)}</span>
-          <span className="vc-participants">
-            <RiGroupLine /> {participants != null ? participants : '—'}
-          </span>
+      <div className="vc-card-body">
+        <div className="vc-icon"><RiVideoLine /></div>
+        <div className="vc-meta">
+          <div className="vc-appt" title={appointment.title}>{appointment.title}</div>
+          <div className="vc-room" title={roomName}>{roomName}</div>
+          <div className="vc-time"><RiTimeLine /> {fmtTimer(seconds)}</div>
         </div>
+      </div>
 
-        <div className="vc-actions">
-          <button className="vc-btn vc-btn-ghost" onClick={copyCustomerLink}>
-            <RiFileCopyLine /> <span className="vc-btn-label">Copy Customer Link</span>
-          </button>
-          <button className="vc-btn vc-btn-leave" onClick={handleLeave} disabled={leaving}>
-            {leaving ? <RiLoader4Line className="vc-spin" /> : <RiLogoutBoxRLine />}
-            <span className="vc-btn-label">Leave</span>
-          </button>
-          <button className="vc-btn vc-btn-icon" onClick={handleLeave} aria-label="Close call">
-            <RiCloseLine />
-          </button>
-        </div>
-      </header>
-
-      <div className="vc-stage">
-        {jitsiUrl ? (
-          <iframe
-            className="vc-frame"
-            title={`Video call — ${appointment.title}`}
-            src={jitsiUrl}
-            allow="camera; microphone; fullscreen; display-capture; autoplay"
-            allowFullScreen
-          />
-        ) : (
-          <div className="vc-connecting"><RiLoader4Line className="vc-spin" /> Connecting…</div>
-        )}
+      <div className="vc-card-actions">
+        <button className="vc-abtn" onClick={openCallTab}>
+          <RiExternalLinkLine /> Open call
+        </button>
+        <button className="vc-abtn" onClick={copyCustomerLink}>
+          <RiFileCopyLine /> Copy Customer Link
+        </button>
+        <button className="vc-abtn vc-end" onClick={handleEnd} disabled={ending}>
+          {ending ? <RiLoader4Line className="vc-spin" /> : <RiCloseCircleLine />} End Call
+        </button>
       </div>
     </div>
   );

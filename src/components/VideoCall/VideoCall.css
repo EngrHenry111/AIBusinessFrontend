@@ -1,88 +1,91 @@
-.vc-overlay {
+/* Floating "call active" widget — the actual call runs in a separate tab */
+.vc-card {
   position: fixed;
-  inset: 0;
+  bottom: 22px;
+  right: 22px;
   z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  background: #0b0b0f;
-  color: #f8fafc;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px -8px rgba(15, 23, 42, 0.28);
+  overflow: hidden;
   font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  animation: vc-pop 0.18s ease;
 }
+@keyframes vc-pop { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
-/* ── Header ─────────────────────────────────────────────────────────────── */
-.vc-header {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  height: 60px;
-  padding: 0 16px;
-  background: #15151c;
-  border-bottom: 1px solid #26262f;
+.vc-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #fff;
 }
+.vc-status { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+.vc-dot {
+  width: 9px; height: 9px; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  animation: vc-pulse 1.6s ease-out infinite;
+}
+@keyframes vc-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+.vc-x {
+  background: rgba(255, 255, 255, 0.18); border: none; color: #fff; cursor: pointer;
+  width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: background 0.15s ease;
+}
+.vc-x:hover { background: rgba(255, 255, 255, 0.32); }
 
-.vc-title { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
-.vc-live {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
-  color: #f87171; flex-shrink: 0;
+.vc-card-body { display: flex; gap: 12px; padding: 14px; align-items: center; }
+.vc-icon {
+  width: 40px; height: 40px; flex-shrink: 0; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  background: var(--color-brand-light, #e0e7ff); color: var(--color-brand, #6366f1);
 }
-.vc-live-dot {
-  width: 8px; height: 8px; border-radius: 50%; background: #f87171;
-  animation: vc-pulse 1.6s ease-in-out infinite;
-}
-@keyframes vc-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-.vc-appt-name {
-  font-size: 14px; font-weight: 600;
+.vc-meta { min-width: 0; flex: 1; }
+.vc-appt {
+  font-size: 14px; font-weight: 700; color: var(--text-primary, #0f172a);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-
-.vc-center { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
-.vc-timer, .vc-participants {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 13px; font-weight: 600; color: #cbd5e1;
-  font-variant-numeric: tabular-nums;
+.vc-room {
+  font-size: 12px; color: var(--text-muted, #64748b);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--font-mono, monospace);
 }
-.vc-timer svg, .vc-participants svg { font-size: 15px; color: #8b8b99; }
+.vc-time {
+  margin-top: 5px; font-size: 13px; font-weight: 600; color: var(--text-secondary, #475569);
+  display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums;
+}
+.vc-time svg { color: var(--text-muted, #94a3b8); }
 
-.vc-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.vc-btn {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 8px 14px; border-radius: 9px; border: none; cursor: pointer;
+.vc-card-actions {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 0 14px 14px;
+}
+.vc-abtn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 9px 12px; border-radius: 9px; cursor: pointer;
   font-size: 13px; font-weight: 600; font-family: inherit;
-  transition: background 0.15s ease, transform 0.15s ease;
+  background: var(--bg-secondary, #f1f5f9); color: var(--text-primary, #0f172a);
+  border: 1px solid var(--border, #e2e8f0);
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
-.vc-btn-ghost { background: #26262f; color: #e2e8f0; }
-.vc-btn-ghost:hover { background: #33333f; }
-.vc-btn-leave { background: #dc2626; color: #fff; }
-.vc-btn-leave:hover { background: #b91c1c; }
-.vc-btn-leave:disabled { opacity: 0.6; cursor: default; }
-.vc-btn-icon { background: transparent; color: #94a3b8; padding: 8px; font-size: 20px; display: none; }
-.vc-btn-icon:hover { color: #fff; }
+.vc-abtn:hover:not(:disabled) { background: var(--bg-hover, #e2e8f0); }
+.vc-abtn:disabled { opacity: 0.6; cursor: default; }
+.vc-abtn svg { font-size: 15px; }
+.vc-end {
+  background: #fee2e2; color: #b91c1c; border-color: #fecaca;
+}
+.vc-end:hover:not(:disabled) { background: #fecaca; }
+[data-theme='dark'] .vc-end { background: #7f1d1d33; color: #fca5a5; border-color: #7f1d1d; }
 
 .vc-spin { animation: vc-spin 0.8s linear infinite; }
 @keyframes vc-spin { to { transform: rotate(360deg); } }
 
-/* ── Stage ─────────────────────────────────────────────────────────────── */
-.vc-stage { flex: 1; min-height: 0; position: relative; background: #000; }
-.vc-frame { width: 100%; height: 100%; border: 0; display: block; }
-.vc-connecting {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  font-size: 15px; color: #94a3b8;
-}
-.vc-connecting svg { font-size: 22px; }
-
-/* ── Mobile ────────────────────────────────────────────────────────────── */
-@media (max-width: 720px) {
-  .vc-header { height: auto; flex-wrap: wrap; padding: 10px 12px; gap: 8px 12px; }
-  .vc-title { order: 1; flex: 1 1 auto; }
-  .vc-actions { order: 2; }
-  .vc-center { order: 3; flex-basis: 100%; justify-content: flex-start; }
-  .vc-btn-label { display: none; }
-  .vc-btn { padding: 8px; }
-  .vc-btn-leave .vc-btn-label { display: inline; }
-  .vc-btn-leave { padding: 8px 12px; }
-  .vc-btn-icon { display: inline-flex; }
+@media (max-width: 480px) {
+  .vc-card { left: 16px; right: 16px; bottom: 16px; width: auto; }
 }
