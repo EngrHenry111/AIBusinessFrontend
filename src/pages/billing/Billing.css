@@ -45,3 +45,30 @@
 .payment-security { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); padding: var(--space-3) 0; }
 
 .spin { animation: spin 1s linear infinite; }
+
+/* ── Subscription info card ────────────────────────────────────────────── */
+.sub-info-card { padding: var(--space-5); }
+.sub-info-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
+.sub-info-head h3 { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; }
+.sub-info-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3) var(--space-4); margin-bottom: var(--space-4);
+}
+.sub-info-grid > div { display: flex; flex-direction: column; gap: 3px; }
+.sub-info-grid span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 600; }
+.sub-info-grid strong { font-size: 14px; color: var(--text-primary); font-weight: 600; }
+
+/* ── Cancel section ───────────────────────────────────────────────────── */
+.cancel-section, .cancel-confirmed {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+}
+.cancel-section strong, .cancel-confirmed strong { font-size: 14px; }
+.cancel-section p, .cancel-confirmed p { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+.cancel-confirmed { border-left: 3px solid var(--color-success); }
+.cancel-confirmed > svg { font-size: 26px; color: var(--color-success); flex-shrink: 0; }
+@media (max-width: 560px) {
+  .cancel-section, .cancel-confirmed { flex-direction: column; align-items: flex-start; }
+}
+
+.plan-billed-note { font-size: 11px; color: var(--text-muted); margin-top: 3px; }

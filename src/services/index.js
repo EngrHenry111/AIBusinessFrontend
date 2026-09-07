@@ -156,6 +156,9 @@ export const paymentService = {
   verify: (reference) => api.get(`/payments/verify/${reference}`),
   getHistory: () => api.get('/payments/history'),
   cancel: () => api.post('/payments/cancel'),
+  subscribe: (plan, billingCycle) => api.post('/payments/subscribe', { plan, billingCycle }),
+  cancelSubscription: () => api.post('/payments/cancel-subscription'),
+  getSubscription: () => api.get('/payments/subscription'),
 };
 
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
