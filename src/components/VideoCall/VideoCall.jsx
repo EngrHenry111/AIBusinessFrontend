@@ -23,11 +23,14 @@ export default function VideoCall({ appointment, roomUrl, onClose }) {
   const startedAt = useRef(Date.now());
 
   // Jitsi room with our preferred config baked into the URL hash.
-  // lobby.enabled + lobby.autoKnock puts guests in a waiting room until the
-  // host admits them; the host gets an admit/reject prompt.
+  // NOTE: no lobby/waiting-room params — on the public meet.jit.si server an
+  // anonymous first-joiner isn't a real moderator, so autoKnock leaves guests
+  // stuck with nobody able to admit them. The unguessable room name
+  // (BizlyAI-<appointmentId>) is the access boundary. A true gated waiting room
+  // needs Jitsi-as-a-Service (JaaS) with a signed moderator JWT.
   const userName = user?.name || 'Host';
   const jitsiUrl = roomUrl
-    ? `${roomUrl}#userInfo.displayName="${userName}"&config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.lobby.enabled=true&config.lobby.autoKnock=true&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.TOOLBAR_BUTTONS=["microphone","camera","hangup","chat","fullscreen"]`
+    ? `${roomUrl}#userInfo.displayName="${userName}"&config.prejoinPageEnabled=false&config.startWithAudioMuted=false&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.TOOLBAR_BUTTONS=["microphone","camera","hangup","chat","fullscreen"]`
     : null;
 
   // Timer counting up
