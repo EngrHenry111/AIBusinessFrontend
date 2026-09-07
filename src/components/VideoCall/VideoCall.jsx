@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { appointmentService } from '../../services';
+import { useAuth } from '../../context/AuthContext';
 import {
   RiCloseLine, RiTimeLine, RiFileCopyLine, RiGroupLine, RiLoader4Line, RiLogoutBoxRLine,
 } from 'react-icons/ri';
@@ -15,10 +16,17 @@ const fmtTimer = (s) => {
 };
 
 export default function VideoCall({ appointment, roomUrl, onClose }) {
+  const { user } = useAuth();
   const [seconds, setSeconds] = useState(0);
   const [participants, setParticipants] = useState(null);
   const [leaving, setLeaving] = useState(false);
   const startedAt = useRef(Date.now());
+
+  // Jitsi room with our preferred config baked into the URL hash
+  const userName = user?.name || 'Host';
+  const jitsiUrl = roomUrl
+    ? `${roomUrl}#userInfo.displayName="${userName}"&config.prejoinPageEnabled=false&config.startWithAudioMuted=false&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.TOOLBAR_BUTTONS=["microphone","camera","hangup","chat","fullscreen"]`
+    : null;
 
   // Timer counting up
   useEffect(() => {
@@ -112,12 +120,12 @@ export default function VideoCall({ appointment, roomUrl, onClose }) {
       </header>
 
       <div className="vc-stage">
-        {roomUrl ? (
+        {jitsiUrl ? (
           <iframe
             className="vc-frame"
             title={`Video call — ${appointment.title}`}
-            src={roomUrl}
-            allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
+            src={jitsiUrl}
+            allow="camera; microphone; fullscreen; display-capture; autoplay"
             allowFullScreen
           />
         ) : (
