@@ -49,9 +49,12 @@ export const leadService = {
   getAll: (params) => api.get('/leads', { params }),
   create: (data) => api.post('/leads', data),
   getOne: (id) => api.get(`/leads/${id}`),
+  getDetail: (id) => api.get(`/leads/${id}`),
   update: (id, data) => api.put(`/leads/${id}`, data),
   delete: (id) => api.delete(`/leads/${id}`),
   analyze: (id) => api.post(`/leads/${id}/analyze`),
+  addNote: (id, content) => api.post(`/leads/${id}/notes`, { content }),
+  bulkImport: (leads) => api.post('/leads/import', { leads }),
 };
 
 // ─── Meetings ─────────────────────────────────────────────────────────────────

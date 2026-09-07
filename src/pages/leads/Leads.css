@@ -25,3 +25,42 @@
 .lead-ai-insight svg { color: var(--color-brand); flex-shrink: 0; margin-top: 2px; }
 .spin { animation: spin 1s linear infinite; }
 @media (max-width: 640px) { .lead-form .form-grid { grid-template-columns: 1fr; } .lead-card-main { flex-wrap: wrap; } }
+
+/* Clickable lead cards */
+.lead-card-clickable { cursor: pointer; transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease; }
+.lead-card-clickable:hover { border-color: var(--color-brand); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.lead-card-clickable:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+
+/* ── CSV import modal ─────────────────────────────────────────────────── */
+.csv-modal { max-width: 620px; }
+.csv-steps { display: flex; gap: 6px; padding: 14px 24px 0; flex-wrap: wrap; }
+.csv-step {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600;
+  color: var(--text-muted); background: var(--bg-tertiary); border-radius: 999px; padding: 4px 11px;
+}
+.csv-step.active { background: var(--color-brand); color: #fff; }
+.csv-step.complete { background: #dcfce7; color: #166534; }
+[data-theme='dark'] .csv-step.complete { background: #064e3b; color: #6ee7b7; }
+
+.csv-upload { display: flex; flex-direction: column; gap: 14px; }
+.csv-drop {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer;
+  border: 2px dashed var(--border-strong); border-radius: var(--radius-lg); padding: 28px;
+  color: var(--text-secondary); font-size: 14px; font-weight: 600;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.csv-drop:hover { border-color: var(--color-brand); background: var(--bg-secondary); }
+.csv-drop svg { font-size: 30px; color: var(--color-brand); }
+.csv-or { text-align: center; font-size: 12px; color: var(--text-muted); }
+
+.csv-map { display: flex; flex-direction: column; gap: 12px; }
+.csv-hint { font-size: 13px; color: var(--text-muted); }
+.csv-map-row { display: flex; align-items: center; gap: 12px; }
+.csv-map-row > span { flex: 0 0 120px; font-size: 13px; font-weight: 600; }
+.csv-map-row select { flex: 1; }
+.csv-warn, .csv-errors { font-size: 12.5px; color: var(--color-danger); }
+.csv-errors { margin-top: 12px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+
+.csv-result { text-align: center; padding: 12px 0; }
+.csv-result-big { font-size: 16px; color: var(--text-primary); }
+.csv-result-big strong { color: var(--color-brand); font-size: 20px; }

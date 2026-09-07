@@ -24,6 +24,7 @@ const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
 const Chat = lazy(() => import('./pages/chat/Chat'));
 const Knowledge = lazy(() => import('./pages/knowledge/Knowledge'));
 const Leads = lazy(() => import('./pages/leads/Leads'));
+const LeadDetail = lazy(() => import('./pages/leads/LeadDetail'));
 const Meetings = lazy(() => import('./pages/meetings/Meetings'));
 const Invoices = lazy(() => import('./pages/invoices/Invoices'));
 const Orders = lazy(() => import('./pages/orders/Orders'));
@@ -108,6 +109,7 @@ function AppRoutes() {
                 <Route path="knowledge" element={<Knowledge />} />
                 <Route path="agents" element={<Agents />} />
                 <Route path="leads" element={<Leads />} />
+                <Route path="leads/:id" element={<LeadDetail />} />
                 <Route path="meetings" element={<Meetings />} />
                 <Route path="invoices" element={<Invoices />} />
                 <Route path="orders" element={<Orders />} />
