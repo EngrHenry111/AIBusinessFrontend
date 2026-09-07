@@ -28,20 +28,17 @@ export default function VideoCall({ appointment, roomUrl, onClose }) {
     return () => clearInterval(t);
   }, []);
 
-  // Best-effort participant count from Daily prebuilt's postMessages
+  // Best-effort participant count from the Jitsi iframe's postMessages.
+  // A plain embed doesn't emit these reliably, so this stays "—" until it does.
   useEffect(() => {
     const onMsg = (e) => {
-      if (typeof e.origin === 'string' && !e.origin.includes('daily.co')) return;
+      if (typeof e.origin === 'string' && !/jit\.si|jitsi/.test(e.origin)) return;
       const d = e.data || {};
-      const action = d.action || d.event;
-      if (action === 'participant-counts' && typeof d.present === 'number') {
-        setParticipants(d.present + (d.hidden || 0));
-      } else if (action === 'participant-joined' || action === 'participant-left' || action === 'joined-meeting') {
-        setParticipants((p) => {
-          if (action === 'participant-left') return Math.max(1, (p || 2) - 1);
-          return (p || 1) + (action === 'participant-joined' ? 1 : 0);
-        });
-      }
+      const name = d.name || d.event || d.action;
+      if (name === 'participantJoined') setParticipants((p) => (p || 1) + 1);
+      else if (name === 'participantLeft') setParticipants((p) => Math.max(1, (p || 2) - 1));
+      else if (name === 'videoConferenceJoined') setParticipants((p) => p || 1);
+      else if (typeof d.numberOfParticipants === 'number') setParticipants(d.numberOfParticipants);
     };
     window.addEventListener('message', onMsg);
     return () => window.removeEventListener('message', onMsg);
@@ -120,7 +117,7 @@ export default function VideoCall({ appointment, roomUrl, onClose }) {
             className="vc-frame"
             title={`Video call — ${appointment.title}`}
             src={roomUrl}
-            allow="camera; microphone; fullscreen; display-capture; autoplay"
+            allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
             allowFullScreen
           />
         ) : (

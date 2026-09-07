@@ -113,10 +113,7 @@ export default function Appointments() {
       const { data } = await appointmentService.getVideoCall(appt._id);
       setActiveCall({ appointment: appt, roomUrl: data.data.roomUrl });
     } catch (err) {
-      const msg = err.response?.status === 503
-        ? 'Video calling isn\'t set up yet. Add a Daily.co API key on the server.'
-        : err.response?.data?.message || 'Could not start the video call';
-      toast.error(msg);
+      toast.error(err.response?.data?.message || 'Could not start the video call');
     } finally {
       setCallLoadingId(null);
     }
