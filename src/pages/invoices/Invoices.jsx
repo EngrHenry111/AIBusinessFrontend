@@ -5,7 +5,7 @@ import {
   RiAddLine, RiMoneyDollarCircleLine, RiRobot2Line, RiDeleteBinLine,
   RiCalendarLine, RiLoader4Line, RiArrowDownSLine, RiArrowUpSLine,
   RiMailLine, RiAlertLine, RiCheckLine, RiTimeLine, RiDownloadLine,
-  RiShareForwardLine
+  RiShareForwardLine, RiMailSendLine, RiCheckboxCircleLine
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './Invoices.css';
@@ -32,6 +32,8 @@ export default function Invoices() {
   const [expanded, setExpanded] = useState(null);
   const [draftingReminder, setDraftingReminder] = useState(null);
   const [sharingId, setSharingId] = useState(null);
+  const [sendingId, setSendingId] = useState(null);
+  const [receiptId, setReceiptId] = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => { loadInvoices(); }, [statusFilter]);
@@ -114,6 +116,38 @@ export default function Invoices() {
       );
     } finally {
       setSharingId(null);
+    }
+  }
+
+  async function handleSendEmail(inv) {
+    const email = inv.customer?.email;
+    if (!email) return;
+    if (!confirm(`Send invoice to ${email}?`)) return;
+    setSendingId(inv._id);
+    try {
+      const { data } = await invoiceService.sendEmail(inv._id);
+      setInvoices(prev => prev.map(i => i._id === inv._id ? (data.data || { ...i, sentAt: new Date().toISOString(), status: i.status === 'draft' ? 'sent' : i.status }) : i));
+      toast.success(`Invoice sent to ${email}!`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to send invoice');
+    } finally {
+      setSendingId(null);
+    }
+  }
+
+  async function handleSendReceipt(inv) {
+    const email = inv.customer?.email;
+    if (!email) return;
+    if (!confirm(`Send payment receipt to ${email}?`)) return;
+    setReceiptId(inv._id);
+    try {
+      const { data } = await invoiceService.sendReceipt(inv._id);
+      setInvoices(prev => prev.map(i => i._id === inv._id ? (data.data || { ...i, receiptSentAt: new Date().toISOString() }) : i));
+      toast.success(`Receipt sent to ${email}!`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to send receipt');
+    } finally {
+      setReceiptId(null);
     }
   }
 
@@ -266,6 +300,9 @@ export default function Invoices() {
                   <div className="invoice-num">
                     <span className="inv-number">{inv.invoiceNumber}</span>
                     <span className="inv-customer">{inv.customer?.name}</span>
+                    {inv.sentAt && (
+                      <span className="inv-sent-badge"><RiCheckLine /> Sent {fmt(inv.sentAt)}</span>
+                    )}
                   </div>
                   <div className="invoice-dates">
                     <span><RiCalendarLine /> Due: {fmt(inv.dueAt)}</span>
@@ -284,6 +321,20 @@ export default function Invoices() {
                       onClick={()=>handleDraftReminder(inv)} disabled={draftingReminder===inv._id} title="AI Draft Reminder">
                       {draftingReminder===inv._id ? <RiLoader4Line className="spin" /> : <RiRobot2Line />}
                     </button>
+                    {inv.customer?.email && (
+                      <button className="btn btn-ghost btn-icon btn-sm"
+                        onClick={()=>handleSendEmail(inv)} disabled={sendingId===inv._id}
+                        title={`Send invoice to ${inv.customer.email}`}>
+                        {sendingId===inv._id ? <RiLoader4Line className="spin" /> : <RiMailSendLine />}
+                      </button>
+                    )}
+                    {inv.status==='paid' && inv.customer?.email && (
+                      <button className="btn btn-ghost btn-icon btn-sm"
+                        onClick={()=>handleSendReceipt(inv)} disabled={receiptId===inv._id}
+                        title={`Send payment receipt to ${inv.customer.email}`}>
+                        {receiptId===inv._id ? <RiLoader4Line className="spin" /> : <RiCheckboxCircleLine />}
+                      </button>
+                    )}
                     <button className="btn btn-ghost btn-icon btn-sm"
                       onClick={()=>handleSharePortal(inv)} disabled={sharingId===inv._id || !inv.customer?.email}
                       title={inv.customer?.email ? `Email portal link to ${inv.customer.email}` : 'No customer email on file'}>

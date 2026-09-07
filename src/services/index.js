@@ -76,6 +76,8 @@ export const invoiceService = {
   delete: (id) => api.delete(`/invoices/${id}`),
   getOverdue: () => api.get('/invoices/overdue'),
   draftReminder: (id) => api.post(`/invoices/${id}/draft-reminder`),
+  sendEmail: (id) => api.post(`/invoices/${id}/send-email`),
+  sendReceipt: (id) => api.post(`/invoices/${id}/send-receipt`),
   getPDF: (id) => `${api.defaults.baseURL}/invoices/${id}/pdf`,
 };
 
