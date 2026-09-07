@@ -4,10 +4,13 @@ import {
   RiAddLine, RiCalendarLine, RiDeleteBinLine, RiTimeLine,
   RiUserLine, RiPhoneLine, RiMailLine, RiArrowDownSLine,
   RiArrowUpSLine, RiRobot2Line, RiMapPinLine, RiVideoLine,
-  RiCheckLine, RiLoader4Line
+  RiCheckLine, RiLoader4Line, RiVideoAddLine
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
+import VideoCall from '../../components/VideoCall/VideoCall';
 import './Appointment.css';
+
+const CALL_WINDOW_MS = 15 * 60 * 1000; // show the call button 15 min before start
 
 const STATUS_COLORS = {
   pending:'warning', confirmed:'success', rescheduled:'info',
@@ -29,6 +32,8 @@ export default function Appointments() {
   const [expanded, setExpanded] = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [view, setView] = useState('all'); // 'all' | 'upcoming'
+  const [activeCall, setActiveCall] = useState(null); // { appointment, roomUrl }
+  const [callLoadingId, setCallLoadingId] = useState(null);
 
   useEffect(() => { loadData(); }, [statusFilter]);
 
@@ -91,6 +96,37 @@ export default function Appointments() {
     const n = new Date();
     return d.getDate()===n.getDate() && d.getMonth()===n.getMonth() && d.getFullYear()===n.getFullYear();
   };
+
+  // Show the "Start Video Call" button when the appointment is confirmed and it's
+  // today, or it starts within the next 15 minutes (or is already in progress).
+  const canStartCall = (appt) => {
+    if (appt.status !== 'confirmed') return false;
+    if (isToday(appt.scheduledAt)) return true;
+    const diff = new Date(appt.scheduledAt).getTime() - Date.now();
+    const endsIn = ((appt.duration || 60) * 60 * 1000);
+    return diff <= CALL_WINDOW_MS && diff >= -endsIn;
+  };
+
+  async function startCall(appt) {
+    setCallLoadingId(appt._id);
+    try {
+      const { data } = await appointmentService.getVideoCall(appt._id);
+      setActiveCall({ appointment: appt, roomUrl: data.data.roomUrl });
+    } catch (err) {
+      const msg = err.response?.status === 503
+        ? 'Video calling isn\'t set up yet. Add a Daily.co API key on the server.'
+        : err.response?.data?.message || 'Could not start the video call';
+      toast.error(msg);
+    } finally {
+      setCallLoadingId(null);
+    }
+  }
+
+  function endCall() {
+    setActiveCall(null);
+    setAppointments(prev => prev.map(a => a._id === activeCall?.appointment._id ? { ...a, roomUrl: null } : a));
+    loadData();
+  }
 
   const displayList = view==='upcoming' ? upcoming : appointments;
 
@@ -253,6 +289,19 @@ export default function Appointments() {
                 </div>
 
                 <div className="appt-actions" onClick={e=>e.stopPropagation()}>
+                  {canStartCall(appt) && (
+                    <button
+                      className="btn btn-sm appt-call-btn"
+                      onClick={() => startCall(appt)}
+                      disabled={callLoadingId === appt._id}
+                      title="Start video call"
+                    >
+                      {callLoadingId === appt._id
+                        ? <RiLoader4Line className="spin" />
+                        : <RiVideoAddLine />}
+                      <span>Start Video Call</span>
+                    </button>
+                  )}
                   <select className="status-select" value={appt.status}
                     onChange={e=>handleStatusChange(appt._id,e.target.value)}>
                     {['pending','confirmed','rescheduled','completed','cancelled','no_show'].map(s=>(
@@ -306,6 +355,14 @@ export default function Appointments() {
             </div>
           ))}
         </div>
+      )}
+
+      {activeCall && (
+        <VideoCall
+          appointment={activeCall.appointment}
+          roomUrl={activeCall.roomUrl}
+          onClose={endCall}
+        />
       )}
     </div>
   );

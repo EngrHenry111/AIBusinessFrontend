@@ -93,6 +93,9 @@ export const appointmentService = {
   update: (id, data) => api.put(`/appointments/${id}`, data),
   delete: (id) => api.delete(`/appointments/${id}`),
   getUpcoming: () => api.get('/appointments/upcoming'),
+  createVideoCall: (id) => api.post(`/appointments/${id}/video-call`),
+  getVideoCall: (id) => api.get(`/appointments/${id}/video-call`),
+  endVideoCall: (id) => api.delete(`/appointments/${id}/video-call`),
 };
 
 // ─── Reports ──────────────────────────────────────────────────────────────────
