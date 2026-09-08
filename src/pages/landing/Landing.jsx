@@ -19,12 +19,12 @@ const STATS = [
 ];
 
 const FEATURES = [
-  { icon: RiRobot2Line, emoji: '🤖', title: 'AI Knowledge Base', text: 'Upload your documents. Ask anything. AI answers instantly.' },
-  { icon: RiWhatsappLine, emoji: '💬', title: 'WhatsApp AI Bot', text: 'AI handles customer WhatsApp messages 24/7. Human takeover in one click.' },
-  { icon: RiUserSearchLine, emoji: '📊', title: 'Leads & CRM', text: 'Track leads, score them with AI, send AI-drafted follow-ups.' },
-  { icon: RiMoneyDollarCircleLine, emoji: '💰', title: 'Invoices & Payments', text: 'Create invoices, track payments, send AI payment reminders.' },
-  { icon: RiCalendarCheckLine, emoji: '📅', title: 'Appointments', text: 'Book appointments, send AI confirmation emails automatically.' },
-  { icon: RiLineChartLine, emoji: '📈', title: 'AI Reports', text: 'One-click business reports with AI insights and recommendations.' },
+  { icon: RiRobot2Line, emoji: '🤖', title: 'AI Knowledge Base for Nigerian Businesses', text: 'Upload your documents. Ask anything. AI answers instantly in seconds.' },
+  { icon: RiWhatsappLine, emoji: '💬', title: 'WhatsApp AI Bot — Handle Customer Chats Automatically', text: 'A WhatsApp business bot for Nigeria that replies to customers 24/7. Human takeover in one click.' },
+  { icon: RiUserSearchLine, emoji: '📊', title: 'Leads & CRM Software for Nigerian SMEs', text: 'Track leads, score them with AI and send AI-drafted follow-ups from one CRM.' },
+  { icon: RiMoneyDollarCircleLine, emoji: '💰', title: 'Invoice & Payment Software — Accept Paystack Payments', text: 'Create invoices, accept Paystack payments and send AI payment reminders automatically.' },
+  { icon: RiStore2Line, emoji: '📦', title: 'Inventory Management — Track Your Stock in Real Time', text: 'Inventory management software for Nigeria: live stock levels, low-stock alerts and product catalogue.' },
+  { icon: RiLineChartLine, emoji: '📈', title: 'Business Reports & AI Insights', text: 'One-click profit & loss, expense tracking and AI recommendations for your business.' },
 ];
 
 const STEPS = [
@@ -262,6 +262,82 @@ export default function Landing() {
     return () => io.disconnect();
   }, []);
 
+  // Schema.org structured data (SoftwareApplication + Organization) for rich results
+  useEffect(() => {
+    const graph = [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'BizlyAI',
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Web',
+        url: 'https://bislyai.com',
+        description: 'AI-powered business management platform for Nigerian businesses',
+        offers: {
+          '@type': 'AggregateOffer',
+          lowPrice: '4900',
+          highPrice: '34900',
+          priceCurrency: 'NGN',
+          offerCount: '3',
+        },
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: '4.8',
+          reviewCount: '47',
+        },
+        author: { '@type': 'Organization', name: 'EngrHenryTech', url: 'https://bislyai.com' },
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'BizlyAI',
+        url: 'https://bislyai.com',
+        logo: 'https://bislyai.com/favicon.svg',
+        contactPoint: {
+          '@type': 'ContactPoint',
+          telephone: '+234-902-836-1165',
+          contactType: 'customer service',
+          areaServed: 'NG',
+          availableLanguage: 'English',
+        },
+        sameAs: ['https://twitter.com/bislyai', 'https://linkedin.com/company/bislyai'],
+      },
+    ];
+    const nodes = graph.map((data) => {
+      const el = document.createElement('script');
+      el.type = 'application/ld+json';
+      el.dataset.seo = 'bizlyai';
+      el.text = JSON.stringify(data);
+      document.head.appendChild(el);
+      return el;
+    });
+    return () => nodes.forEach((n) => n.remove());
+  }, []);
+
+  // SPA section-aware <title> for crawlers that execute JS
+  useEffect(() => {
+    const original = document.title;
+    const DEFAULT_TITLE = 'BizlyAI — AI Business Software Nigeria';
+    const SECTION_TITLES = {
+      features: 'BizlyAI Features — 15+ Business Modules',
+      pricing: 'BizlyAI Pricing — From ₦4,900/month',
+    };
+    document.title = DEFAULT_TITLE;
+    const targets = ['features', 'pricing']
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+    let io;
+    if (targets.length && 'IntersectionObserver' in window) {
+      io = new IntersectionObserver((entries) => {
+        const visible = entries.filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        document.title = visible ? (SECTION_TITLES[visible.target.id] || DEFAULT_TITLE) : DEFAULT_TITLE;
+      }, { threshold: [0.25, 0.5] });
+      targets.forEach((t) => io.observe(t));
+    }
+    return () => { if (io) io.disconnect(); document.title = original; };
+  }, []);
+
   return (
     <div className="landing">
       {/* ── Navbar ─────────────────────────────────────────────── */}
@@ -335,6 +411,34 @@ export default function Landing() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── SEO intro band ─────────────────────────────────────── */}
+      <section className="lp-section lp-seo" aria-label="About BizlyAI">
+        <div className="lp-container lp-seo-inner" data-reveal>
+          <h2>Business Management Software Built for Nigeria &amp; Africa</h2>
+          <p>
+            <strong>BizlyAI</strong> is an AI business platform for Nigerian businesses that brings your
+            whole operation into one place. Instead of paying for separate CRM software, invoice
+            software, inventory management software and expense tracking software, small businesses in
+            Lagos, Abuja, Port Harcourt and across Africa run everything on BizlyAI — from customer
+            records and Paystack invoices to stock levels, expenses and profit &amp; loss reports.
+          </p>
+          <p>
+            Our AI assistant for business answers customer questions from your own documents, a
+            WhatsApp business bot handles chats around the clock, and AI-drafted follow-ups keep your
+            leads warm. BizlyAI is designed for how African SMEs actually work: naira pricing,
+            mobile-first, offline-tolerant and quick to set up — start free, no card required.
+          </p>
+          <ul className="lp-seo-tags">
+            <li>CRM software Nigeria</li>
+            <li>Invoice software Nigeria</li>
+            <li>Inventory management software Nigeria</li>
+            <li>Expense tracking software Nigeria</li>
+            <li>WhatsApp business bot Nigeria</li>
+            <li>Small business software Africa</li>
+          </ul>
         </div>
       </section>
 

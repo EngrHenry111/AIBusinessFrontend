@@ -1,9 +1,27 @@
 User-agent: *
 Allow: /
+Allow: /register
+Allow: /login
+Allow: /privacy
+Allow: /terms
+
 Disallow: /dashboard
 Disallow: /admin
 Disallow: /api
 Disallow: /settings
 Disallow: /portal
+Disallow: /leads
+Disallow: /customers
+Disallow: /products
+Disallow: /orders
+Disallow: /invoices
+Disallow: /expenses
+Disallow: /appointments
+Disallow: /meetings
+Disallow: /chat
+Disallow: /knowledge
+Disallow: /messages
+Disallow: /billing
+Disallow: /onboarding
 
 Sitemap: https://bislyai.com/sitemap.xml

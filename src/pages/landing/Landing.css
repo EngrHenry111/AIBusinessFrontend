@@ -349,3 +349,38 @@ html { scroll-behavior: smooth; }
   .lp-hero-actions { flex-direction: column; }
   .lp-hero-actions .lp-btn { width: 100%; }
 }
+
+
+/* ── SEO intro band ─────────────────────────────────────────────────── */
+.lp-seo-inner {
+  max-width: 860px;
+  margin: 0 auto;
+  text-align: center;
+}
+.lp-seo-inner h2 {
+  margin-bottom: 18px;
+}
+.lp-seo-inner p {
+  color: var(--lp-text-soft, #4b5563);
+  line-height: 1.75;
+  margin: 0 auto 16px;
+  font-size: 1.02rem;
+}
+.lp-seo-tags {
+  list-style: none;
+  padding: 0;
+  margin: 26px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.lp-seo-tags li {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--lp-brand, #4f46e5);
+  background: rgba(99, 102, 241, 0.09);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-radius: 999px;
+  padding: 6px 14px;
+}
