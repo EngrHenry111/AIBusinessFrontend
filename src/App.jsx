@@ -13,6 +13,7 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import GoogleCallback from './pages/auth/GoogleCallback';
 import VerifyEmail from './pages/auth/VerifyEmail';
+import TwoFactorLogin from './pages/auth/TwoFactorLogin';
 import Landing from './pages/landing/Landing';
 import Privacy from './pages/legal/Privacy';
 import Terms from './pages/legal/Terms';
@@ -90,6 +91,7 @@ function AppRoutes() {
       <Route path="/reset-password/:token" element={<PublicRoute><ResetPassword /></PublicRoute>} />
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/2fa-login" element={<TwoFactorLogin />} />
 
       {/* Public legal pages — no auth */}
       <Route path="/privacy" element={<Privacy />} />

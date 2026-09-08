@@ -69,6 +69,11 @@ export function AuthProvider({ children }) {
     dispatch({ type: 'AUTH_START' });
     try {
       const { data } = await authService.login(email, password);
+      // Password was correct but the account has 2FA — hand off to the 2FA page.
+      if (data.requiresTwoFactor) {
+        dispatch({ type: 'SET_LOADING', payload: false });
+        return data;
+      }
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
       try { sessionStorage.removeItem('evb_dismissed'); } catch { /* ignore */ }
@@ -111,8 +116,24 @@ export function AuthProvider({ children }) {
     dispatch({ type: 'UPDATE_COMPANY', payload: updates });
   }, []);
 
+  // Finalise a session from tokens obtained elsewhere (e.g. 2FA completion)
+  const completeAuth = useCallback((data) => {
+    localStorage.setItem('accessToken', data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
+    try { sessionStorage.removeItem('evb_dismissed'); } catch { /* ignore */ }
+    dispatch({
+      type: 'AUTH_SUCCESS',
+      payload: {
+        user: data.user,
+        company: data.company,
+        subscriptionState: data.subscriptionState,
+        graceDays: data.graceDays,
+      },
+    });
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout, updateUser, updateCompany }}>
+    <AuthContext.Provider value={{ ...state, login, register, logout, updateUser, updateCompany, completeAuth }}>
       {children}
     </AuthContext.Provider>
   );

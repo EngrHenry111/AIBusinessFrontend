@@ -20,7 +20,11 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      await login(form.email, form.password);
+      const data = await login(form.email, form.password);
+      if (data?.requiresTwoFactor) {
+        navigate('/2fa-login', { state: { tempToken: data.tempToken } });
+        return;
+      }
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password. Please try again.');

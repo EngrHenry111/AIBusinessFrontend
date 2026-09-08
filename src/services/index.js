@@ -14,6 +14,15 @@ export const authService = {
   resendVerification: () => api.post('/auth/resend-verification'),
 };
 
+// ─── Two-Factor Authentication (TOTP) ────────────────────────────────────────
+export const twoFactorService = {
+  setup: () => api.get('/2fa/setup'),
+  verify: (token) => api.post('/2fa/verify', { token }),
+  disable: (token) => api.delete('/2fa', { data: { token } }),
+  completeLogin: (tempToken, token) => api.post('/auth/2fa/complete', { tempToken, token }),
+  useBackupCode: (tempToken, code) => api.post('/auth/2fa/backup', { tempToken, code }),
+};
+
 // ─── Documents ────────────────────────────────────────────────────────────────
 export const documentService = {
   getAll: (params) => api.get('/documents', { params }),

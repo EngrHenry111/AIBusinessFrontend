@@ -3,16 +3,18 @@ import { useAuth } from '../../context/AuthContext';
 import { userService, companyService } from '../../services';
 import {
   RiUserLine, RiBuildingLine, RiRobot2Line, RiLockLine,
-  RiCheckLine, RiLoader4Line, RiMoonLine, RiSunLine, RiImageAddLine
+  RiCheckLine, RiLoader4Line, RiMoonLine, RiSunLine, RiImageAddLine, RiShieldKeyholeLine
 } from 'react-icons/ri';
 import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
+import TwoFactor from './TwoFactor';
 import './Settings.css';
 
 const TABS = [
   { id:'profile', label:'Profile', icon: RiUserLine },
   { id:'company', label:'Company', icon: RiBuildingLine },
   { id:'ai', label:'AI Settings', icon: RiRobot2Line },
+  { id:'security', label:'Security', icon: RiShieldKeyholeLine },
   { id:'password', label:'Password', icon: RiLockLine },
 ];
 
@@ -315,6 +317,15 @@ export default function Settings() {
                   {!saving && <><RiCheckLine /> Save AI Settings</>}
                 </button>
               </form>
+            </div>
+          )}
+
+          {/* Security */}
+          {activeTab==='security' && (
+            <div className="card card-pad">
+              <h2>Security</h2>
+              <p className="settings-subtitle">Protect your account with two-factor authentication</p>
+              <TwoFactor />
             </div>
           )}
 
