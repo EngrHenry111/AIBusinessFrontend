@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { userService, companyService } from '../../services';
 import {
   RiUserLine, RiBuildingLine, RiRobot2Line, RiLockLine,
-  RiCheckLine, RiLoader4Line, RiMoonLine, RiSunLine
+  RiCheckLine, RiLoader4Line, RiMoonLine, RiSunLine, RiImageAddLine
 } from 'react-icons/ri';
 import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
@@ -21,6 +21,8 @@ export default function Settings() {
   const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('profile');
   const [saving, setSaving] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Profile form
   const [profileForm, setProfileForm] = useState({ name: user?.name || '', preferences: user?.preferences || {} });
@@ -46,11 +48,37 @@ export default function Settings() {
     e.preventDefault();
     setSaving(true);
     try {
-      const { data } = await userService.updateProfile(profileForm);
+      const { data } = await userService.updateProfile({
+        name: profileForm.name,
+        preferences: profileForm.preferences || {},
+      });
       updateUser(data.data);
       toast.success('Profile updated');
     } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
     finally { setSaving(false); }
+  }
+
+  async function handleAvatarChange(e) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-picking the same file
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Please choose an image file'); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
+
+    setAvatarPreview(URL.createObjectURL(file));
+    setUploadingAvatar(true);
+    try {
+      const fd = new FormData();
+      fd.append('avatar', file);
+      const { data } = await userService.updateProfile(fd);
+      updateUser(data.data);
+      toast.success('Profile photo updated');
+    } catch (err) {
+      setAvatarPreview(null);
+      toast.error(err.response?.data?.message || 'Failed to upload photo');
+    } finally {
+      setUploadingAvatar(false);
+    }
   }
 
   async function saveCompany(e) {
@@ -136,12 +164,19 @@ export default function Settings() {
               {/* Avatar */}
               <div className="avatar-section">
                 <div className="settings-avatar">
-                  {user?.avatar ? <img src={user.avatar} alt={user.name} /> : <span>{user?.name?.[0]?.toUpperCase()}</span>}
+                  {(avatarPreview || user?.avatar)
+                    ? <img src={avatarPreview || user.avatar} alt={user?.name} />
+                    : <span>{user?.name?.[0]?.toUpperCase()}</span>}
+                  {uploadingAvatar && <div className="avatar-uploading"><RiLoader4Line className="spin" /></div>}
                 </div>
                 <div>
                   <div className="avatar-name">{user?.name}</div>
                   <div className="avatar-email">{user?.email}</div>
-                  <div className="avatar-role">{user?.role?.replace('_',' ')}</div>
+                  <label className="btn btn-secondary btn-sm avatar-upload-btn">
+                    <RiImageAddLine /> {user?.avatar ? 'Change Photo' : 'Add Photo'}
+                    <input type="file" accept="image/*" hidden disabled={uploadingAvatar} onChange={handleAvatarChange} />
+                  </label>
+                  <div className="avatar-hint">JPG or PNG, up to 5MB</div>
                 </div>
               </div>
 
