@@ -109,6 +109,23 @@ export const orderService = {
   track: (orderNumber) => api.get(`/orders/track/${orderNumber}`),
 };
 
+// ─── Products & Inventory ─────────────────────────────────────────────────────
+export const productService = {
+  getAll: (params) => api.get('/products', { params }),
+  getOne: (id) => api.get(`/products/${id}`),
+  create: (data) => api.post('/products', data, data instanceof FormData
+    ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined),
+  update: (id, data) => api.put(`/products/${id}`, data),
+  delete: (id) => api.delete(`/products/${id}`),
+  adjustStock: (id, data) => api.post(`/products/${id}/stock`, data),
+  getStockHistory: (id) => api.get(`/products/${id}/stock-history`),
+  getCategories: () => api.get('/products/categories'),
+  getLowStock: () => api.get('/products/low-stock'),
+  uploadImages: (id, formData) => api.post(`/products/${id}/images`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+};
+
 // ─── Appointments ─────────────────────────────────────────────────────────────
 export const appointmentService = {
   getAll: (params) => api.get('/appointments', { params }),

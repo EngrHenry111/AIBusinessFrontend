@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { whatsappService } from '../../services';
+import { whatsappService, productService } from '../../services';
 import {
   RiDashboardLine, RiRobot2Line, RiFileTextLine, RiUserLine,
   RiCalendarLine, RiMoneyDollarCircleLine, RiBarChartLine,
   RiTeamLine, RiSettings4Line, RiMenuFoldLine, RiMenuUnfoldLine,
   RiShoppingBagLine, RiVideoLine, RiMegaphoneLine, RiBriefcaseLine,
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
-  RiWhatsappLine, RiShieldLine, RiHistoryLine
+  RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line
 } from 'react-icons/ri';
 import './Sidebar.css';
 
@@ -22,6 +22,7 @@ const NAV_ITEMS = [
   { label: 'Meetings', icon: RiVideoLine, path: '/meetings' },
   { label: 'Invoices', icon: RiMoneyDollarCircleLine, path: '/invoices' },
   { label: 'Orders', icon: RiShoppingBagLine, path: '/orders' },
+  { label: 'Products', icon: RiStore2Line, path: '/products' },
   { label: 'Appointments', icon: RiCalendarLine, path: '/appointments' },
   { label: 'Social Media', icon: RiMegaphoneLine, path: '/social' },
   { label: 'Reports', icon: RiFileChartLine, path: '/reports' },
@@ -39,6 +40,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const { user, company, logout } = useAuth();
   const location = useLocation();
   const [waNeedsHuman, setWaNeedsHuman] = useState(0);
+  const [outOfStock, setOutOfStock] = useState(0);
 
   // Poll for WhatsApp conversations waiting on a human
   useEffect(() => {
@@ -54,7 +56,25 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     return () => { alive = false; clearInterval(iv); };
   }, []);
 
-  const badgeFor = (item) => (item.path === '/whatsapp' && waNeedsHuman > 0 ? waNeedsHuman : item.badge);
+  // Poll for out-of-stock product count (sidebar badge)
+  useEffect(() => {
+    let alive = true;
+    const check = async () => {
+      try {
+        const { data } = await productService.getAll({ limit: 1 });
+        if (alive) setOutOfStock(data.stats?.outOfStock || 0);
+      } catch { /* ignore */ }
+    };
+    check();
+    const iv = setInterval(check, 60000);
+    return () => { alive = false; clearInterval(iv); };
+  }, []);
+
+  const badgeFor = (item) => {
+    if (item.path === '/whatsapp') return waNeedsHuman > 0 ? waNeedsHuman : null;
+    if (item.path === '/products') return outOfStock > 0 ? outOfStock : null;
+    return item.badge;
+  };
 
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>

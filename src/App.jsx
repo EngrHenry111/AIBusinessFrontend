@@ -31,6 +31,9 @@ const LeadDetail = lazy(() => import('./pages/leads/LeadDetail'));
 const Meetings = lazy(() => import('./pages/meetings/Meetings'));
 const Invoices = lazy(() => import('./pages/invoices/Invoices'));
 const Orders = lazy(() => import('./pages/orders/Orders'));
+const Products = lazy(() => import('./pages/products/Products'));
+const ProductForm = lazy(() => import('./pages/products/ProductForm'));
+const ProductDetail = lazy(() => import('./pages/products/ProductDetail'));
 const Appointments = lazy(() => import('./pages/appointments/Appointments'));
 const Social = lazy(() => import('./pages/social/Social'));
 const Analytics = lazy(() => import('./pages/analytics/Analytics'));
@@ -126,6 +129,10 @@ function AppRoutes() {
                 <Route path="meetings" element={<Meetings />} />
                 <Route path="invoices" element={<Invoices />} />
                 <Route path="orders" element={<Orders />} />
+                <Route path="products" element={<Products />} />
+                <Route path="products/new" element={<ProductForm />} />
+                <Route path="products/:id" element={<ProductDetail />} />
+                <Route path="products/:id/edit" element={<ProductForm />} />
                 <Route path="appointments" element={<Appointments />} />
                 <Route path="social" element={<Social />} />
                 <Route path="reports" element={<Reports />} />

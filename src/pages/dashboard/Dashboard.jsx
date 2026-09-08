@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   RiFileTextLine, RiRobot2Line, RiUserLine, RiMoneyDollarCircleLine,
   RiCalendarLine, RiArrowUpLine, RiArrowDownLine, RiRefreshLine,
-  RiAlertLine, RiCheckLine, RiTimeLine
+  RiAlertLine, RiCheckLine, RiTimeLine, RiStore2Line, RiErrorWarningLine
 } from 'react-icons/ri';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { SkeletonCard } from '../../components/ui/Skeleton';
@@ -178,6 +178,21 @@ export default function Dashboard() {
           label="Agent Executions" icon={RiRobot2Line} color="#ec4899"
           value={metrics?.overview?.agentExecutions ?? 0}
           onClick={() => navigate('/agents')}
+        />
+        <StatCard
+          label="Total Products" icon={RiStore2Line} color="#14b8a6"
+          value={metrics?.products?.total ?? 0}
+          onClick={() => navigate('/products')}
+        />
+        <StatCard
+          label="Out of Stock" icon={RiErrorWarningLine} color="#ef4444"
+          value={metrics?.products?.outOfStock ?? 0}
+          onClick={() => navigate('/products?status=out_of_stock')}
+        />
+        <StatCard
+          label="Low Stock" icon={RiAlertLine} color="#f59e0b"
+          value={metrics?.products?.lowStock ?? 0}
+          onClick={() => navigate('/products?status=low_stock')}
         />
       </div>
       )}

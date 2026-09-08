@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { orderService } from '../../services';
+import { orderService, productService } from '../../services';
 import {
   RiAddLine, RiShoppingBagLine, RiDeleteBinLine, RiSearchLine,
   RiArrowDownSLine, RiArrowUpSLine, RiTruckLine, RiCheckLine,
-  RiTimeLine, RiMapPinLine, RiLoader4Line, RiRobot2Line
+  RiTimeLine, RiMapPinLine, RiLoader4Line, RiRobot2Line, RiStore2Line
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './Orders.css';
+import '../products/Products.css';
 
 const STATUS_COLORS = {
   pending:'neutral', confirmed:'info', processing:'warning',
@@ -17,7 +18,7 @@ const STATUS_STEPS = ['pending','confirmed','processing','shipped','delivered'];
 
 const EMPTY_FORM = {
   customer: { name:'', email:'', phone:'' },
-  items: [{ name:'', quantity:1, price:0, sku:'' }],
+  items: [{ name:'', quantity:1, price:0, sku:'', productId:'', stockAvail:null }],
   shippingAddress: { street:'', city:'', state:'', country:'', zip:'' },
   trackingNumber:'', carrier:'', currency:'USD',
 };
@@ -31,6 +32,7 @@ export default function Orders() {
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
   const [trackingId, setTrackingId] = useState(null);
+  const [pickerIdx, setPickerIdx] = useState(null);
 
   useEffect(() => { loadOrders(); }, [statusFilter]);
 
@@ -49,12 +51,30 @@ export default function Orders() {
     setForm(p => ({ ...p, items }));
   }
 
+  function pickProduct(idx, product) {
+    const items = [...form.items];
+    items[idx] = {
+      ...items[idx],
+      name: product.name,
+      price: product.price,
+      sku: product.sku,
+      productId: product._id,
+      stockAvail: product.stock?.trackStock ? product.stock.quantity : null,
+      currency: product.currency,
+    };
+    setForm(p => ({ ...p, items, currency: product.currency || p.currency }));
+    setPickerIdx(null);
+  }
+
   const total = form.items.reduce((s,i) => s + (Number(i.quantity||0) * Number(i.price||0)), 0);
 
   async function handleCreate(e) {
     e.preventDefault();
     try {
-      const { data } = await orderService.create({ ...form, total });
+      const cleanItems = form.items
+        .filter(i => i.name && Number(i.quantity) > 0)
+        .map(({ stockAvail, ...rest }) => ({ ...rest, productId: rest.productId || undefined }));
+      const { data } = await orderService.create({ ...form, items: cleanItems, total });
       setOrders(prev => [data.data, ...prev]);
       setShowForm(false); setForm(EMPTY_FORM);
       toast.success(`Order ${data.data.orderNumber} created`);
@@ -138,23 +158,36 @@ export default function Orders() {
               <label className="form-label" style={{marginBottom:8,display:'block'}}>Order Items</label>
               <div className="order-items-header"><span>Item Name</span><span>SKU</span><span>Qty</span><span>Price</span><span></span></div>
               {form.items.map((item,idx)=>(
-                <div key={idx} className="order-item-row">
-                  <input className="form-input" placeholder="Item name" value={item.name}
-                    onChange={e=>updateItem(idx,'name',e.target.value)} />
-                  <input className="form-input" placeholder="SKU" value={item.sku}
-                    onChange={e=>updateItem(idx,'sku',e.target.value)} />
-                  <input className="form-input" type="number" min="1" value={item.quantity}
-                    onChange={e=>updateItem(idx,'quantity',e.target.value)} />
-                  <input className="form-input" type="number" min="0" step="0.01" value={item.price}
-                    onChange={e=>updateItem(idx,'price',e.target.value)} />
-                  {form.items.length>1 && (
-                    <button type="button" className="btn btn-ghost btn-icon btn-sm"
-                      onClick={()=>setForm(p=>({...p,items:p.items.filter((_,i)=>i!==idx)}))}>×</button>
-                  )}
+                <div key={idx}>
+                  <div className="order-item-row">
+                    <input className="form-input" placeholder="Item name" value={item.name}
+                      onChange={e=>updateItem(idx,'name',e.target.value)} />
+                    <input className="form-input" placeholder="SKU" value={item.sku}
+                      onChange={e=>updateItem(idx,'sku',e.target.value)} />
+                    <input className="form-input" type="number" min="1" value={item.quantity}
+                      onChange={e=>updateItem(idx,'quantity',e.target.value)} />
+                    <input className="form-input" type="number" min="0" step="0.01" value={item.price}
+                      onChange={e=>updateItem(idx,'price',e.target.value)} />
+                    {form.items.length>1 && (
+                      <button type="button" className="btn btn-ghost btn-icon btn-sm"
+                        onClick={()=>setForm(p=>({...p,items:p.items.filter((_,i)=>i!==idx)}))}>×</button>
+                    )}
+                  </div>
+                  <div style={{display:'flex',alignItems:'center',gap:10,margin:'2px 0 10px'}}>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={()=>setPickerIdx(idx)}>
+                      <RiStore2Line /> Select product
+                    </button>
+                    {item.stockAvail != null && (
+                      <span style={{fontSize:12, color: Number(item.quantity) > item.stockAvail ? 'var(--color-danger)' : 'var(--text-muted)'}}>
+                        {item.stockAvail} in stock
+                        {Number(item.quantity) > item.stockAvail && ' — ordering more than available'}
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
               <button type="button" className="btn btn-secondary btn-sm" style={{marginTop:8}}
-                onClick={()=>setForm(p=>({...p,items:[...p.items,{name:'',quantity:1,price:0,sku:''}]}))}>
+                onClick={()=>setForm(p=>({...p,items:[...p.items,{name:'',quantity:1,price:0,sku:'',productId:'',stockAvail:null}]}))}>
                 <RiAddLine /> Add Item
               </button>
               <div style={{textAlign:'right',marginTop:10,fontSize:15,color:'var(--text-secondary)'}}>
@@ -302,6 +335,64 @@ export default function Orders() {
           ))}
         </div>
       )}
+
+      {pickerIdx !== null && (
+        <ProductPicker
+          onClose={() => setPickerIdx(null)}
+          onSelect={(product) => pickProduct(pickerIdx, product)}
+        />
+      )}
+    </div>
+  );
+}
+
+function ProductPicker({ onClose, onSelect }) {
+  const [q, setQ] = useState('');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const { data } = await productService.getAll({ search: q || undefined, status: 'active', limit: 30 });
+        if (alive) setItems(data.data);
+      } catch { /* ignore */ }
+      finally { if (alive) setLoading(false); }
+    }, 250);
+    return () => { alive = false; clearTimeout(t); };
+  }, [q]);
+
+  const money = (n, cur = 'NGN') => `${cur === 'NGN' ? '₦' : cur === 'USD' ? '$' : cur + ' '}${Number(n || 0).toLocaleString()}`;
+
+  return (
+    <div className="pm-overlay" onClick={onClose}>
+      <div className="pm-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
+        <h3>Select a product</h3>
+        <div className="search-bar" style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '8px 12px', marginTop: 8 }}>
+          <RiSearchLine />
+          <input placeholder="Search products…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus
+            style={{ border: 0, outline: 'none', background: 'transparent', width: '100%', color: 'var(--text-primary)' }} />
+        </div>
+        <div className="picker-list">
+          {loading ? <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Loading…</p>
+            : items.length === 0 ? <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>No matching products.</p>
+              : items.map((p) => (
+                <div key={p._id} className="picker-row" onClick={() => onSelect(p)}>
+                  {p.images?.[0] ? <img src={p.images[0]} alt="" /> : <div style={{ width: 36, height: 36, borderRadius: 6, background: 'var(--bg-tertiary)' }} />}
+                  <div style={{ flex: 1 }}>
+                    <div className="pr-name">{p.name}</div>
+                    <div className="pr-meta">
+                      {p.sku} · {money(p.price, p.currency)}
+                      {p.stock?.trackStock && ` · ${p.stock.quantity} in stock`}
+                    </div>
+                  </div>
+                </div>
+              ))}
+        </div>
+        <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={onClose}>Close</button>
+      </div>
     </div>
   );
 }
