@@ -48,6 +48,17 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+
+    // Normalise so every caller can rely on error.response.data.message
+    if (!error.response) {
+      const friendly = error.code === 'ECONNABORTED'
+        ? 'Request timed out. Please try again.'
+        : 'Connection error, please retry.';
+      error.response = { data: { message: friendly }, status: 0 };
+    } else if (error.response.status >= 500 && !error.response.data?.message) {
+      error.response.data = { ...error.response.data, message: 'Something went wrong on our side. Please try again.' };
+    }
+
     return Promise.reject(error);
   }
 );
