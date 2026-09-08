@@ -10,6 +10,8 @@ export const authService = {
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
   refreshToken: (refreshToken) => api.post('/auth/refresh-token', { refreshToken }),
+  verifyEmail: (token) => api.get(`/auth/verify-email?token=${encodeURIComponent(token)}`),
+  resendVerification: () => api.post('/auth/resend-verification'),
 };
 
 // ─── Documents ────────────────────────────────────────────────────────────────

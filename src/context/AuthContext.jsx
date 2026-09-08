@@ -13,18 +13,26 @@ const initialState = {
   graceDays: null,
 };
 
+// Normalise the user: OAuth accounts and users predating email verification
+// are treated as verified; only new email/password sign-ups are `false`.
+function normalizeUser(user) {
+  if (!user) return user;
+  const verified = user.emailVerified !== false; // undefined / null / true → verified
+  return { ...user, emailVerified: verified };
+}
+
 function authReducer(state, action) {
   switch (action.type) {
     case 'AUTH_START':
       return { ...state, isLoading: true, error: null };
     case 'AUTH_SUCCESS':
-      return { ...state, isLoading: false, isAuthenticated: true, user: action.payload.user, company: action.payload.company, subscriptionState: action.payload.subscriptionState || 'active', graceDays: action.payload.graceDays || null, error: null };
+      return { ...state, isLoading: false, isAuthenticated: true, user: normalizeUser(action.payload.user), company: action.payload.company, subscriptionState: action.payload.subscriptionState || 'active', graceDays: action.payload.graceDays || null, error: null };
     case 'AUTH_FAILURE':
       return { ...state, isLoading: false, isAuthenticated: false, user: null, company: null, error: action.payload };
     case 'LOGOUT':
       return { ...initialState, isLoading: false };
     case 'UPDATE_USER':
-      return { ...state, user: { ...state.user, ...action.payload } };
+      return { ...state, user: normalizeUser({ ...state.user, ...action.payload }) };
     case 'UPDATE_COMPANY':
       return { ...state, company: { ...state.company, ...action.payload } };
     case 'SET_LOADING':
@@ -63,6 +71,7 @@ export function AuthProvider({ children }) {
       const { data } = await authService.login(email, password);
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
+      try { sessionStorage.removeItem('evb_dismissed'); } catch { /* ignore */ }
       dispatch({ type: 'AUTH_SUCCESS', payload: { user: data.user, company: data.company, subscriptionState: data.subscriptionState, graceDays: data.graceDays } });
       return data;
     } catch (err) {

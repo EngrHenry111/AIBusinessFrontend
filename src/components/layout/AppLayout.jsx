@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import GracePeriodBanner from '../subscription/GracePeriodBanner';
+import EmailVerificationBanner from '../EmailVerificationBanner';
 import './AppLayout.css';
 
 // Pages accessible even when subscription is expired
@@ -12,7 +13,7 @@ const ALLOWED_EXPIRED = ['/billing', '/settings', '/messages'];
 export default function AppLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { subscriptionState } = useAuth();
+  const { subscriptionState, user } = useAuth();
   const location = useLocation();
 
   // Close the mobile drawer whenever the route changes
@@ -70,6 +71,8 @@ export default function AppLayout({ children }) {
 
       <main className={`app-main ${collapsed ? 'sidebar-collapsed' : ''}`}>
         <TopBar onMenuToggle={() => setMobileOpen(v => !v)} mobileOpen={mobileOpen} />
+        {/* Reminder — never blocks access */}
+        {user?.emailVerified === false && <EmailVerificationBanner />}
         {/* Grace period warning banner — shown 7 days before suspension */}
         <GracePeriodBanner />
         <div className="app-content">
