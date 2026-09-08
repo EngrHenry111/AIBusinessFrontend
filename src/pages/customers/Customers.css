@@ -1,0 +1,74 @@
+/* ── Customers ──────────────────────────────────────────────────────── */
+
+.customers-page .page-header-row {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+}
+.customers-page .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.cust-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
+.cust-stat {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px;
+}
+.cust-stat .cs-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.cust-stat .cs-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+.cust-stat .cs-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.customers-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.customers-toolbar .search-bar {
+  flex: 1 1 220px; display: flex; align-items: center; gap: 8px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 12px;
+}
+.customers-toolbar .search-bar input { border: 0; background: transparent; outline: none; width: 100%; color: var(--text-primary); font-size: 14px; }
+.customers-toolbar select {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 8px 12px; font-size: 14px; color: var(--text-primary);
+}
+
+.avatar-circle {
+  width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--color-brand-light); color: var(--color-brand-dark); font-weight: 600; font-size: 13px; flex-shrink: 0;
+}
+.avatar-circle.lg { width: 64px; height: 64px; font-size: 22px; }
+
+.cust-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: var(--radius-lg); overflow: hidden; }
+.cust-table th, .cust-table td { padding: 10px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.cust-table th { color: var(--text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: .04em; }
+.cust-table tr:last-child td { border-bottom: 0; }
+.cust-table tr:hover td { background: var(--bg-hover); }
+.cust-name-cell { display: flex; align-items: center; gap: 10px; }
+.cust-name-cell .nm { font-weight: 600; cursor: pointer; }
+.cust-table .muted { color: var(--text-muted); }
+.cust-table td .actions { display: flex; gap: 2px; }
+
+/* Detail */
+.cd-header { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.cd-header .cd-id { flex: 1; min-width: 220px; }
+.cd-header h1 { margin: 0; }
+.cd-header .cd-contact { color: var(--text-secondary); font-size: 14px; margin-top: 4px; display: flex; gap: 14px; flex-wrap: wrap; }
+.cd-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0; }
+
+.cd-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; overflow-x: auto; }
+.cd-tabs button {
+  border: 0; background: transparent; padding: 10px 14px; cursor: pointer; font-size: 14px; font-weight: 500;
+  color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap;
+}
+.cd-tabs button.active { color: var(--color-brand); border-bottom-color: var(--color-brand); }
+
+.chip {
+  font-size: 11px; padding: 2px 8px; border-radius: var(--radius-full);
+  background: var(--bg-tertiary); color: var(--text-secondary); font-weight: 500;
+}
+
+.timeline-list { display: flex; flex-direction: column; gap: 2px; }
+.tl-entry { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.tl-entry:last-child { border-bottom: 0; }
+.tl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-brand); margin-top: 6px; flex-shrink: 0; }
+.tl-body { flex: 1; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.tl-time { color: var(--text-muted); font-size: 12px; }
+
+@media (max-width: 900px) {
+  .cust-stats, .cd-stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .cust-table .hide-sm { display: none; }
+}

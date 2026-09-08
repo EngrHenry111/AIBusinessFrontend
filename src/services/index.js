@@ -126,6 +126,17 @@ export const productService = {
   }),
 };
 
+// ─── Customers ────────────────────────────────────────────────────────────────
+export const customerService = {
+  getAll: (params) => api.get('/customers', { params }),
+  getOne: (id) => api.get(`/customers/${id}`),
+  create: (data) => api.post('/customers', data),
+  update: (id, data) => api.put(`/customers/${id}`, data),
+  delete: (id) => api.delete(`/customers/${id}`),
+  convertLead: (leadId) => api.post(`/customers/convert/${leadId}`),
+  getStats: () => api.get('/customers/stats'),
+};
+
 // ─── Appointments ─────────────────────────────────────────────────────────────
 export const appointmentService = {
   getAll: (params) => api.get('/appointments', { params }),

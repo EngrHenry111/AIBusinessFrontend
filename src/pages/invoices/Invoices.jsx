@@ -9,6 +9,7 @@ import {
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import { SkeletonTable } from '../../components/ui/Skeleton';
+import CustomerPicker from '../customers/CustomerPicker';
 import './Invoices.css';
 
 const STATUS_COLORS = {
@@ -219,6 +220,7 @@ export default function Invoices() {
         <div className="card card-pad">
           <h3 style={{marginBottom:16}}>New Invoice</h3>
           <form onSubmit={handleCreate}>
+            <CustomerPicker onSelect={(c) => setForm(p => ({ ...p, customer: { ...p.customer, name: c.name, email: c.email, phone: c.phone, address: c.address } }))} />
             <div className="form-grid-2">
               <div className="form-group"><label className="form-label">Customer Name *</label>
                 <input className="form-input" value={form.customer.name}

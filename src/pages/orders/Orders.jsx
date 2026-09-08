@@ -8,6 +8,7 @@ import {
 import toast from 'react-hot-toast';
 import './Orders.css';
 import '../products/Products.css';
+import CustomerPicker from '../customers/CustomerPicker';
 
 const STATUS_COLORS = {
   pending:'neutral', confirmed:'info', processing:'warning',
@@ -142,6 +143,7 @@ export default function Orders() {
         <div className="card card-pad">
           <h3 style={{marginBottom:16}}>New Order</h3>
           <form onSubmit={handleCreate}>
+            <CustomerPicker onSelect={(c) => setForm(p => ({ ...p, customer: { name: c.name, email: c.email, phone: c.phone } }))} />
             <div className="form-grid-3">
               <div className="form-group"><label className="form-label">Customer Name *</label>
                 <input className="form-input" value={form.customer.name}

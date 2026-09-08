@@ -34,6 +34,9 @@ const Orders = lazy(() => import('./pages/orders/Orders'));
 const Products = lazy(() => import('./pages/products/Products'));
 const ProductForm = lazy(() => import('./pages/products/ProductForm'));
 const ProductDetail = lazy(() => import('./pages/products/ProductDetail'));
+const Customers = lazy(() => import('./pages/customers/Customers'));
+const CustomerForm = lazy(() => import('./pages/customers/CustomerForm'));
+const CustomerDetail = lazy(() => import('./pages/customers/CustomerDetail'));
 const Appointments = lazy(() => import('./pages/appointments/Appointments'));
 const Social = lazy(() => import('./pages/social/Social'));
 const Analytics = lazy(() => import('./pages/analytics/Analytics'));
@@ -133,6 +136,10 @@ function AppRoutes() {
                 <Route path="products/new" element={<ProductForm />} />
                 <Route path="products/:id" element={<ProductDetail />} />
                 <Route path="products/:id/edit" element={<ProductForm />} />
+                <Route path="customers" element={<Customers />} />
+                <Route path="customers/new" element={<CustomerForm />} />
+                <Route path="customers/:id" element={<CustomerDetail />} />
+                <Route path="customers/:id/edit" element={<CustomerForm />} />
                 <Route path="appointments" element={<Appointments />} />
                 <Route path="social" element={<Social />} />
                 <Route path="reports" element={<Reports />} />

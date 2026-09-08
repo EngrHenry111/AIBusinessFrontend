@@ -8,7 +8,7 @@ import {
   RiTeamLine, RiSettings4Line, RiMenuFoldLine, RiMenuUnfoldLine,
   RiShoppingBagLine, RiVideoLine, RiMegaphoneLine, RiBriefcaseLine,
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
-  RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line
+  RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine
 } from 'react-icons/ri';
 import './Sidebar.css';
 
@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { label: 'AI Agents', icon: RiRobot2Line, path: '/agents' },
   { type: 'divider', label: 'Business' },
   { label: 'Leads', icon: RiUserLine, path: '/leads' },
+  { label: 'Customers', icon: RiUserStarLine, path: '/customers' },
   { label: 'Meetings', icon: RiVideoLine, path: '/meetings' },
   { label: 'Invoices', icon: RiMoneyDollarCircleLine, path: '/invoices' },
   { label: 'Orders', icon: RiShoppingBagLine, path: '/orders' },

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { leadService } from '../../services';
+import { leadService, customerService } from '../../services';
 import {
   RiArrowLeftLine, RiEditLine, RiSave3Line, RiCloseLine, RiRobot2Line, RiLoader4Line,
   RiMailLine, RiPhoneLine, RiMapPinLine, RiBuilding2Line, RiUserAddLine, RiTimeLine,
@@ -10,8 +10,8 @@ import {
 import toast from 'react-hot-toast';
 import './LeadDetail.css';
 
-const STATUS_OPTIONS = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost'];
-const STATUS_COLORS = { new: 'brand', contacted: 'info', qualified: 'warning', proposal: 'warning', negotiation: 'warning', won: 'success', lost: 'neutral' };
+const STATUS_OPTIONS = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost', 'converted'];
+const STATUS_COLORS = { new: 'brand', contacted: 'info', qualified: 'warning', proposal: 'warning', negotiation: 'warning', won: 'success', lost: 'neutral', converted: 'success' };
 const SOURCES = ['website', 'referral', 'social', 'email', 'cold_call', 'event', 'other'];
 
 const scoreColor = (s) => (s >= 75 ? '#10b981' : s >= 50 ? '#f59e0b' : s >= 25 ? '#6366f1' : '#94a3b8');
@@ -36,6 +36,7 @@ export default function LeadDetail() {
   const [saving, setSaving] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [addingNote, setAddingNote] = useState(false);
+  const [converting, setConverting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,6 +62,20 @@ export default function LeadDetail() {
       toast.success('Status updated');
       load();
     } catch { toast.error('Failed to update status'); }
+  }
+
+  async function convertToCustomer() {
+    if (!confirm('Convert this lead to a customer? The lead will be marked as converted.')) return;
+    setConverting(true);
+    try {
+      const res = await customerService.convertLead(id);
+      toast.success('Lead converted to customer!');
+      navigate(`/customers/${res.data.data._id}`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to convert lead');
+    } finally {
+      setConverting(false);
+    }
   }
 
   function startEdit() {
@@ -170,6 +185,11 @@ export default function LeadDetail() {
               </select>
               <span className={`badge badge-${STATUS_COLORS[lead.status] || 'neutral'}`}>{lead.status}</span>
               <button className="btn btn-secondary btn-sm" onClick={startEdit}><RiEditLine /> Edit</button>
+              {lead.status !== 'converted' && (
+                <button className="btn btn-primary btn-sm" onClick={convertToCustomer} disabled={converting}>
+                  <RiUserAddLine /> {converting ? 'Converting…' : 'Convert to Customer'}
+                </button>
+              )}
             </div>
           </div>
         </div>

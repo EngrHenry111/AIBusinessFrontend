@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   RiFileTextLine, RiRobot2Line, RiUserLine, RiMoneyDollarCircleLine,
   RiCalendarLine, RiArrowUpLine, RiArrowDownLine, RiRefreshLine,
-  RiAlertLine, RiCheckLine, RiTimeLine, RiStore2Line, RiErrorWarningLine
+  RiAlertLine, RiCheckLine, RiTimeLine, RiStore2Line, RiErrorWarningLine, RiUserStarLine
 } from 'react-icons/ri';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { SkeletonCard } from '../../components/ui/Skeleton';
@@ -193,6 +193,12 @@ export default function Dashboard() {
           label="Low Stock" icon={RiAlertLine} color="#f59e0b"
           value={metrics?.products?.lowStock ?? 0}
           onClick={() => navigate('/products?status=low_stock')}
+        />
+        <StatCard
+          label="Customers" icon={RiUserStarLine} color="#0ea5e9"
+          value={metrics?.customers?.total ?? 0}
+          change={metrics?.customers?.newThisMonth}
+          onClick={() => navigate('/customers')}
         />
       </div>
       )}
