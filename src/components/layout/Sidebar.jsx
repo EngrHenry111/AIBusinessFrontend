@@ -8,7 +8,7 @@ import {
   RiTeamLine, RiSettings4Line, RiMenuFoldLine, RiMenuUnfoldLine,
   RiShoppingBagLine, RiVideoLine, RiMegaphoneLine, RiBriefcaseLine,
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
-  RiWhatsappLine, RiShieldLine
+  RiWhatsappLine, RiShieldLine, RiHistoryLine
 } from 'react-icons/ri';
 import './Sidebar.css';
 
@@ -30,6 +30,7 @@ const NAV_ITEMS = [
   { label: 'Team', icon: RiTeamLine, path: '/team' },
   { label: 'WhatsApp', icon: RiWhatsappLine, path: '/whatsapp' },
   { label: 'Settings', icon: RiSettings4Line, path: '/settings' },
+  { label: 'Activity Log', icon: RiHistoryLine, path: '/settings/audit-log', roles: ['company_owner', 'manager', 'super_admin'] },
   { type: 'divider', label: 'Platform', adminOnly: true },
   { label: 'Super Admin', icon: RiShieldLine, path: '/admin', adminOnly: true },
 ];
@@ -79,6 +80,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
       <nav className="sidebar-nav">
         {NAV_ITEMS.map((item, idx) => {
           if (item.adminOnly && user?.role !== 'super_admin') return null;
+          if (item.roles && !item.roles.includes(user?.role)) return null;
           if (item.type === 'divider') {
             return (
               <div key={idx} className="nav-divider">

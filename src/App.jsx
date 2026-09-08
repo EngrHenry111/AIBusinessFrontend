@@ -35,6 +35,7 @@ const Social = lazy(() => import('./pages/social/Social'));
 const Analytics = lazy(() => import('./pages/analytics/Analytics'));
 const Team = lazy(() => import('./pages/team/Team'));
 const Settings = lazy(() => import('./pages/settings/Settings'));
+const AuditLog = lazy(() => import('./pages/settings/AuditLog'));
 const Reports = lazy(() => import('./pages/reports/Reports'));
 const Agents = lazy(() => import('./pages/agents/Agents'));
 const WhatsApp = lazy(() => import('./pages/whatsapp/WhatsApp'));
@@ -122,6 +123,7 @@ function AppRoutes() {
                 <Route path="reports" element={<Reports />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="team" element={<Team />} />
+                <Route path="settings/audit-log" element={<AuditLog />} />
                 <Route path="settings/*" element={<Settings />} />
                 <Route path="" element={<Navigate to="dashboard" replace />} />
                 <Route path="*" element={<Navigate to="dashboard" replace />} />

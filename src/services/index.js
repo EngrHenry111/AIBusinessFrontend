@@ -14,6 +14,12 @@ export const authService = {
   resendVerification: () => api.post('/auth/resend-verification'),
 };
 
+// ─── Audit / Activity Log ───────────────────────────────────────────────────
+export const auditService = {
+  getLogs: (params) => api.get('/audit-logs', { params }),
+  exportCSV: (params) => api.get('/audit-logs/export', { params, responseType: 'blob' }),
+};
+
 // ─── Two-Factor Authentication (TOTP) ────────────────────────────────────────
 export const twoFactorService = {
   setup: () => api.get('/2fa/setup'),

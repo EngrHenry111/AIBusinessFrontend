@@ -1,0 +1,80 @@
+.al-page { display: flex; flex-direction: column; gap: var(--space-4); }
+.al-page .page-header h1 { display: flex; align-items: center; gap: 8px; }
+.al-loading { display: flex; align-items: center; justify-content: center; padding: 60px; font-size: 28px; color: var(--text-muted); }
+.al-page .spin { animation: spin 1s linear infinite; }
+
+/* ── Filter bar ─────────────────────────────────────────────────────────── */
+.al-filters {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  padding: var(--space-3) var(--space-4);
+}
+.al-search {
+  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px;
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 8px 12px; color: var(--text-muted);
+}
+.al-search input { flex: 1; border: none; background: transparent; outline: none; font-size: 14px; color: var(--text-primary); }
+.al-filters select, .al-dates input {
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-md);
+  font-size: 13px; background: var(--bg-card); color: var(--text-primary);
+}
+.al-dates { display: flex; align-items: center; gap: 6px; }
+.al-dates span { color: var(--text-muted); }
+.al-clear {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600;
+  color: var(--color-danger); background: none; border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 8px 12px; cursor: pointer;
+}
+.al-clear:hover { background: #fee2e2; border-color: #fecaca; }
+[data-theme='dark'] .al-clear:hover { background: #7f1d1d33; }
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+.al-table-card { overflow: hidden; }
+.al-table th, .al-table td { white-space: nowrap; }
+.al-table td.al-desc { white-space: normal; min-width: 240px; color: var(--text-secondary); font-size: 13px; }
+.al-time { font-size: 13px; color: var(--text-muted); }
+
+.al-user { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 500; }
+.al-avatar {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+  background: var(--color-brand); color: #fff; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.al-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.al-badge {
+  display: inline-block; font-size: 11.5px; font-weight: 700; padding: 2px 9px;
+  border-radius: 999px; font-family: var(--font-mono, monospace); letter-spacing: 0.01em;
+}
+.al-badge.green  { background: #dcfce7; color: #166534; }
+.al-badge.yellow { background: #fef3c7; color: #92400e; }
+.al-badge.red    { background: #fee2e2; color: #991b1b; }
+.al-badge.blue   { background: #dbeafe; color: #1e40af; }
+.al-badge.grey   { background: var(--bg-tertiary); color: var(--text-secondary); }
+[data-theme='dark'] .al-badge.green  { background: #064e3b; color: #6ee7b7; }
+[data-theme='dark'] .al-badge.yellow { background: #78350f; color: #fcd34d; }
+[data-theme='dark'] .al-badge.red    { background: #7f1d1d; color: #fca5a5; }
+[data-theme='dark'] .al-badge.blue   { background: #1e3a5f; color: #93c5fd; }
+
+.al-ip { font-family: var(--font-mono, monospace); font-size: 12px; color: var(--text-muted); }
+
+/* ── Pagination ─────────────────────────────────────────────────────────── */
+.al-pagination {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; border-top: 1px solid var(--border); flex-wrap: wrap;
+  font-size: 13px; color: var(--text-muted);
+}
+.al-pager { display: flex; gap: 8px; }
+.al-pager button {
+  display: inline-flex; align-items: center; gap: 3px; font-size: 13px; font-weight: 600;
+  color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 7px 12px; cursor: pointer;
+}
+.al-pager button:hover:not(:disabled) { border-color: var(--color-brand); color: var(--color-brand); }
+.al-pager button:disabled { opacity: 0.45; cursor: default; }
+
+@media (max-width: 640px) {
+  .al-filters { flex-direction: column; align-items: stretch; }
+  .al-dates { justify-content: space-between; }
+  .al-dates input { flex: 1; }
+}
