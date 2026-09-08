@@ -3,7 +3,7 @@ import { documentService, knowledgeBaseService } from '../../services';
 import {
   RiUploadLine, RiFilePdfLine, RiFileWordLine, RiFileTextLine,
   RiDeleteBinLine, RiSearchLine, RiCheckLine, RiLoader4Line,
-  RiAlertLine, RiAddLine, RiFolderLine, RiEyeLine
+  RiAlertLine, RiAddLine, RiFolderLine, RiEyeLine, RiRefreshLine
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './Knowledge.css';
@@ -15,6 +15,7 @@ const STATUS_CONFIG = {
   chunking: { label: 'Chunking...', color: 'info', icon: RiLoader4Line },
   embedding: { label: 'Creating embeddings...', color: 'warning', icon: RiLoader4Line },
   indexing: { label: 'Indexing...', color: 'warning', icon: RiLoader4Line },
+  processing: { label: 'Processing...', color: 'warning', icon: RiLoader4Line },
   ready: { label: 'Ready', color: 'success', icon: RiCheckLine },
   failed: { label: 'Failed', color: 'danger', icon: RiAlertLine },
 };
@@ -30,6 +31,7 @@ export default function Knowledge() {
   const [dragOver, setDragOver] = useState(false);
   const [showCreateKB, setShowCreateKB] = useState(false);
   const [newKBName, setNewKBName] = useState('');
+  const [reembeddingId, setReembeddingId] = useState(null);
   const fileInputRef = useRef(null);
   const pollingRef = useRef(null);
 
@@ -109,6 +111,24 @@ export default function Knowledge() {
       setDocuments(prev => prev.filter(d => d._id !== id));
       toast.success('Document deleted');
     } catch { toast.error('Failed to delete document'); }
+  };
+
+  const handleReembed = async (doc) => {
+    if (!confirm('Re-embed this document? This will reprocess all chunks.')) return;
+    setReembeddingId(doc._id);
+    setDocuments(prev => prev.map(d => d._id === doc._id ? { ...d, status: 'processing' } : d));
+    try {
+      const { data } = await documentService.reembed(doc._id);
+      setDocuments(prev => prev.map(d => d._id === doc._id
+        ? { ...d, status: 'ready', chunksCount: data.chunks }
+        : d));
+      toast.success('Document re-embedded successfully');
+    } catch {
+      setDocuments(prev => prev.map(d => d._id === doc._id ? { ...d, status: 'failed' } : d));
+      toast.error('Re-embed failed, please try again');
+    } finally {
+      setReembeddingId(null);
+    }
   };
 
   const handleCreateKB = async () => {
@@ -261,10 +281,20 @@ export default function Knowledge() {
                       </div>
                     </div>
                     <div className={`doc-status badge badge-${status.color}`}>
-                      <StatusIcon className={['uploading','extracting','chunking','embedding','indexing'].includes(doc.status) ? 'spin' : ''} />
+                      <StatusIcon className={['uploading','extracting','chunking','embedding','indexing','processing'].includes(doc.status) ? 'spin' : ''} />
                       {status.label}
                     </div>
                     <div className="doc-actions">
+                      {['ready', 'failed'].includes(doc.status) && (
+                        <button className="btn btn-ghost btn-icon btn-sm"
+                          title="Re-process document"
+                          onClick={() => handleReembed(doc)}
+                          disabled={reembeddingId === doc._id}>
+                          {reembeddingId === doc._id
+                            ? <RiLoader4Line className="spin" />
+                            : <RiRefreshLine />}
+                        </button>
+                      )}
                       <button className="btn btn-ghost btn-icon btn-sm" title="Delete" onClick={() => handleDelete(doc._id, doc.name)}>
                         <RiDeleteBinLine />
                       </button>

@@ -20,11 +20,15 @@ const MOCK_CHART = [
   { name: 'Sun', questions: 5, leads: 0 },
 ];
 
+const usageColor = (pct) => (pct > 80 ? 'red' : pct >= 60 ? 'amber' : 'green');
+const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
+
 export default function Dashboard() {
   const { user, company } = useAuth();
   const navigate = useNavigate();
   const [metrics, setMetrics] = useState(null);
   const [insights, setInsights] = useState([]);
+  const [usage, setUsage] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,18 +38,39 @@ export default function Dashboard() {
   async function loadData() {
     setLoading(true);
     try {
-      const [metricsRes, insightsRes] = await Promise.all([
+      const [metricsRes, insightsRes, usageRes] = await Promise.all([
         analyticsService.getDashboard(),
         analyticsService.getInsights(),
+        analyticsService.getUsage().catch(() => null),
       ]);
       setMetrics(metricsRes.data.data);
       setInsights(insightsRes.data.data.recommendations || []);
+      setUsage(usageRes?.data?.data || null);
     } catch (err) {
       console.error('Dashboard load error:', err);
     } finally {
       setLoading(false);
     }
   }
+
+  const UsageCard = ({ title, meter, unit, cta }) => {
+    const color = usageColor(meter.percent);
+    return (
+      <div className="usage-card card">
+        <div className="usage-top">
+          <span className="usage-title">{title}</span>
+          <span className={`usage-pct ${color}`}>{meter.percent}%</span>
+        </div>
+        <div className="usage-track">
+          <div className={`usage-fill ${color}`} style={{ '--pct': `${meter.percent}%` }} />
+        </div>
+        <div className="usage-bottom">
+          <span>{meter.used.toLocaleString()} of {meter.limit.toLocaleString()} {unit}</span>
+          {cta}
+        </div>
+      </div>
+    );
+  };
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -149,6 +174,44 @@ export default function Dashboard() {
           onClick={() => navigate('/agents')}
         />
       </div>
+
+      {/* Usage vs plan limits */}
+      {usage && (
+        <>
+          <div className="usage-grid">
+            <UsageCard
+              title="AI Questions This Month" unit="used" meter={usage.aiQuestions}
+              cta={usage.aiQuestions.percent > 80 && (
+                <button className="usage-cta" onClick={() => navigate('/billing')}>Upgrade plan</button>
+              )}
+            />
+            <UsageCard
+              title="Documents" unit="documents" meter={usage.documents}
+              cta={usage.documents.percent > 80 && (
+                <button className="usage-cta" onClick={() => navigate('/billing')}>Upgrade plan</button>
+              )}
+            />
+            <UsageCard
+              title="Team Members" unit="members" meter={usage.teamMembers}
+              cta={usage.teamMembers.used < usage.teamMembers.limit
+                ? <button className="usage-cta" onClick={() => navigate('/team')}>Invite member</button>
+                : <button className="usage-cta" onClick={() => navigate('/billing')}>Upgrade plan</button>}
+            />
+          </div>
+
+          {usage.plan !== 'trial' && (
+            <div className="sub-bar card">
+              <div className="sub-bar-left">
+                <span className="sub-plan-badge">{cap(usage.plan)}</span>
+                <span className="sub-days">
+                  <RiTimeLine /> {usage.daysRemaining} day{usage.daysRemaining === 1 ? '' : 's'} remaining in billing period
+                </span>
+              </div>
+              <button className="btn btn-secondary btn-sm" onClick={() => navigate('/billing')}>Upgrade Plan</button>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Charts + Activity */}
       <div className="dashboard-grid">

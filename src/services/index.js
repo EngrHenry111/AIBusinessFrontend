@@ -39,6 +39,7 @@ export const documentService = {
     onUploadProgress,
   }),
   delete: (id) => api.delete(`/documents/${id}`),
+  reembed: (id) => api.post(`/documents/${id}/reembed`),
 };
 
 // ─── Knowledge Bases ──────────────────────────────────────────────────────────
@@ -139,6 +140,7 @@ export const socialService = {
 export const analyticsService = {
   getDashboard: () => api.get('/analytics/dashboard'),
   getInsights: () => api.get('/analytics/insights'),
+  getUsage: () => api.get('/analytics/usage'),
 };
 
 // ─── Agents ───────────────────────────────────────────────────────────────────
