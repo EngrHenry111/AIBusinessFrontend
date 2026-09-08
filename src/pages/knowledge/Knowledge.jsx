@@ -6,6 +6,7 @@ import {
   RiAlertLine, RiAddLine, RiFolderLine, RiEyeLine, RiRefreshLine
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
+import { SkeletonCard } from '../../components/ui/Skeleton';
 import './Knowledge.css';
 
 const FILE_ICONS = { pdf: RiFilePdfLine, docx: RiFileWordLine, txt: RiFileTextLine };
@@ -248,9 +249,9 @@ export default function Knowledge() {
 
           {/* Document List */}
           {loading ? (
-            Array(5).fill(0).map((_, i) => (
-              <div key={i} className="skeleton" style={{ height: 72, marginBottom: 8, borderRadius: 10 }} />
-            ))
+            <div className="document-list">
+              {[1, 2, 3].map((i) => <SkeletonCard key={i} lines={2} />)}
+            </div>
           ) : filtered.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon"><RiFileTextLine /></div>

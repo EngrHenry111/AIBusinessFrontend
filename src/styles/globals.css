@@ -254,6 +254,13 @@ input, textarea, select { font-family: inherit; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 .fade-in { animation: fadeIn 0.3s ease forwards; }
 
+/* Route transition — applied to a pathname-keyed wrapper so it replays on nav */
+@keyframes pageFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.page-fade { animation: pageFade 0.2s ease; }
+.page-enter { opacity: 0; transform: translateY(8px); }
+.page-enter-active { opacity: 1; transform: translateY(0); transition: all 0.2s ease; }
+@media (prefers-reduced-motion: reduce) { .page-fade { animation: none; } }
+
 /* ─── Confidence Bar ─────────────────────────────────────────────────────────── */
 .confidence-bar { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
 .confidence-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }

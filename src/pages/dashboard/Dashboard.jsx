@@ -8,6 +8,7 @@ import {
   RiAlertLine, RiCheckLine, RiTimeLine
 } from 'react-icons/ri';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { SkeletonCard } from '../../components/ui/Skeleton';
 import './Dashboard.css';
 
 const MOCK_CHART = [
@@ -133,6 +134,11 @@ export default function Dashboard() {
       )}
 
       {/* KPI Grid */}
+      {loading ? (
+        <div className="stat-grid">
+          {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} lines={1} />)}
+        </div>
+      ) : (
       <div className="stat-grid">
         <StatCard
           label="Documents" icon={RiFileTextLine} color="#6366f1"
@@ -174,6 +180,7 @@ export default function Dashboard() {
           onClick={() => navigate('/agents')}
         />
       </div>
+      )}
 
       {/* Usage vs plan limits */}
       {usage && (

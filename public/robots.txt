@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+Disallow: /settings
+Disallow: /portal
+
+Sitemap: https://bislyai.com/sitemap.xml

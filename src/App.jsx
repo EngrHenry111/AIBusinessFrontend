@@ -1,9 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { Suspense, lazy } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import AppLayout from './components/layout/AppLayout';
+import ErrorBoundary from './components/ErrorBoundary';
 import './styles/globals.css';
 
 // Auth pages (not lazy — needed immediately)
@@ -82,6 +83,12 @@ function RootRoute() {
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Landing />;
 }
 
+// Fade the page in on every route change (keyed by pathname)
+function PageFade({ children }) {
+  const location = useLocation();
+  return <div key={location.pathname} className="page-fade">{children}</div>;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -107,6 +114,7 @@ function AppRoutes() {
         <ProtectedRoute>
           <AppLayout>
             <Suspense fallback={<PageLoader />}>
+              <PageFade>
               <Routes>
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="chat" element={<Chat />} />
@@ -136,6 +144,7 @@ function AppRoutes() {
                 <Route path="*" element={<NotFound />} />
 
               </Routes>
+              </PageFade>
             </Suspense>
           </AppLayout>
         </ProtectedRoute>
@@ -151,7 +160,9 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
-          <AppRoutes />
+          <ErrorBoundary>
+            <AppRoutes />
+          </ErrorBoundary>
           <Toaster
             position="top-right"
             toastOptions={{

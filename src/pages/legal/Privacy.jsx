@@ -142,7 +142,7 @@ export default function Privacy() {
 
       <footer className="legal-footer">
         <div className="legal-footer-inner">
-          <span>© 2026 BizlyAI by EngrHenryTech. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} BizlyAI by EngrHenryTech. All rights reserved.</span>
           <nav className="legal-footer-links">
             <Link to="/terms">Terms of Service</Link>
             <Link to="/">Home</Link>

@@ -8,6 +8,7 @@ import {
   RiShareForwardLine, RiMailSendLine, RiCheckboxCircleLine
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
+import { SkeletonTable } from '../../components/ui/Skeleton';
 import './Invoices.css';
 
 const STATUS_COLORS = {
@@ -281,7 +282,7 @@ export default function Invoices() {
       )}
 
       {/* Invoice List */}
-      {loading ? Array(4).fill(0).map((_,i)=><div key={i} className="skeleton" style={{height:76,marginBottom:10,borderRadius:12}} />) :
+      {loading ? <div className="card"><SkeletonTable rows={6} cols={4} /></div> :
       invoices.length===0 ? (
         <div className="empty-state">
           <div className="empty-state-icon"><RiMoneyDollarCircleLine /></div>

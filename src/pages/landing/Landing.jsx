@@ -522,7 +522,7 @@ export default function Landing() {
           </nav>
         </div>
         <div className="lp-container lp-footer-bottom">
-          © 2026 BizlyAI by EngrHenryTech. All rights reserved.
+          © {new Date().getFullYear()} BizlyAI by EngrHenryTech. All rights reserved.
         </div>
       </footer>
 

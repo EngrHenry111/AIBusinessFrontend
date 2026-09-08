@@ -8,6 +8,7 @@ import {
   RiArrowLeftSLine, RiCheckLine, RiArrowRightLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
+import { SkeletonTable } from '../../components/ui/Skeleton';
 import './Leads.css';
 
 const STATUS_OPTIONS = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost'];
@@ -128,7 +129,7 @@ export default function Leads() {
 
       {/* Lead List */}
       {loading ? (
-        Array(5).fill(0).map((_, i) => <div key={i} className="skeleton" style={{ height: 100, marginBottom: 8, borderRadius: 10 }} />)
+        <div className="card"><SkeletonTable rows={6} cols={4} /></div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon"><RiUserLine /></div>

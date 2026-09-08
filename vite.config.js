@@ -14,11 +14,15 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           charts: ['recharts'],
+          icons: ['react-icons'],
+          socket: ['socket.io-client'],
+          markdown: ['react-markdown'],
         },
       },
     },
