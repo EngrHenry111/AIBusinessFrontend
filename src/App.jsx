@@ -37,6 +37,8 @@ const ProductDetail = lazy(() => import('./pages/products/ProductDetail'));
 const Customers = lazy(() => import('./pages/customers/Customers'));
 const CustomerForm = lazy(() => import('./pages/customers/CustomerForm'));
 const CustomerDetail = lazy(() => import('./pages/customers/CustomerDetail'));
+const Expenses = lazy(() => import('./pages/expenses/Expenses'));
+const ProfitLoss = lazy(() => import('./pages/expenses/ProfitLoss'));
 const Appointments = lazy(() => import('./pages/appointments/Appointments'));
 const Social = lazy(() => import('./pages/social/Social'));
 const Analytics = lazy(() => import('./pages/analytics/Analytics'));
@@ -140,6 +142,8 @@ function AppRoutes() {
                 <Route path="customers/new" element={<CustomerForm />} />
                 <Route path="customers/:id" element={<CustomerDetail />} />
                 <Route path="customers/:id/edit" element={<CustomerForm />} />
+                <Route path="expenses" element={<Expenses />} />
+                <Route path="expenses/profit-loss" element={<ProfitLoss />} />
                 <Route path="appointments" element={<Appointments />} />
                 <Route path="social" element={<Social />} />
                 <Route path="reports" element={<Reports />} />

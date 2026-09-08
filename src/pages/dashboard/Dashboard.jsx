@@ -5,7 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import {
   RiFileTextLine, RiRobot2Line, RiUserLine, RiMoneyDollarCircleLine,
   RiCalendarLine, RiArrowUpLine, RiArrowDownLine, RiRefreshLine,
-  RiAlertLine, RiCheckLine, RiTimeLine, RiStore2Line, RiErrorWarningLine, RiUserStarLine
+  RiAlertLine, RiCheckLine, RiTimeLine, RiStore2Line, RiErrorWarningLine, RiUserStarLine,
+  RiScales3Line
 } from 'react-icons/ri';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { SkeletonCard } from '../../components/ui/Skeleton';
@@ -199,6 +200,14 @@ export default function Dashboard() {
           value={metrics?.customers?.total ?? 0}
           change={metrics?.customers?.newThisMonth}
           onClick={() => navigate('/customers')}
+        />
+        <StatCard
+          label="Net Profit (this month)" icon={RiScales3Line}
+          color={(metrics?.finance?.netProfitThisMonth ?? 0) >= 0 ? '#10b981' : '#ef4444'}
+          value={metrics?.finance
+            ? `₦${Number(metrics.finance.netProfitThisMonth).toLocaleString()}`
+            : '—'}
+          onClick={() => navigate('/expenses/profit-loss')}
         />
       </div>
       )}

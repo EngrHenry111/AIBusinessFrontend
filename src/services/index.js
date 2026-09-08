@@ -137,6 +137,19 @@ export const customerService = {
   getStats: () => api.get('/customers/stats'),
 };
 
+// ─── Expenses / P&L ───────────────────────────────────────────────────────────
+export const expenseService = {
+  getAll: (params) => api.get('/expenses', { params }),
+  getOne: (id) => api.get(`/expenses/${id}`),
+  create: (data) => api.post('/expenses', data, data instanceof FormData
+    ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined),
+  update: (id, data) => api.put(`/expenses/${id}`, data, data instanceof FormData
+    ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined),
+  delete: (id) => api.delete(`/expenses/${id}`),
+  getSummary: (params) => api.get('/expenses/summary', { params }),
+  getProfitLoss: (params) => api.get('/expenses/profit-loss', { params }),
+};
+
 // ─── Appointments ─────────────────────────────────────────────────────────────
 export const appointmentService = {
   getAll: (params) => api.get('/appointments', { params }),

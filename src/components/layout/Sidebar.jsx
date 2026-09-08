@@ -22,6 +22,7 @@ const NAV_ITEMS = [
   { label: 'Customers', icon: RiUserStarLine, path: '/customers' },
   { label: 'Meetings', icon: RiVideoLine, path: '/meetings' },
   { label: 'Invoices', icon: RiMoneyDollarCircleLine, path: '/invoices' },
+  { label: 'Expenses', icon: RiMoneyDollarCircleLine, path: '/expenses' },
   { label: 'Orders', icon: RiShoppingBagLine, path: '/orders' },
   { label: 'Products', icon: RiStore2Line, path: '/products' },
   { label: 'Appointments', icon: RiCalendarLine, path: '/appointments' },
