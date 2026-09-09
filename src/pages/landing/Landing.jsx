@@ -6,7 +6,7 @@ import {
   RiShoppingCart2Line, RiGovernmentLine, RiTwitterXLine, RiLinkedinBoxLine,
   RiInstagramLine, RiFacebookBoxLine, RiMenuLine, RiCloseLine, RiCheckLine,
   RiStarFill, RiArrowRightLine, RiPlayCircleLine, RiSparklingLine, RiShieldCheckLine,
-  RiArrowDownSLine,
+  RiArrowDownSLine, RiMailLine,
 } from 'react-icons/ri';
 import './Landing.css';
 
@@ -77,6 +77,35 @@ const NAV_LINKS = [
   { label: 'How it works', id: 'how' },
   { label: 'Pricing', id: 'pricing' },
   { label: 'FAQ', id: 'faq' },
+  { label: 'Contact', id: 'contact' },
+];
+
+const WHATSAPP_URL = 'https://wa.me/2349028361165';
+const DEMO_URL = `${WHATSAPP_URL}?text=${encodeURIComponent("Hi, I'd like to book a demo of BizlyAI")}`;
+const EMAIL_URL = 'mailto:henryengrakpan@gmail.com';
+
+const CONTACT_CARDS = [
+  {
+    icon: RiWhatsappLine,
+    title: 'Chat with us on WhatsApp',
+    text: 'Message our team and get a reply, usually within minutes.',
+    cta: 'Open WhatsApp',
+    href: WHATSAPP_URL,
+  },
+  {
+    icon: RiMailLine,
+    title: 'Send us an email',
+    text: 'Prefer email? Reach us any time and we’ll get back to you.',
+    cta: 'Send Email',
+    href: EMAIL_URL,
+  },
+  {
+    icon: RiPlayCircleLine,
+    title: 'See it in action',
+    text: 'Book a live walkthrough and see how BizlyAI fits your business.',
+    cta: 'Book a Demo',
+    href: DEMO_URL,
+  },
 ];
 
 /* ── Brand mark ───────────────────────────────────────────────────────────── */
@@ -602,6 +631,36 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── Contact ────────────────────────────────────────────── */}
+      <section id="contact" className="lp-section lp-section-alt">
+        <div className="lp-container">
+          <div className="lp-head" data-reveal>
+            <h2>Get In Touch</h2>
+            <p>Have questions? We’re here to help.</p>
+          </div>
+          <div className="lp-grid lp-grid-3">
+            {CONTACT_CARDS.map((c, i) => {
+              const Icon = c.icon;
+              return (
+                <article key={c.title} className="lp-card lp-feature lp-contact-card" data-reveal style={{ transitionDelay: `${(i % 3) * 60}ms` }}>
+                  <span className="lp-feature-icon"><Icon /></span>
+                  <h3>{c.title}</h3>
+                  <p>{c.text}</p>
+                  <a
+                    href={c.href}
+                    className="lp-btn lp-btn-primary"
+                    target={c.href.startsWith('mailto:') ? undefined : '_blank'}
+                    rel={c.href.startsWith('mailto:') ? undefined : 'noreferrer'}
+                  >
+                    {c.cta} <RiArrowRightLine />
+                  </a>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* ── Footer ─────────────────────────────────────────────── */}
       <footer className="lp-footer">
         <div className="lp-container lp-footer-inner">
@@ -620,7 +679,7 @@ export default function Landing() {
             <button onClick={() => scrollTo('features')}>Features</button>
             <button onClick={() => scrollTo('pricing')}>Pricing</button>
             <button onClick={() => scrollTo('testimonials')}>About</button>
-            <a href="mailto:henryengrakpan@gmail.com">Contact</a>
+            <button onClick={() => scrollTo('contact')}>Contact</button>
             <Link to="/privacy">Privacy</Link>
             <Link to="/terms">Terms</Link>
           </nav>
