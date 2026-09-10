@@ -39,6 +39,10 @@ const CustomerForm = lazy(() => import('./pages/customers/CustomerForm'));
 const CustomerDetail = lazy(() => import('./pages/customers/CustomerDetail'));
 const Expenses = lazy(() => import('./pages/expenses/Expenses'));
 const ProfitLoss = lazy(() => import('./pages/expenses/ProfitLoss'));
+const Store = lazy(() => import('./pages/storefront/Store'));
+const StoreCheckout = lazy(() => import('./pages/storefront/Checkout'));
+const StoreSuccess = lazy(() => import('./pages/storefront/OrderSuccess'));
+const StoreSettings = lazy(() => import('./pages/settings/StoreSettings'));
 const Appointments = lazy(() => import('./pages/appointments/Appointments'));
 const Social = lazy(() => import('./pages/social/Social'));
 const Analytics = lazy(() => import('./pages/analytics/Analytics'));
@@ -117,6 +121,11 @@ function AppRoutes() {
       <Route path="/portal/login" element={<PortalLogin />} />
       <Route path="/portal" element={<Portal />} />
 
+      {/* Public customer storefront — no auth */}
+      <Route path="/store/:slug" element={<Suspense fallback={<PageLoader />}><Store /></Suspense>} />
+      <Route path="/store/:slug/checkout" element={<Suspense fallback={<PageLoader />}><StoreCheckout /></Suspense>} />
+      <Route path="/store/:slug/success" element={<Suspense fallback={<PageLoader />}><StoreSuccess /></Suspense>} />
+
       {/* Protected app routes */}
       <Route path="/*" element={
         <ProtectedRoute>
@@ -150,6 +159,7 @@ function AppRoutes() {
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="team" element={<Team />} />
                 <Route path="settings/audit-log" element={<AuditLog />} />
+                <Route path="settings/store" element={<StoreSettings />} />
                 <Route path="settings/*" element={<Settings />} />
                 <Route path="" element={<Navigate to="dashboard" replace />} />
                 <Route path="*" element={<Navigate to="dashboard" replace />} />

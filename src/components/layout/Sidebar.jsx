@@ -8,7 +8,7 @@ import {
   RiTeamLine, RiSettings4Line, RiMenuFoldLine, RiMenuUnfoldLine,
   RiShoppingBagLine, RiVideoLine, RiMegaphoneLine, RiBriefcaseLine,
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
-  RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine
+  RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine, RiStoreLine
 } from 'react-icons/ri';
 import './Sidebar.css';
 
@@ -29,6 +29,7 @@ const NAV_ITEMS = [
   { label: 'Social Media', icon: RiMegaphoneLine, path: '/social' },
   { label: 'Reports', icon: RiFileChartLine, path: '/reports' },
   { type: 'divider', label: 'Workspace' },
+  { label: 'My Store', icon: RiStoreLine, path: '/settings/store' },
   { label: 'Analytics', icon: RiBarChartLine, path: '/analytics' },
   { label: 'Team', icon: RiTeamLine, path: '/team' },
   { label: 'WhatsApp', icon: RiWhatsappLine, path: '/whatsapp' },
@@ -72,9 +73,12 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     return () => { alive = false; clearInterval(iv); };
   }, []);
 
+  const storeNeedsSetup = Boolean(company) && !company?.paymentSettings?.isPaymentSetup;
+
   const badgeFor = (item) => {
     if (item.path === '/whatsapp') return waNeedsHuman > 0 ? waNeedsHuman : null;
     if (item.path === '/products') return outOfStock > 0 ? outOfStock : null;
+    if (item.path === '/settings/store') return storeNeedsSetup ? 'Setup' : null;
     return item.badge;
   };
 

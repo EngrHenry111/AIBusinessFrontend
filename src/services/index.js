@@ -198,6 +198,34 @@ export const companyService = {
   updateAISettings: (data) => api.patch('/companies/ai-settings', data),
 };
 
+// ─── Storefront (public — no auth) ────────────────────────────────────────────
+export const storefrontService = {
+  getStore: (slug) => axios.get(`${API_BASE}/store/${slug}`),
+  getProducts: (slug, params) => axios.get(`${API_BASE}/store/${slug}/products`, { params }),
+  getCategories: (slug) => axios.get(`${API_BASE}/store/${slug}/categories`),
+  checkout: (slug, data) => axios.post(`${API_BASE}/store/${slug}/checkout`, data),
+  verifyPayment: (slug, reference) => axios.get(`${API_BASE}/store/${slug}/verify/${reference}`),
+};
+
+// ─── Payment settings — Paystack subaccount (authenticated) ───────────────────
+export const paymentSettingsService = {
+  getSettings: () => api.get('/payment-settings'),
+  getBanks: () => api.get('/payment-settings/banks'),
+  verifyAccount: (data) => api.post('/payment-settings/verify-account', data),
+  setupPayment: (data) => api.post('/payment-settings/setup', data),
+  updatePayment: (data) => api.put('/payment-settings/update', data),
+};
+
+// ─── Store management (authenticated) ────────────────────────────────────────
+export const storeAdminService = {
+  getSettings: () => api.get('/companies/store'),
+  updateSettings: (data) => api.put('/companies/store', data),
+  uploadBanner: (formData) => api.post('/companies/store/banner', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  getAnalytics: () => api.get('/companies/store/analytics'),
+};
+
 // ─── Users / Team ─────────────────────────────────────────────────────────────
 export const userService = {
   getProfile: () => api.get('/users/profile'),
