@@ -82,6 +82,16 @@
 .sf-empty { text-align: center; padding: 80px 20px; color: var(--sf-muted); }
 .sf-empty h3 { color: var(--sf-text); margin: 0 0 6px; }
 
+/* Footer */
+.sf-footer { border-top: 1px solid var(--sf-border); background: var(--sf-card); margin-top: 20px; }
+.sf-footer-inner {
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 22px 20px;
+}
+.sf-footer-brand { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--sf-text); }
+.sf-footer-brand img { width: 26px; height: 26px; border-radius: 6px; object-fit: cover; }
+.sf-footer-contact { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.82rem; color: var(--sf-muted); }
+.sf-footer-contact a { color: var(--sf-brand); }
+
 /* Cart drawer */
 .sf-overlay { position: fixed; inset: 0; background: rgba(2,6,23,.45); z-index: 40; opacity: 0; pointer-events: none; transition: opacity .2s; }
 .sf-overlay.open { opacity: 1; pointer-events: auto; }

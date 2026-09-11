@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   RiFileList3Line, RiShoppingBag3Line, RiCalendarEventLine, RiDownloadLine,
   RiLogoutBoxRLine, RiLoader4Line, RiInboxLine, RiTimeLine, RiMapPinLine, RiVideoLine,
+  RiBankLine, RiMailLine, RiPhoneLine, RiStore2Line,
 } from 'react-icons/ri';
 import { portalService } from '../../services';
 import './Portal.css';
@@ -104,6 +105,8 @@ export default function Portal() {
   }
 
   const email = data.email || localStorage.getItem(PT_EMAIL) || '';
+  // Older tokens may still return `company` as a plain name string.
+  const business = typeof data.company === 'string' ? { name: data.company } : (data.company || {});
   const counts = {
     invoices: data.invoices.length,
     orders: data.orders.length,
@@ -114,7 +117,17 @@ export default function Portal() {
     <div className="pt">
       <header className="pt-header">
         <div className="pt-header-inner">
-          <PortalMark />
+          {business.logo ? (
+            <span className="pt-biz-brand">
+              <img className="pt-biz-logo" src={business.logo} alt={business.name} />
+              <span className="pt-biz-name">{business.name}</span>
+            </span>
+          ) : (
+            <span className="pt-biz-brand">
+              <RiStore2Line className="pt-biz-fallback-icon" />
+              <span className="pt-biz-name">{business.name || 'Your provider'}</span>
+            </span>
+          )}
           <div className="pt-header-right">
             <span className="pt-email" title={email}>{email}</span>
             <button className="pt-logout" onClick={() => logout()}>
@@ -127,8 +140,30 @@ export default function Portal() {
       <main className="pt-main">
         <div className="pt-greeting">
           <h1>Your Documents</h1>
-          <p>Shared with you by {data.company}</p>
+          <p>{business.tagline || `Shared with you by ${business.name || 'your provider'}`}</p>
         </div>
+
+        {(business.contact?.email || business.contact?.phone || business.contact?.address || business.bankDetails) && (
+          <div className="pt-biz-info">
+            {(business.contact?.email || business.contact?.phone || business.contact?.address) && (
+              <div className="pt-biz-contact">
+                {business.contact?.phone && <span><RiPhoneLine /> {business.contact.phone}</span>}
+                {business.contact?.email && <span><RiMailLine /> {business.contact.email}</span>}
+                {business.contact?.address && <span><RiMapPinLine /> {business.contact.address}</span>}
+              </div>
+            )}
+            {business.bankDetails && (
+              <div className="pt-bank-box">
+                <div className="pt-bank-title"><RiBankLine /> Bank details for manual payment</div>
+                <div className="pt-bank-grid">
+                  <span>Bank</span><strong>{business.bankDetails.bankName || '—'}</strong>
+                  <span>Account Name</span><strong>{business.bankDetails.accountName || '—'}</strong>
+                  <span>Account Number</span><strong>{business.bankDetails.accountNumber || '—'}</strong>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="pt-tabs">
           {TABS.map((t) => {
@@ -233,6 +268,10 @@ export default function Portal() {
           </div>
         )}
       </main>
+
+      <footer className="pt-footer">
+        <PortalMark /> <span>Secure customer portal</span>
+      </footer>
     </div>
   );
 }

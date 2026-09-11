@@ -154,6 +154,23 @@ export default function Store() {
         )}
       </div>
 
+      {(store.contact?.phone || store.contact?.email || store.contact?.address || store.contact?.website) && (
+        <footer className="sf-footer">
+          <div className="sf-container sf-footer-inner">
+            <div className="sf-footer-brand">
+              {store.logo ? <img src={store.logo} alt="" /> : <RiStore2Line />}
+              <span>{store.name}</span>
+            </div>
+            <div className="sf-footer-contact">
+              {store.contact?.phone && <span>{store.contact.phone}</span>}
+              {store.contact?.email && <span>{store.contact.email}</span>}
+              {store.contact?.address && <span>{store.contact.address}</span>}
+              {store.contact?.website && <a href={store.contact.website} target="_blank" rel="noreferrer">{store.contact.website}</a>}
+            </div>
+          </div>
+        </footer>
+      )}
+
       {/* Cart drawer */}
       <div className={`sf-overlay ${drawerOpen ? 'open' : ''}`} onClick={() => setDrawerOpen(false)} />
       <aside className={`sf-drawer ${drawerOpen ? 'open' : ''}`}>

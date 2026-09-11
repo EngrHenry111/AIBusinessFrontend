@@ -34,7 +34,29 @@ export default function Settings() {
     companyName: company?.companyName || '',
     industry: company?.industry || '',
     website: company?.website || '',
+    profile: {
+      tagline: company?.profile?.tagline || '',
+      email: company?.profile?.email || '',
+      phone: company?.profile?.phone || '',
+      address: company?.profile?.address || '',
+      rcNumber: company?.profile?.rcNumber || '',
+      tin: company?.profile?.tin || '',
+      socials: {
+        twitter: company?.profile?.socials?.twitter || '',
+        facebook: company?.profile?.socials?.facebook || '',
+        instagram: company?.profile?.socials?.instagram || '',
+        linkedin: company?.profile?.socials?.linkedin || '',
+        whatsapp: company?.profile?.socials?.whatsapp || '',
+      },
+    },
   });
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const setProfileField = (field, value) =>
+    setCompanyForm((p) => ({ ...p, profile: { ...p.profile, [field]: value } }));
+  const setSocialField = (field, value) =>
+    setCompanyForm((p) => ({ ...p, profile: { ...p.profile, socials: { ...p.profile.socials, [field]: value } } }));
 
   // AI settings
   const [aiForm, setAiForm] = useState({
@@ -92,6 +114,29 @@ export default function Settings() {
       toast.success('Company updated');
     } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
     finally { setSaving(false); }
+  }
+
+  async function handleLogoChange(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Please choose an image file'); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Logo must be under 5MB'); return; }
+
+    setLogoPreview(URL.createObjectURL(file));
+    setUploadingLogo(true);
+    try {
+      const fd = new FormData();
+      fd.append('logo', file);
+      const { data } = await companyService.update(fd);
+      updateCompany(data.data);
+      toast.success('Company logo updated');
+    } catch (err) {
+      setLogoPreview(null);
+      toast.error(err.response?.data?.message || 'Failed to upload logo');
+    } finally {
+      setUploadingLogo(false);
+    }
   }
 
   async function saveAI(e) {
@@ -221,12 +266,40 @@ export default function Settings() {
           {activeTab==='company' && (
             <div className="card card-pad">
               <h2>Company Settings</h2>
-              <p className="settings-subtitle">Update your company information</p>
+              <p className="settings-subtitle">
+                This information appears on your invoices, AI-generated reminders, your storefront and the customer portal.
+              </p>
+
+              {/* Logo */}
+              <div className="avatar-section">
+                <div className="settings-avatar">
+                  {(logoPreview || company?.logo)
+                    ? <img src={logoPreview || company.logo} alt={company?.companyName} />
+                    : <span>{company?.companyName?.[0]?.toUpperCase()}</span>}
+                  {uploadingLogo && <div className="avatar-uploading"><RiLoader4Line className="spin" /></div>}
+                </div>
+                <div>
+                  <div className="avatar-name">{company?.companyName}</div>
+                  <div className="avatar-email">Company logo</div>
+                  <label className="btn btn-secondary btn-sm avatar-upload-btn">
+                    <RiImageAddLine /> {company?.logo ? 'Change Logo' : 'Add Logo'}
+                    <input type="file" accept="image/*" hidden disabled={uploadingLogo} onChange={handleLogoChange} />
+                  </label>
+                  <div className="avatar-hint">JPG or PNG, up to 5MB</div>
+                </div>
+              </div>
+
               <form onSubmit={saveCompany} className="settings-form">
                 <div className="form-group">
                   <label className="form-label">Company Name</label>
                   <input className="form-input" value={companyForm.companyName}
                     onChange={e=>setCompanyForm(p=>({...p,companyName:e.target.value}))} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Tagline</label>
+                  <input className="form-input" placeholder="e.g. Quality you can trust"
+                    value={companyForm.profile.tagline}
+                    onChange={e=>setProfileField('tagline', e.target.value)} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Industry</label>
@@ -243,12 +316,72 @@ export default function Settings() {
                     <option value="other">Other</option>
                   </select>
                 </div>
+
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Company Email <span className="form-hint">(shown on invoices)</span></label>
+                    <input className="form-input" type="email" placeholder="billing@yourcompany.com"
+                      value={companyForm.profile.email}
+                      onChange={e=>setProfileField('email', e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Company Phone</label>
+                    <input className="form-input" type="tel" placeholder="+234 800 000 0000"
+                      value={companyForm.profile.phone}
+                      onChange={e=>setProfileField('phone', e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Company Address</label>
+                  <input className="form-input" placeholder="Street, City, State, Country"
+                    value={companyForm.profile.address}
+                    onChange={e=>setProfileField('address', e.target.value)} />
+                </div>
+
                 <div className="form-group">
                   <label className="form-label">Website</label>
                   <input className="form-input" type="url" placeholder="https://yourcompany.com"
                     value={companyForm.website}
                     onChange={e=>setCompanyForm(p=>({...p,website:e.target.value}))} />
                 </div>
+
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">RC Number <span className="form-hint">(business registration)</span></label>
+                    <input className="form-input" placeholder="RC1234567"
+                      value={companyForm.profile.rcNumber}
+                      onChange={e=>setProfileField('rcNumber', e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">TIN <span className="form-hint">(tax ID)</span></label>
+                    <input className="form-input" placeholder="12345678-0001"
+                      value={companyForm.profile.tin}
+                      onChange={e=>setProfileField('tin', e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Social Media Handles</label>
+                  <div className="form-grid-2">
+                    <input className="form-input" placeholder="Twitter / X URL"
+                      value={companyForm.profile.socials.twitter}
+                      onChange={e=>setSocialField('twitter', e.target.value)} />
+                    <input className="form-input" placeholder="Facebook URL"
+                      value={companyForm.profile.socials.facebook}
+                      onChange={e=>setSocialField('facebook', e.target.value)} />
+                    <input className="form-input" placeholder="Instagram URL"
+                      value={companyForm.profile.socials.instagram}
+                      onChange={e=>setSocialField('instagram', e.target.value)} />
+                    <input className="form-input" placeholder="LinkedIn URL"
+                      value={companyForm.profile.socials.linkedin}
+                      onChange={e=>setSocialField('linkedin', e.target.value)} />
+                    <input className="form-input" placeholder="WhatsApp number (+234...)"
+                      value={companyForm.profile.socials.whatsapp}
+                      onChange={e=>setSocialField('whatsapp', e.target.value)} />
+                  </div>
+                </div>
+
                 <div className="info-row">
                   <span>Subscription Plan</span>
                   <span className={`badge badge-brand`}>{company?.subscription?.plan || 'trial'}</span>
