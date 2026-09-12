@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { API_ORIGIN } from '../../services/api';
-import { RiRobot2Line, RiGoogleLine, RiEyeLine, RiEyeOffLine } from 'react-icons/ri';
+import { RiRobot2Line, RiEyeLine, RiEyeOffLine } from 'react-icons/ri';
 import './Auth.css';
 
 export default function Register() {
@@ -29,10 +28,6 @@ export default function Register() {
     }
   }
 
-  function handleGoogle() {
-    window.location.href = `${API_ORIGIN}/api/v1/auth/google`;
-  }
-
   const f = (field, value) => setForm(p => ({ ...p, [field]: value }));
 
   return (
@@ -45,14 +40,6 @@ export default function Register() {
         </div>
 
         {error && <div className="auth-error">{error}</div>}
-
-        {/* Google */}
-        <button className="btn-google" onClick={handleGoogle} type="button">
-          <RiGoogleLine />
-          <span>Sign up with Google</span>
-        </button>
-
-        <div className="auth-divider"><span>or register with email</span></div>
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="auth-form-grid">

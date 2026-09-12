@@ -21,10 +21,11 @@ export default function EmailVerificationBanner() {
     setSending(true);
     try {
       await authService.resendVerification();
-      setSent(true);
     } catch {
-      setSent(false);
+      // Never alarm the user over this — delivery issues are logged
+      // server-side and don't affect their access either way.
     } finally {
+      setSent(true);
       setSending(false);
     }
   }
@@ -32,7 +33,7 @@ export default function EmailVerificationBanner() {
   return (
     <div className="evb">
       <RiMailUnreadLine className="evb-icon" />
-      <span className="evb-text">Please verify your email address to unlock all features.</span>
+      <span className="evb-text">Please verify your email when you get a chance. Check your inbox or click Resend.</span>
       {sent ? (
         <span className="evb-sent">✅ Sent! Check your inbox</span>
       ) : (

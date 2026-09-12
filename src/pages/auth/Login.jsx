@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { API_ORIGIN } from '../../services/api';
-import { RiRobot2Line, RiEyeLine, RiEyeOffLine, RiGoogleLine, RiLockLine, RiMailLine } from 'react-icons/ri';
+import { RiRobot2Line, RiEyeLine, RiEyeOffLine, RiLockLine, RiMailLine } from 'react-icons/ri';
 import './Auth.css';
-
-const GOOGLE_ENABLED = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export default function Login() {
   const { login } = useAuth();
@@ -33,10 +30,6 @@ export default function Login() {
     }
   }
 
-  function handleGoogle() {
-    window.location.href = `${API_ORIGIN}/api/v1/auth/google`;
-  }
-
   return (
     <div className="auth-page">
       <div className="auth-card">
@@ -48,16 +41,6 @@ export default function Login() {
         </div>
 
         {error && <div className="auth-error">{error}</div>}
-
-        {/* Google Sign In */}
-        <button className="btn-google" onClick={handleGoogle} type="button">
-          <RiGoogleLine />
-          <span>Continue with Google</span>
-        </button>
-
-        <div className="auth-divider">
-          <span>or sign in with email</span>
-        </div>
 
         {/* Email form */}
         <form onSubmit={handleSubmit} className="auth-form">
