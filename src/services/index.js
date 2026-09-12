@@ -83,6 +83,36 @@ export const meetingService = {
   update: (id, data) => api.put(`/meetings/${id}`, data),
   delete: (id) => api.delete(`/meetings/${id}`),
   summarize: (id, transcript) => api.post(`/meetings/${id}/summarize`, { transcript }),
+  exportPdfUrl: (id) => `${api.defaults.baseURL}/meetings/${id}/pdf`,
+
+  // Agenda
+  addAgendaItem: (id, data) => api.post(`/meetings/${id}/agenda`, data),
+  updateAgendaItem: (id, itemId, data) => api.put(`/meetings/${id}/agenda/${itemId}`, data),
+  deleteAgendaItem: (id, itemId) => api.delete(`/meetings/${id}/agenda/${itemId}`),
+
+  // Attendance
+  recordAttendance: (id, data) => api.put(`/meetings/${id}/attendance`, data),
+
+  // Resolutions
+  addResolution: (id, data) => api.post(`/meetings/${id}/resolutions`, data),
+  updateResolution: (id, resId, data) => api.put(`/meetings/${id}/resolutions/${resId}`, data),
+  deleteResolution: (id, resId) => api.delete(`/meetings/${id}/resolutions/${resId}`),
+
+  // Action items
+  addActionItem: (id, data) => api.post(`/meetings/${id}/action-items`, data),
+  updateActionItem: (id, itemId, data) => api.put(`/meetings/${id}/action-items/${itemId}`, data),
+  deleteActionItem: (id, itemId) => api.delete(`/meetings/${id}/action-items/${itemId}`),
+
+  // Minutes
+  saveMinutes: (id, data) => api.put(`/meetings/${id}/minutes`, data),
+  generateMinutes: (id, notes) => api.post(`/meetings/${id}/minutes/generate`, { notes }),
+  confirmPreviousMinutes: (id, confirmedBy) => api.put(`/meetings/${id}/confirm-previous`, { confirmedBy }),
+
+  // Attachments
+  uploadAttachment: (id, formData) => api.post(`/meetings/${id}/attachments`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  deleteAttachment: (id, attachmentId) => api.delete(`/meetings/${id}/attachments/${attachmentId}`),
 };
 
 // ─── Invoices ─────────────────────────────────────────────────────────────────

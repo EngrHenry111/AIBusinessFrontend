@@ -29,6 +29,7 @@ const Knowledge = lazy(() => import('./pages/knowledge/Knowledge'));
 const Leads = lazy(() => import('./pages/leads/Leads'));
 const LeadDetail = lazy(() => import('./pages/leads/LeadDetail'));
 const Meetings = lazy(() => import('./pages/meetings/Meetings'));
+const MeetingDetail = lazy(() => import('./pages/meetings/MeetingDetail'));
 const Invoices = lazy(() => import('./pages/invoices/Invoices'));
 const Orders = lazy(() => import('./pages/orders/Orders'));
 const Products = lazy(() => import('./pages/products/Products'));
@@ -141,6 +142,7 @@ function AppRoutes() {
                 <Route path="leads" element={<Leads />} />
                 <Route path="leads/:id" element={<LeadDetail />} />
                 <Route path="meetings" element={<Meetings />} />
+                <Route path="meetings/:id" element={<MeetingDetail />} />
                 <Route path="invoices" element={<Invoices />} />
                 <Route path="orders" element={<Orders />} />
                 <Route path="products" element={<Products />} />

@@ -1,0 +1,58 @@
+.md-page .page-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.md-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 16px 0 20px; overflow-x: auto; }
+.md-tabs button {
+  border: 0; background: transparent; padding: 10px 14px; cursor: pointer; font-size: 14px; font-weight: 500;
+  color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap;
+}
+.md-tabs button.active { color: var(--color-brand); border-bottom-color: var(--color-brand); }
+
+.md-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
+@media (max-width: 800px) { .md-grid { grid-template-columns: 1fr; } }
+
+.md-dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 14px; margin: 0; }
+.md-dl dt { color: var(--text-muted); }
+.md-dl dd { margin: 0; }
+.md-subhead { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin: 18px 0 6px; }
+.md-desc { font-size: 14px; color: var(--text-secondary); white-space: pre-line; }
+.md-participants { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+
+.quorum-badge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-full); display: inline-block; }
+.quorum-badge.ok { background: rgba(16,185,129,.12); color: var(--color-success); }
+.quorum-badge.no { background: rgba(245,158,11,.14); color: var(--color-warning); }
+
+.prev-minutes-box { border-top: 1px solid var(--border); margin-top: 18px; padding-top: 14px; }
+
+.quorum-bar-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.quorum-bar { height: 8px; border-radius: 999px; background: var(--bg-tertiary); overflow: hidden; }
+.quorum-fill { height: 100%; border-radius: 999px; transition: width .2s; }
+
+.md-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
+.md-table th, .md-table td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+.md-table th { color: var(--text-muted); text-transform: uppercase; font-size: 11px; }
+.md-table tr:last-child td { border-bottom: 0; }
+.md-table .actions { display: flex; gap: 2px; }
+
+.minutes-area { font-family: var(--font-sans); resize: vertical; }
+
+.agenda-form { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
+.agenda-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.agenda-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.agenda-item.done { opacity: .6; }
+.agenda-item.done .agenda-title { text-decoration: line-through; }
+.agenda-check { border: 0; background: none; cursor: pointer; color: var(--color-brand); font-size: 18px; flex-shrink: 0; padding: 0; margin-top: 1px; }
+.agenda-body { flex: 1; min-width: 0; }
+.agenda-top { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: 14px; }
+.agenda-num { color: var(--text-muted); }
+.agenda-title { font-weight: 600; }
+.agenda-time, .agenda-presenter { font-size: 12px; color: var(--text-muted); }
+.agenda-notes { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+.resolutions-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.resolution-card { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; }
+.resolution-head { display: flex; align-items: center; gap: 8px; }
+.resolution-desc { font-size: 14px; margin: 6px 0; }
+.vote-row { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
+.vote-row label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+.vote-input { width: 60px; padding: 4px 6px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary); }
