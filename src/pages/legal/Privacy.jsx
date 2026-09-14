@@ -131,18 +131,30 @@ export default function Privacy() {
           <h2>7. Contact</h2>
           <p>
             Questions about this Privacy Policy or your data can be sent to{' '}
-            <a href="mailto:henryengrakpan@gmail.com">henryengrakpan@gmail.com</a>.
+            <a href="mailto:privacy@bislyai.com">privacy@bislyai.com</a>.
           </p>
           <p>
             We may update this policy from time to time. Material changes will be announced on this page
             with a revised effective date.
           </p>
         </section>
+
+        <section className="legal-section">
+          <h2>8. Company Information</h2>
+          <ul>
+            <li><strong>Company:</strong> ENGRHENRY TECH</li>
+            <li><strong>RC Number:</strong> 9823522</li>
+            <li><strong>TIN:</strong> 33945414</li>
+            <li><strong>Address:</strong> 29 Pack Road, Itu, Akwa Ibom State, Nigeria</li>
+            <li><strong>Email:</strong> <a href="mailto:privacy@bislyai.com">privacy@bislyai.com</a></li>
+            <li><strong>Website:</strong> <a href="https://bislyai.com" target="_blank" rel="noopener noreferrer">bislyai.com</a></li>
+          </ul>
+        </section>
       </main>
 
       <footer className="legal-footer">
         <div className="legal-footer-inner">
-          <span>© {new Date().getFullYear()} BizlyAI by EngrHenryTech. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} BizlyAI by ENGRHENRY TECH | RC: 9823522 | TIN: 33945414</span>
           <nav className="legal-footer-links">
             <Link to="/terms">Terms of Service</Link>
             <Link to="/">Home</Link>

@@ -7,6 +7,7 @@ import {
   RiInstagramLine, RiFacebookBoxLine, RiMenuLine, RiCloseLine, RiCheckLine,
   RiStarFill, RiArrowRightLine, RiPlayCircleLine, RiSparklingLine, RiShieldCheckLine,
   RiArrowDownSLine, RiMailLine, RiLockLine, RiFileList3Line, RiCloudLine, RiBankCardLine,
+  RiGlobalLine, RiTimeLine,
 } from 'react-icons/ri';
 import './Landing.css';
 
@@ -88,9 +89,14 @@ const NAV_LINKS = [
   { label: 'Contact', id: 'contact' },
 ];
 
-const WHATSAPP_URL = 'https://wa.me/2349028361165';
-const DEMO_URL = `${WHATSAPP_URL}?text=${encodeURIComponent("Hi, I'd like to book a demo of BizlyAI")}`;
-const EMAIL_URL = 'mailto:henryengrakpan@gmail.com';
+// api.whatsapp.com works reliably across every device/browser — wa.me can
+// bounce through an app-store/download interstitial on some setups instead
+// of opening the chat directly.
+const WHATSAPP_PHONE = '2349028361165';
+const waLink = (text) => `https://api.whatsapp.com/send?phone=${WHATSAPP_PHONE}&text=${encodeURIComponent(text)}`;
+const WHATSAPP_URL = waLink("Hi, I'm interested in BizlyAI");
+const DEMO_URL = waLink("Hi, I'd like to book a demo of BizlyAI");
+const EMAIL_URL = 'mailto:support@bislyai.com';
 
 const CONTACT_CARDS = [
   {
@@ -669,14 +675,21 @@ export default function Landing() {
                   <a
                     href={c.href}
                     className="lp-btn lp-btn-primary"
-                    target={c.href.startsWith('mailto:') ? undefined : '_blank'}
-                    rel={c.href.startsWith('mailto:') ? undefined : 'noreferrer'}
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
                     {c.cta} <RiArrowRightLine />
                   </a>
                 </article>
               );
             })}
+          </div>
+
+          <div className="lp-contact-info" data-reveal>
+            <div><RiMailLine /> Email: <a href={EMAIL_URL} target="_blank" rel="noopener noreferrer">support@bislyai.com</a></div>
+            <div><RiWhatsappLine /> WhatsApp: <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">+234 902 836 1165</a></div>
+            <div><RiGlobalLine /> Website: <a href="https://bislyai.com" target="_blank" rel="noopener noreferrer">bislyai.com</a></div>
+            <div><RiTimeLine /> Hours: Monday – Friday, 8am – 6pm WAT</div>
           </div>
         </div>
       </section>
@@ -688,10 +701,10 @@ export default function Landing() {
             <Logo light />
             <p>The AI operating system for growing African businesses.</p>
             <div className="lp-socials">
-              <a href="https://twitter.com" aria-label="Twitter / X" target="_blank" rel="noreferrer"><RiTwitterXLine /></a>
-              <a href="https://linkedin.com" aria-label="LinkedIn" target="_blank" rel="noreferrer"><RiLinkedinBoxLine /></a>
-              <a href="https://instagram.com" aria-label="Instagram" target="_blank" rel="noreferrer"><RiInstagramLine /></a>
-              <a href="https://facebook.com" aria-label="Facebook" target="_blank" rel="noreferrer"><RiFacebookBoxLine /></a>
+              <a href="https://twitter.com" aria-label="Twitter / X" target="_blank" rel="noopener noreferrer"><RiTwitterXLine /></a>
+              <a href="https://linkedin.com" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer"><RiLinkedinBoxLine /></a>
+              <a href="https://instagram.com" aria-label="Instagram" target="_blank" rel="noopener noreferrer"><RiInstagramLine /></a>
+              <a href="https://facebook.com" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><RiFacebookBoxLine /></a>
             </div>
           </div>
 
@@ -706,16 +719,16 @@ export default function Landing() {
           </nav>
         </div>
         <div className="lp-container lp-footer-bottom">
-          © {new Date().getFullYear()} BizlyAI by EngrHenryTech. All rights reserved.
+          © {new Date().getFullYear()} BizlyAI by ENGRHENRY TECH | RC: 9823522 | TIN: 33945414
         </div>
       </footer>
 
       {/* ── Floating WhatsApp button ───────────────────────────── */}
       <a
         className="lp-wa-fab"
-        href="https://wa.me/2349028361165"
+        href={waLink("Hi, I found BizlyAI and I'm interested")}
         target="_blank"
-        rel="noreferrer"
+        rel="noopener noreferrer"
         aria-label="Chat with us on WhatsApp"
       >
         <RiWhatsappLine />

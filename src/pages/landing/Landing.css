@@ -426,3 +426,24 @@ html { scroll-behavior: smooth; }
   .lp-security-badges { gap: 8px 14px; }
   .lp-security-badge { font-size: 0.76rem; }
 }
+
+/* ── Professional contact info strip ──────────────────────────────────── */
+.lp-contact-info {
+  margin-top: 40px;
+  padding: 24px 28px;
+  background: var(--lp-card, #fff);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-radius);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 32px;
+  font-size: 0.92rem;
+  color: var(--lp-ink);
+}
+.lp-contact-info > div { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.lp-contact-info svg { color: var(--lp-brand); font-size: 1.05rem; flex-shrink: 0; }
+.lp-contact-info a { color: var(--lp-brand); font-weight: 600; }
+@media (max-width: 640px) {
+  .lp-contact-info { justify-content: flex-start; padding: 20px; }
+}

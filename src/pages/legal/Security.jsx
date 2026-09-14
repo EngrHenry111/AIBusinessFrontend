@@ -117,7 +117,7 @@ export default function Security() {
 
       <footer className="legal-footer">
         <div className="legal-footer-inner">
-          <span>© {new Date().getFullYear()} BizlyAI by EngrHenryTech. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} BizlyAI by ENGRHENRY TECH | RC: 9823522 | TIN: 33945414</span>
           <nav className="legal-footer-links">
             <Link to="/privacy">Privacy</Link>
             <Link to="/terms">Terms</Link>
