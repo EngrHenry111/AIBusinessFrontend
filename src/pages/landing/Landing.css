@@ -400,6 +400,23 @@ html { scroll-behavior: smooth; }
   align-self: stretch;
   justify-content: center;
 }
+.lp-contact-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--lp-ink-mute);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.lp-contact-copy:hover { color: var(--lp-brand); }
+.lp-contact-copy svg { font-size: 1rem; flex-shrink: 0; }
 
 /* ── Security badges row ──────────────────────────────────────────────── */
 .lp-security-badges {
@@ -444,6 +461,20 @@ html { scroll-behavior: smooth; }
 .lp-contact-info > div { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
 .lp-contact-info svg { color: var(--lp-brand); font-size: 1.05rem; flex-shrink: 0; }
 .lp-contact-info a { color: var(--lp-brand); font-weight: 600; }
+.lp-copy-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  background: none;
+  border: none;
+  color: var(--lp-ink-mute);
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.lp-copy-icon:hover { color: var(--lp-brand); background: rgba(99, 102, 241, 0.1); }
 @media (max-width: 640px) {
   .lp-contact-info { justify-content: flex-start; padding: 20px; }
 }

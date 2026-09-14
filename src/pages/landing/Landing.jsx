@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import {
   RiRobot2Line, RiWhatsappLine, RiUserSearchLine, RiMoneyDollarCircleLine,
   RiCalendarCheckLine, RiLineChartLine, RiStore2Line, RiBriefcase4Line,
@@ -7,9 +8,38 @@ import {
   RiInstagramLine, RiFacebookBoxLine, RiMenuLine, RiCloseLine, RiCheckLine,
   RiStarFill, RiArrowRightLine, RiPlayCircleLine, RiSparklingLine, RiShieldCheckLine,
   RiArrowDownSLine, RiMailLine, RiLockLine, RiFileList3Line, RiCloudLine, RiBankCardLine,
-  RiGlobalLine, RiTimeLine,
+  RiGlobalLine, RiTimeLine, RiFileCopyLine,
 } from 'react-icons/ri';
 import './Landing.css';
+
+const SUPPORT_EMAIL = 'support@bislyai.com';
+
+// mailto: only works when the browser/OS has a mail client registered as a
+// handler — plenty of setups (Chrome with no default Mail app, ChromeOS,
+// most work machines) have none, so the link silently does nothing. Copying
+// the address is the one fallback that always works everywhere.
+function copyEmail() {
+  const done = () => toast.success(`Copied ${SUPPORT_EMAIL} to your clipboard`);
+  const fail = () => toast.error(`Could not copy — email us at ${SUPPORT_EMAIL}`);
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(SUPPORT_EMAIL).then(done, fail);
+    return;
+  }
+  // Fallback for browsers without the async Clipboard API.
+  try {
+    const el = document.createElement('textarea');
+    el.value = SUPPORT_EMAIL;
+    el.style.position = 'fixed';
+    el.style.opacity = '0';
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    done();
+  } catch {
+    fail();
+  }
+}
 
 /* ── Content ──────────────────────────────────────────────────────────────── */
 const STATS = [
@@ -97,7 +127,7 @@ const waLink = (text) => `https://api.whatsapp.com/send?phone=${WHATSAPP_PHONE}&
 const WHATSAPP_URL = waLink("Hi, I'm interested in BizlyAI");
 const DEMO_URL = waLink("Hi, I'd like to book a demo of BizlyAI");
 // No target="_blank" on this one — see the render site below for why.
-const EMAIL_URL = 'mailto:support@bislyai.com?subject=' + encodeURIComponent('BizlyAI Enquiry');
+const EMAIL_URL = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('BizlyAI Enquiry')}`;
 
 const CONTACT_CARDS = [
   {
@@ -688,13 +718,23 @@ export default function Landing() {
                   >
                     {c.cta} <RiArrowRightLine />
                   </a>
+                  {c.href.startsWith('mailto:') && (
+                    <button type="button" className="lp-contact-copy" onClick={copyEmail}>
+                      <RiFileCopyLine /> No mail app? Copy address instead
+                    </button>
+                  )}
                 </article>
               );
             })}
           </div>
 
           <div className="lp-contact-info" data-reveal>
-            <div><RiMailLine /> Email: <a href={EMAIL_URL}>support@bislyai.com</a></div>
+            <div>
+              <RiMailLine /> Email: <a href={EMAIL_URL}>{SUPPORT_EMAIL}</a>
+              <button type="button" className="lp-copy-icon" onClick={copyEmail} aria-label="Copy email address" title="Copy email address">
+                <RiFileCopyLine />
+              </button>
+            </div>
             <div><RiWhatsappLine /> WhatsApp: <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">+234 902 836 1165</a></div>
             <div><RiGlobalLine /> Website: <a href="https://bislyai.com" target="_blank" rel="noopener noreferrer">bislyai.com</a></div>
             <div><RiTimeLine /> Hours: Monday – Friday, 8am – 6pm WAT</div>
