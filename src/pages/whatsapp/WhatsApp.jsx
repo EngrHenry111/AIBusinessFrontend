@@ -106,7 +106,6 @@ export default function WhatsApp() {
   useEffect(() => {
     if (!companyId) return;
     const socket = io(SOCKET_URL, {
-      auth: { token: localStorage.getItem('accessToken') },
       transports: ['websocket', 'polling'],
     });
     socketRef.current = socket;

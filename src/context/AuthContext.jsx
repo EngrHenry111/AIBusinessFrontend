@@ -45,20 +45,16 @@ function authReducer(state, action) {
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Check auth on mount
+  // Check auth on mount. The session token lives in an httpOnly cookie that
+  // JS can't read, so there's no local flag to check first — we just ask the
+  // server, and it succeeds or fails based on whatever cookie the browser
+  // sends automatically.
   useEffect(() => {
     const init = async () => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        dispatch({ type: 'SET_LOADING', payload: false });
-        return;
-      }
       try {
         const { data } = await authService.getMe();
         dispatch({ type: 'AUTH_SUCCESS', payload: { user: data.user, company: data.company, subscriptionState: data.subscriptionState, graceDays: data.graceDays } });
       } catch {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
         dispatch({ type: 'SET_LOADING', payload: false });
       }
     };
@@ -74,8 +70,6 @@ export function AuthProvider({ children }) {
         dispatch({ type: 'SET_LOADING', payload: false });
         return data;
       }
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
       try { sessionStorage.removeItem('evb_dismissed'); } catch { /* ignore */ }
       dispatch({ type: 'AUTH_SUCCESS', payload: { user: data.user, company: data.company, subscriptionState: data.subscriptionState, graceDays: data.graceDays } });
       return data;
@@ -90,8 +84,6 @@ export function AuthProvider({ children }) {
     dispatch({ type: 'AUTH_START' });
     try {
       const { data } = await authService.register(formData);
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
       dispatch({ type: 'AUTH_SUCCESS', payload: { user: data.user, company: data.company, subscriptionState: data.subscriptionState, graceDays: data.graceDays } });
       return data;
     } catch (err) {
@@ -103,8 +95,6 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     try { await authService.logout(); } catch {}
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
     dispatch({ type: 'LOGOUT' });
   }, []);
 
@@ -116,10 +106,10 @@ export function AuthProvider({ children }) {
     dispatch({ type: 'UPDATE_COMPANY', payload: updates });
   }, []);
 
-  // Finalise a session from tokens obtained elsewhere (e.g. 2FA completion)
+  // Finalise a session established elsewhere (2FA completion, Google OAuth
+  // redirect) — the server has already set the httpOnly cookies, this just
+  // updates local UI state to match.
   const completeAuth = useCallback((data) => {
-    localStorage.setItem('accessToken', data.accessToken);
-    localStorage.setItem('refreshToken', data.refreshToken);
     try { sessionStorage.removeItem('evb_dismissed'); } catch { /* ignore */ }
     dispatch({
       type: 'AUTH_SUCCESS',

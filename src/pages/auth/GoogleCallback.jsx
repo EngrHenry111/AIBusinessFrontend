@@ -1,28 +1,32 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services';
 import { RiLoader4Line } from 'react-icons/ri';
 
 export default function GoogleCallback() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { updateUser } = useAuth();
+  const { completeAuth } = useAuth();
 
   useEffect(() => {
-    const token = params.get('token');
-    const refresh = params.get('refresh');
     const error = params.get('error');
-
-    if (error || !token) {
+    if (error) {
       navigate('/login?error=google_failed');
       return;
     }
 
-    localStorage.setItem('accessToken', token);
-    if (refresh) localStorage.setItem('refreshToken', refresh);
-
-    // Let AuthContext pick up the token on next render
-    navigate('/dashboard');
+    // The backend has already set the httpOnly session cookies on this
+    // redirect — there's no token in the URL to read. Just ask who we are.
+    (async () => {
+      try {
+        const { data } = await authService.getMe();
+        completeAuth(data);
+        navigate('/dashboard');
+      } catch {
+        navigate('/login?error=google_failed');
+      }
+    })();
   }, []);
 
   return (

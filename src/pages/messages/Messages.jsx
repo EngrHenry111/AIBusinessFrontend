@@ -33,7 +33,6 @@ export default function Messages() {
   // Setup Socket.io
   useEffect(() => {
     const socket = io(SOCKET_URL, {
-      auth: { token: localStorage.getItem('accessToken') },
       transports: ['websocket', 'polling'],
     });
 

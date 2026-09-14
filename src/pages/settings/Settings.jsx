@@ -157,12 +157,11 @@ export default function Settings() {
     }
     setSaving(true);
     try {
-      const { data } = await userService.changePassword({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword });
+      await userService.changePassword({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword });
       // Changing your password invalidates every previously-issued token
-      // (every other device is signed out) — the server sends this device a
-      // fresh pair in the same response so it isn't logged out too.
-      if (data.accessToken) localStorage.setItem('accessToken', data.accessToken);
-      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+      // (every other device is signed out) — the server sets this device a
+      // fresh httpOnly cookie pair in the same response so it isn't logged
+      // out too.
       setPwForm({ currentPassword:'', newPassword:'', confirmPassword:'' });
       toast.success('Password changed successfully. Other devices have been signed out.');
     } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
