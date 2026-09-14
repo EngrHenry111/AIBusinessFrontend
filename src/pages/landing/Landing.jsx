@@ -6,7 +6,7 @@ import {
   RiShoppingCart2Line, RiGovernmentLine, RiTwitterXLine, RiLinkedinBoxLine,
   RiInstagramLine, RiFacebookBoxLine, RiMenuLine, RiCloseLine, RiCheckLine,
   RiStarFill, RiArrowRightLine, RiPlayCircleLine, RiSparklingLine, RiShieldCheckLine,
-  RiArrowDownSLine, RiMailLine,
+  RiArrowDownSLine, RiMailLine, RiLockLine, RiFileList3Line, RiCloudLine, RiBankCardLine,
 } from 'react-icons/ri';
 import './Landing.css';
 
@@ -16,6 +16,14 @@ const STATS = [
   { value: '99.9% Uptime', sub: 'guaranteed reliability' },
   { value: '9 AI Agents', sub: 'specialized for business' },
   { value: '< 2 seconds', sub: 'average AI response time' },
+];
+
+const SECURITY_BADGES = [
+  { icon: RiLockLine, label: '256-bit Encryption' },
+  { icon: RiShieldCheckLine, label: '2FA Available' },
+  { icon: RiFileList3Line, label: 'Full Audit Log' },
+  { icon: RiCloudLine, label: 'Enterprise Hosting' },
+  { icon: RiBankCardLine, label: 'PCI DSS Payments' },
 ];
 
 const FEATURES = [
@@ -440,6 +448,18 @@ export default function Landing() {
               </div>
             ))}
           </div>
+
+          {/* ── Security badges ─────────────────────────────────── */}
+          <Link to="/security" className="lp-security-badges" data-reveal aria-label="Learn about BizlyAI security">
+            {SECURITY_BADGES.map((b) => {
+              const Icon = b.icon;
+              return (
+                <span key={b.label} className="lp-security-badge">
+                  <Icon /> {b.label}
+                </span>
+              );
+            })}
+          </Link>
         </div>
       </section>
 
@@ -680,6 +700,7 @@ export default function Landing() {
             <button onClick={() => scrollTo('pricing')}>Pricing</button>
             <button onClick={() => scrollTo('testimonials')}>About</button>
             <button onClick={() => scrollTo('contact')}>Contact</button>
+            <Link to="/security">Security</Link>
             <Link to="/privacy">Privacy</Link>
             <Link to="/terms">Terms</Link>
           </nav>

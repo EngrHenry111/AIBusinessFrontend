@@ -400,3 +400,29 @@ html { scroll-behavior: smooth; }
   align-self: stretch;
   justify-content: center;
 }
+
+/* ── Security badges row ──────────────────────────────────────────────── */
+.lp-security-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 22px;
+  margin-top: 28px;
+  text-decoration: none;
+}
+.lp-security-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--lp-ink-mute);
+  white-space: nowrap;
+}
+.lp-security-badge svg { font-size: 1rem; color: var(--lp-brand); }
+.lp-security-badges:hover .lp-security-badge { color: var(--lp-ink); }
+
+@media (max-width: 640px) {
+  .lp-security-badges { gap: 8px 14px; }
+  .lp-security-badge { font-size: 0.76rem; }
+}
