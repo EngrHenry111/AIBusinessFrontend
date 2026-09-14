@@ -96,7 +96,8 @@ const WHATSAPP_PHONE = '2349028361165';
 const waLink = (text) => `https://api.whatsapp.com/send?phone=${WHATSAPP_PHONE}&text=${encodeURIComponent(text)}`;
 const WHATSAPP_URL = waLink("Hi, I'm interested in BizlyAI");
 const DEMO_URL = waLink("Hi, I'd like to book a demo of BizlyAI");
-const EMAIL_URL = 'mailto:support@bislyai.com';
+// No target="_blank" on this one — see the render site below for why.
+const EMAIL_URL = 'mailto:support@bislyai.com?subject=' + encodeURIComponent('BizlyAI Enquiry');
 
 const CONTACT_CARDS = [
   {
@@ -675,8 +676,15 @@ export default function Landing() {
                   <a
                     href={c.href}
                     className="lp-btn lp-btn-primary"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    // mailto: is not a page to open in a new tab — giving it
+                    // target="_blank" makes several browsers (and most
+                    // in-app webviews) open a blank tab and never hand off
+                    // to the mail client, which is exactly the "link does
+                    // nothing" bug this fixes. Real external links (http/
+                    // https, e.g. WhatsApp) still open in a new tab.
+                    {...(c.href.startsWith('mailto:')
+                      ? {}
+                      : { target: '_blank', rel: 'noopener noreferrer' })}
                   >
                     {c.cta} <RiArrowRightLine />
                   </a>
@@ -686,7 +694,7 @@ export default function Landing() {
           </div>
 
           <div className="lp-contact-info" data-reveal>
-            <div><RiMailLine /> Email: <a href={EMAIL_URL} target="_blank" rel="noopener noreferrer">support@bislyai.com</a></div>
+            <div><RiMailLine /> Email: <a href={EMAIL_URL}>support@bislyai.com</a></div>
             <div><RiWhatsappLine /> WhatsApp: <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">+234 902 836 1165</a></div>
             <div><RiGlobalLine /> Website: <a href="https://bislyai.com" target="_blank" rel="noopener noreferrer">bislyai.com</a></div>
             <div><RiTimeLine /> Hours: Monday – Friday, 8am – 6pm WAT</div>
