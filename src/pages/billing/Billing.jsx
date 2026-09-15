@@ -16,9 +16,9 @@ const PLAN_COLORS = {
 };
 
 const PLAN_FEATURES = {
-  starter: ['5 team members', '500 documents', '2,000 AI questions/month', 'All business modules', 'Email support'],
-  professional: ['25 team members', '2,000 documents', '10,000 AI questions/month', 'All business modules', 'Priority support', 'Analytics & Reports'],
-  business: ['100 team members', '10,000 documents', '50,000 AI questions/month', 'All business modules', 'Dedicated support', 'Custom AI settings', 'API access'],
+  starter: ['5 team members', '500 documents', '2,000 AI questions/month', 'All business modules', 'AI chat widget (your store only)', 'Email support'],
+  professional: ['25 team members', '2,000 documents', '10,000 AI questions/month', 'All business modules', 'AI chat widget on 1 external website', 'Priority support', 'Analytics & Reports'],
+  business: ['100 team members', '10,000 documents', '50,000 AI questions/month', 'All business modules', 'AI chat widget on unlimited websites', 'Dedicated support', 'Custom AI settings', 'API access'],
 };
 
 const STATUS_BADGE = {

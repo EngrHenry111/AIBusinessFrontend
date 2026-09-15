@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { whatsappService, productService } from '../../services';
+import { whatsappService, productService, widgetService } from '../../services';
 import {
   RiDashboardLine, RiRobot2Line, RiFileTextLine, RiUserLine,
   RiCalendarLine, RiMoneyDollarCircleLine, RiBarChartLine,
   RiTeamLine, RiSettings4Line, RiMenuFoldLine, RiMenuUnfoldLine,
   RiShoppingBagLine, RiVideoLine, RiMegaphoneLine, RiBriefcaseLine,
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
-  RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine, RiStoreLine
+  RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine, RiStoreLine,
+  RiChat3Line, RiCodeLine,
 } from 'react-icons/ri';
 import './Sidebar.css';
 
@@ -33,6 +34,8 @@ const NAV_ITEMS = [
   { label: 'Analytics', icon: RiBarChartLine, path: '/analytics' },
   { label: 'Team', icon: RiTeamLine, path: '/team' },
   { label: 'WhatsApp', icon: RiWhatsappLine, path: '/whatsapp' },
+  { label: 'Chat Inbox', icon: RiChat3Line, path: '/widget-inbox' },
+  { label: 'Widget Settings', icon: RiCodeLine, path: '/widget-settings' },
   { label: 'Settings', icon: RiSettings4Line, path: '/settings' },
   { label: 'Activity Log', icon: RiHistoryLine, path: '/settings/audit-log', roles: ['company_owner', 'manager', 'super_admin'] },
   { type: 'divider', label: 'Platform', adminOnly: true },
@@ -43,6 +46,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const { user, company, logout } = useAuth();
   const location = useLocation();
   const [waNeedsHuman, setWaNeedsHuman] = useState(0);
+  const [widgetNeedsHuman, setWidgetNeedsHuman] = useState(0);
   const [outOfStock, setOutOfStock] = useState(0);
 
   // Poll for WhatsApp conversations waiting on a human
@@ -52,6 +56,20 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
       try {
         const { data } = await whatsappService.getConversations({ filter: 'human' });
         if (alive) setWaNeedsHuman(data.counts?.human || 0);
+      } catch { /* ignore */ }
+    };
+    check();
+    const iv = setInterval(check, 45000);
+    return () => { alive = false; clearInterval(iv); };
+  }, []);
+
+  // Poll for widget chat conversations waiting on a human
+  useEffect(() => {
+    let alive = true;
+    const check = async () => {
+      try {
+        const { data } = await widgetService.getConversations({ filter: 'needs_human' });
+        if (alive) setWidgetNeedsHuman(data.counts?.needsHuman || 0);
       } catch { /* ignore */ }
     };
     check();
@@ -77,6 +95,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
 
   const badgeFor = (item) => {
     if (item.path === '/whatsapp') return waNeedsHuman > 0 ? waNeedsHuman : null;
+    if (item.path === '/widget-inbox') return widgetNeedsHuman > 0 ? widgetNeedsHuman : null;
     if (item.path === '/products') return outOfStock > 0 ? outOfStock : null;
     if (item.path === '/settings/store') return storeNeedsSetup ? 'Setup' : null;
     return item.badge;

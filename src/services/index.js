@@ -294,6 +294,18 @@ export const whatsappService = {
   getQR: () => api.get('/whatsapp/qr'),
 };
 
+// ─── Website Chat Widget (embeddable, knowledge-base powered) ────────────────
+export const widgetService = {
+  getConversations: (params) => api.get('/widget/conversations', { params }),
+  getConversation: (id) => api.get(`/widget/conversations/${id}`),
+  humanReply: (id, message) => api.post(`/widget/conversations/${id}/reply`, { message }),
+  takeover: (id) => api.post(`/widget/conversations/${id}/takeover`),
+  resolve: (id) => api.post(`/widget/conversations/${id}/resolve`),
+  sendToAI: (id) => api.post(`/widget/conversations/${id}/send-to-ai`),
+  getSettings: () => api.get('/widget/settings'),
+  updateSettings: (data) => api.patch('/widget/settings', data),
+};
+
 // ─── Messages ─────────────────────────────────────────────────────────────────
 export const messageService = {
   getConversations: () => api.get('/messages/conversations'),

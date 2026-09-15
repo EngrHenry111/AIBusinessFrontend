@@ -75,15 +75,15 @@ const STEPS = [
 const PLANS = [
   {
     name: 'Starter', price: '4,900', popular: false,
-    features: ['5 team members', '500 documents', '2,000 AI questions / month', 'WhatsApp AI bot', 'Leads, invoices & appointments', 'Email support'],
+    features: ['5 team members', '500 documents', '2,000 AI questions / month', 'WhatsApp AI bot', 'AI chat widget (your store only)', 'Leads, invoices & appointments', 'Email support'],
   },
   {
     name: 'Professional', price: '14,900', popular: true,
-    features: ['25 team members', '2,000 documents', '10,000 AI questions / month', 'Everything in Starter', 'AI reports & analytics', 'Priority support'],
+    features: ['25 team members', '2,000 documents', '10,000 AI questions / month', 'Everything in Starter', 'Embed AI chat widget on 1 external website', 'AI reports & analytics', 'Priority support'],
   },
   {
     name: 'Business', price: '34,900', popular: false,
-    features: ['100 team members', '10,000 documents', '50,000 AI questions / month', 'Everything in Professional', 'All 9 AI agents', 'Dedicated onboarding'],
+    features: ['100 team members', '10,000 documents', '50,000 AI questions / month', 'Everything in Professional', 'Embed AI chat widget on unlimited websites', 'All 9 AI agents', 'Dedicated onboarding'],
   },
 ];
 
