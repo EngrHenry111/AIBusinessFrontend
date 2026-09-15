@@ -32,8 +32,14 @@ api.interceptors.response.use(
       try {
         await axios.post(`${API_BASE}/auth/refresh-token`, {}, { withCredentials: true });
         return api(original);
-      } catch {
-        window.location.href = '/login';
+      } catch (refreshErr) {
+        // Only force a hard redirect once the server has explicitly said the
+        // session is gone (401/403) — a network blip or a slow cold-start
+        // shouldn't kick a still-valid session back to the login page.
+        const status = refreshErr.response?.status;
+        if ((status === 401 || status === 403) && !window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
       }
     }
 
