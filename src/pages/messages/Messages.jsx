@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { messageService } from '../../services';
-import { API_ORIGIN } from '../../services/api';
+import { SOCKET_ORIGIN } from '../../services/api';
 import { io } from 'socket.io-client';
 import {
   RiSendPlane2Line, RiSearchLine, RiTeamLine,
@@ -11,7 +11,7 @@ import {
 import toast from 'react-hot-toast';
 import './Messages.css';
 
-const SOCKET_URL = API_ORIGIN || 'http://localhost:5000';
+const SOCKET_URL = SOCKET_ORIGIN;
 
 export default function Messages() {
   const { user } = useAuth();

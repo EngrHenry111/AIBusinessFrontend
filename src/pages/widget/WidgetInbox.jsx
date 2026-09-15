@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { widgetService } from '../../services';
-import { API_ORIGIN } from '../../services/api';
+import { SOCKET_ORIGIN } from '../../services/api';
 import { io } from 'socket.io-client';
 import {
   RiChat3Line, RiSearchLine, RiSendPlane2Line, RiLoader4Line,
@@ -11,7 +11,7 @@ import {
 import toast from 'react-hot-toast';
 import './WidgetInbox.css';
 
-const SOCKET_URL = API_ORIGIN || 'http://localhost:5000';
+const SOCKET_URL = SOCKET_ORIGIN;
 
 const FILTERS = [
   { id: 'all', label: 'All' },
