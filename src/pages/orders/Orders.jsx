@@ -1,9 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { orderService, productService } from '../../services';
+import { useAuth } from '../../context/AuthContext';
+import { SOCKET_ORIGIN } from '../../services/api';
+import { io } from 'socket.io-client';
 import {
   RiAddLine, RiShoppingBagLine, RiDeleteBinLine, RiSearchLine,
   RiArrowDownSLine, RiArrowUpSLine, RiTruckLine, RiCheckLine,
-  RiTimeLine, RiMapPinLine, RiLoader4Line, RiRobot2Line, RiStore2Line
+  RiTimeLine, RiMapPinLine, RiLoader4Line, RiRobot2Line, RiStore2Line,
+  RiGlobalLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './Orders.css';
@@ -25,6 +29,7 @@ const EMPTY_FORM = {
 };
 
 export default function Orders() {
+  const { company } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -35,16 +40,32 @@ export default function Orders() {
   const [trackingId, setTrackingId] = useState(null);
   const [pickerIdx, setPickerIdx] = useState(null);
 
-  useEffect(() => { loadOrders(); }, [statusFilter]);
-
-  async function loadOrders() {
+  const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await orderService.getAll({ status: statusFilter || undefined, search: search || undefined });
       setOrders(data.data);
     } catch { toast.error('Failed to load orders'); }
     finally { setLoading(false); }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
+
+  useEffect(() => { loadOrders(); }, [loadOrders]);
+
+  // Real-time — a new storefront order shows up here the instant it's paid
+  // for, instead of only after this page happens to be reloaded.
+  useEffect(() => {
+    const companyId = company?.id || company?._id;
+    if (!companyId) return;
+    const socket = io(SOCKET_ORIGIN, { transports: ['websocket', 'polling'] });
+    socket.on('connect', () => socket.emit('join_company', companyId));
+    socket.on('order:new', (p) => {
+      toast.success(p.message || 'New order received', { icon: '🛒' });
+      loadOrders();
+    });
+    return () => socket.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [company?.id, company?._id]);
 
   function updateItem(idx, field, value) {
     const items = [...form.items];
@@ -238,7 +259,14 @@ export default function Orders() {
             <div key={order._id} className="order-card card">
               <div className="order-header" onClick={()=>setExpanded(expanded===order._id?null:order._id)}>
                 <div className="order-num">
-                  <span className="order-number">{order.orderNumber}</span>
+                  <span className="order-number">
+                    {order.orderNumber}
+                    {order.source === 'storefront' && (
+                      <span className="badge badge-info order-source-badge" title="Placed and paid for on your online store">
+                        <RiGlobalLine /> Online Order
+                      </span>
+                    )}
+                  </span>
                   <span className="order-customer">{order.customer?.name}</span>
                 </div>
 

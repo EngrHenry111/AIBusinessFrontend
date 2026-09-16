@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { notificationService } from '../../services';
+import { SOCKET_ORIGIN } from '../../services/api';
+import { io } from 'socket.io-client';
+import toast from 'react-hot-toast';
 import {
   RiSearchLine, RiSunLine, RiMoonLine, RiNotification3Line,
   RiMenuLine, RiSettings4Line, RiLogoutBoxLine, RiUserLine,
@@ -51,6 +54,23 @@ export default function TopBar({ onMenuToggle, mobileOpen = false }) {
     const interval = setInterval(loadNotifications, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // Real-time push — without this, a new storefront order only ever showed
+  // up here after the 60s poll AND the backend's own 2-minute notifications
+  // cache both happened to line up, which read as "no notification sent."
+  useEffect(() => {
+    const companyId = company?.id || company?._id;
+    if (!companyId) return;
+    const socket = io(SOCKET_ORIGIN, { transports: ['websocket', 'polling'] });
+    socket.on('connect', () => socket.emit('join_company', companyId));
+    socket.on('order:new', (p) => {
+      toast.success(p.message || 'New order received');
+      loadNotifications();
+    });
+    socket.on('notification:refresh', () => loadNotifications());
+    return () => socket.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [company?.id, company?._id]);
 
   async function loadNotifications() {
     try {

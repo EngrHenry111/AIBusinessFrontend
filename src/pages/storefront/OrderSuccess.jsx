@@ -83,6 +83,13 @@ export default function OrderSuccess() {
               <div className="sf-row total"><span>Total paid</span><span>{naira(order.total)}</span></div>
             </div>
 
+            <div className="sf-panel" style={{ marginTop: 12, textAlign: 'center' }}>
+              <p style={{ margin: 0, fontWeight: 600 }}>📦 Your order is being processed</p>
+              <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--sf-muted, #64748b)' }}>
+                {store?.name || 'The seller'} will be in touch shortly about delivery.
+              </p>
+            </div>
+
             <div style={{ textAlign: 'center', marginTop: 24, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link to={`/store/${slug}`} className="sf-btn sf-btn-ghost" style={{ width: 'auto', padding: '12px 22px' }}>
                 Continue Shopping

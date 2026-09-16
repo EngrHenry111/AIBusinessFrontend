@@ -16,7 +16,8 @@
 .order-card:hover { box-shadow: var(--shadow-md); }
 .order-header { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5); cursor: pointer; flex-wrap: wrap; }
 .order-num { display: flex; flex-direction: column; min-width: 110px; }
-.order-number { font-size: 13px; font-weight: 700; color: var(--color-brand); }
+.order-number { font-size: 13px; font-weight: 700; color: var(--color-brand); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.order-source-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; padding: 2px 7px; }
 .order-customer { font-size: 14px; font-weight: 500; color: var(--text-primary); }
 /* Progress tracker */
 .order-progress { display: flex; align-items: center; flex: 1; justify-content: center; gap: 0; }
