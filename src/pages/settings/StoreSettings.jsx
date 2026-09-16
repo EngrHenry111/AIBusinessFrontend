@@ -247,8 +247,12 @@ function PaymentTab({ pay, onChanged }) {
           </div>
           <div className="form-group">
             <label className="form-label">Account number</label>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 8px' }}>
+              Enter your 10-digit bank account number. Not your phone number.
+            </p>
             <div style={{ display: 'flex', gap: 8 }}>
               <input className="form-input" inputMode="numeric" maxLength={10} value={accountNumber}
+                placeholder="e.g. 0123456789"
                 onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} />
               <button className="btn btn-secondary" disabled={verifying} onClick={verify}>
                 {verifying ? 'Checking…' : 'Verify'}
