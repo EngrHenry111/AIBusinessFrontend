@@ -240,7 +240,12 @@ function PaymentTab({ pay, onChanged }) {
         <>
           <div className="form-group">
             <label className="form-label">Bank</label>
-            <select className="form-input form-select" value={bankCode} onChange={(e) => setBankCode(e.target.value)}>
+            <select className="form-input form-select" value={bankCode} onChange={(e) => {
+              const selectedBank = banks.find((b) => b.code === e.target.value);
+              console.log('Selected bank code:', selectedBank?.code);
+              console.log('Selected bank name:', selectedBank?.name);
+              setBankCode(e.target.value);
+            }}>
               <option value="">Select your bank</option>
               {banks.map((b) => <option key={b.code} value={b.code}>{b.name}</option>)}
             </select>
