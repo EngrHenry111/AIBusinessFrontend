@@ -350,4 +350,7 @@ export const adminService = {
   updatePlan: (id, plan) => api.patch(`/admin/companies/${id}/plan`, { plan }),
   broadcast: (data) => api.post('/admin/broadcast', data),
   getAuditLogs: (params) => api.get('/admin/audit-logs', { params }),
+  // Wide-window backfill can take a while (many Paystack pages) — give it
+  // more room than the shared 60s default instead of failing a slow-but-fine run.
+  reconcileOrders: (days) => api.post('/admin/reconcile-orders', null, { params: { days }, timeout: 120000 }),
 };

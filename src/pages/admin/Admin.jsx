@@ -8,6 +8,7 @@ import {
   RiFileTextLine, RiRobot2Line, RiArrowUpLine, RiArrowDownLine,
   RiMoneyDollarCircleLine, RiPulseLine, RiRefreshLine, RiMailSendLine,
   RiDatabase2Line, RiServerLine, RiCpuLine, RiTimeLine, RiEyeLine,
+  RiSearchEyeLine,
 } from 'react-icons/ri';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip,
@@ -754,6 +755,8 @@ function SystemTab() {
         </div>
       </div>
 
+      <OrderReconciliationCard />
+
       <div className="card">
         <div className="card-header-row"><h3>Error Logs <span className="muted">· last 20 failures</span></h3></div>
         <div className="table-wrapper">
@@ -777,3 +780,106 @@ function SystemTab() {
     </>
   );
 }
+
+/* ───────────────── Storefront order recovery (reconciliation) ───────────────
+ * Finds and creates any storefront order Paystack confirmed as paid but that
+ * never made it onto the Orders page — a missed webhook, or a customer who
+ * paid by bank transfer/USSD and never returned to the success page. The
+ * same job also runs automatically every 15 minutes over a rolling 3-hour
+ * window; this lets an admin re-run it on demand over a much wider window
+ * to backfill orders from before that job existed, or from longer ago than
+ * its rolling window covers. Always safe to run — it never creates a
+ * duplicate order for a payment reference that's already been fulfilled. */
+function OrderReconciliationCard() {
+  const [days, setDays] = useState(30);
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState(null);
+
+  async function run() {
+    setRunning(true);
+    setResult(null);
+    try {
+      const { data } = await adminService.reconcileOrders(days);
+      setResult(data);
+      toast.success(data.created > 0 ? `Recovered ${data.created} missing order(s)` : 'No missing orders found in that window');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Reconciliation failed — check Render logs, it may still be running');
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <div className="card card-pad">
+      <h3><RiSearchEyeLine /> Storefront Order Recovery</h3>
+      <p className="muted" style={{ marginTop: -6, marginBottom: 14, fontSize: 13 }}>
+        Asks Paystack for every payment it confirmed as successful and creates any storefront order still
+        missing from the Orders page. Works regardless of a merchant's subaccount verification status —
+        that only affects when Paystack pays them out, not whether their order exists here.
+      </p>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          Look back
+          <input type="number" min={1} max={180} value={days}
+            onChange={(e) => setDays(Math.min(180, Math.max(1, Number(e.target.value) || 1)))}
+            className="form-input" style={{ width: 68 }} />
+          days
+        </label>
+        <button className="btn btn-primary btn-sm" onClick={run} disabled={running}>
+          {running ? <RiLoader4Line className="spin" /> : <RiRefreshLine />} {running ? 'Scanning…' : 'Run Reconciliation'}
+        </button>
+        {running && <span className="muted" style={{ fontSize: 12 }}>Calling Paystack live — a wide window can take a little while.</span>}
+      </div>
+
+      {result && (
+        <div style={{ marginTop: 16 }}>
+          <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 14 }}>
+            <MiniStat label="Transactions scanned" value={fmtNum(result.scanned)} />
+            <MiniStat label="Storefront payments" value={fmtNum(result.candidates)} />
+            <MiniStat label="Orders recovered" value={fmtNum(result.created)} color={result.created > 0 ? '#10b981' : undefined} />
+            <MiniStat label="Already existed" value={fmtNum(result.skipped)} />
+          </div>
+
+          {result.createdOrders?.length > 0 && (
+            <div className="table-wrapper">
+              <table className="table compact">
+                <thead><tr><th>Order</th><th>Reference</th><th>Company ID</th><th>Total</th></tr></thead>
+                <tbody>
+                  {result.createdOrders.map((o) => (
+                    <tr key={o.reference}>
+                      <td><strong>{o.orderNumber}</strong></td>
+                      <td className="muted mono">{o.reference}</td>
+                      <td className="muted mono">{o.companyId}</td>
+                      <td>{fmtMoney(o.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {result.errors?.length > 0 && (
+            <div style={{ marginTop: 10 }}>
+              {result.errors.map((e, i) => (
+                <div key={i} className="badge badge-danger" style={{ display: 'block', marginBottom: 4, whiteSpace: 'normal' }}>
+                  {e.reference || 'general'}: {e.message}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!result.createdOrders?.length && !result.errors?.length && (
+            <p className="muted" style={{ fontSize: 13 }}>Nothing missing in that window — every successful storefront payment already has an order.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const MiniStat = ({ label, value, color }) => (
+  <div>
+    <div style={{ fontSize: 20, fontWeight: 700, color: color || 'var(--text-primary)' }}>{value}</div>
+    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</div>
+  </div>
+);
