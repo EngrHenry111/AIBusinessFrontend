@@ -5,7 +5,8 @@ import {
   RiAddLine, RiMoneyDollarCircleLine, RiRobot2Line, RiDeleteBinLine,
   RiCalendarLine, RiLoader4Line, RiArrowDownSLine, RiArrowUpSLine,
   RiMailLine, RiAlertLine, RiCheckLine, RiTimeLine, RiDownloadLine,
-  RiShareForwardLine, RiMailSendLine, RiCheckboxCircleLine
+  RiShareForwardLine, RiMailSendLine, RiCheckboxCircleLine, RiRepeatLine,
+  RiPlayLine, RiPauseLine, RiFlashlightLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import { SkeletonTable } from '../../components/ui/Skeleton';
@@ -17,15 +18,33 @@ const STATUS_COLORS = {
   paid:'success', overdue:'danger', cancelled:'neutral'
 };
 
+const INTERVAL_LABELS = { weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly', annually: 'Annually' };
+
+// Mirrors utils/recurringInvoices.js's addInterval() so the "Next invoice"
+// preview in the create form matches what the backend will actually compute.
+function addInterval(date, interval) {
+  const next = new Date(date);
+  switch (interval) {
+    case 'weekly': next.setDate(next.getDate() + 7); break;
+    case 'quarterly': next.setMonth(next.getMonth() + 3); break;
+    case 'annually': next.setFullYear(next.getFullYear() + 1); break;
+    default: next.setMonth(next.getMonth() + 1);
+  }
+  return next;
+}
+
 const EMPTY_FORM = {
   customer: { name:'', email:'', phone:'', address:'' },
   items: [{ description:'', quantity:1, unitPrice:0, total:0 }],
   dueAt:'', notes:'', currency:'USD',
+  isRecurring: false,
+  recurringSettings: { interval: 'monthly', startDate: '', endDate: '', maxOccurrences: '' },
 };
 
 export default function Invoices() {
   const { company } = useAuth();
   const companyId = company?.id || company?._id;
+  const [tab, setTab] = useState('invoices');
   const [invoices, setInvoices] = useState([]);
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -72,11 +91,19 @@ export default function Invoices() {
   async function handleCreate(e) {
     e.preventDefault();
     try {
-      const { data } = await invoiceService.create({
-        ...form,
-        subtotal,
-        total: subtotal,
-      });
+      const payload = { ...form, subtotal, total: subtotal };
+      if (payload.isRecurring) {
+        const rs = payload.recurringSettings;
+        payload.recurringSettings = {
+          interval: rs.interval,
+          nextDueDate: rs.startDate || undefined,
+          endDate: rs.endDate || undefined,
+          maxOccurrences: rs.maxOccurrences ? Number(rs.maxOccurrences) : undefined,
+        };
+      } else {
+        delete payload.recurringSettings;
+      }
+      const { data } = await invoiceService.create(payload);
       setInvoices(prev => [data.data, ...prev]);
       setShowForm(false);
       setForm(EMPTY_FORM);
@@ -180,10 +207,21 @@ export default function Invoices() {
       <div className="page-header">
         <div className="page-header-row">
           <div><h1>Invoices</h1><p>{invoices.length} invoices · AI-powered payment reminders</p></div>
-          <button className="btn btn-primary" onClick={() => setShowForm(v => !v)}><RiAddLine /> New Invoice</button>
+          {tab === 'invoices' && (
+            <button className="btn btn-primary" onClick={() => setShowForm(v => !v)}><RiAddLine /> New Invoice</button>
+          )}
         </div>
       </div>
 
+      <div className="inv-tabs">
+        <button className={`inv-tab ${tab === 'invoices' ? 'active' : ''}`} onClick={() => setTab('invoices')}>Invoices</button>
+        <button className={`inv-tab ${tab === 'recurring' ? 'active' : ''}`} onClick={() => setTab('recurring')}><RiRepeatLine /> Recurring</button>
+      </div>
+
+      {tab === 'recurring' && <RecurringTab />}
+
+      {tab === 'invoices' && (
+      <>
       {/* Stats */}
       <div className="invoice-stats">
         <div className="invoice-stat-card">
@@ -275,6 +313,56 @@ export default function Invoices() {
                 onChange={e=>setForm(p=>({...p,notes:e.target.value}))} placeholder="Payment terms, bank details..." />
             </div>
 
+            <div className="inv-recurring-toggle">
+              <label className="switch">
+                <input type="checkbox" checked={form.isRecurring}
+                  onChange={e=>setForm(p=>({...p,isRecurring:e.target.checked}))} />
+                <span className="track" />
+              </label>
+              <div>
+                <div className="t-label">Make this recurring <RiRepeatLine /></div>
+                <div className="t-help">Automatically generate and send a new copy of this invoice on a schedule.</div>
+              </div>
+            </div>
+
+            {form.isRecurring && (
+              <div className="inv-recurring-fields">
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Interval</label>
+                    <select className="form-input form-select" value={form.recurringSettings.interval}
+                      onChange={e=>setForm(p=>({...p,recurringSettings:{...p.recurringSettings,interval:e.target.value}}))}>
+                      {Object.entries(INTERVAL_LABELS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Start date <span className="form-hint">(when the 2nd invoice fires)</span></label>
+                    <input className="form-input" type="date" value={form.recurringSettings.startDate}
+                      onChange={e=>setForm(p=>({...p,recurringSettings:{...p.recurringSettings,startDate:e.target.value}}))} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">End date <span className="form-hint">(optional)</span></label>
+                    <input className="form-input" type="date" value={form.recurringSettings.endDate}
+                      onChange={e=>setForm(p=>({...p,recurringSettings:{...p.recurringSettings,endDate:e.target.value}}))} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Max occurrences <span className="form-hint">(optional)</span></label>
+                    <input className="form-input" type="number" min="1" value={form.recurringSettings.maxOccurrences}
+                      placeholder="Unlimited"
+                      onChange={e=>setForm(p=>({...p,recurringSettings:{...p.recurringSettings,maxOccurrences:e.target.value}}))} />
+                  </div>
+                </div>
+                <div className="inv-recurring-preview">
+                  <RiCalendarLine /> Next invoice:{' '}
+                  <strong>
+                    {fmt(form.recurringSettings.startDate
+                      ? new Date(form.recurringSettings.startDate)
+                      : addInterval(new Date(), form.recurringSettings.interval))}
+                  </strong>
+                </div>
+              </div>
+            )}
+
             <div style={{display:'flex',gap:8,marginTop:16}}>
               <button type="submit" className="btn btn-primary">Create Invoice</button>
               <button type="button" className="btn btn-secondary" onClick={()=>setShowForm(false)}>Cancel</button>
@@ -301,10 +389,16 @@ export default function Invoices() {
               <div key={inv._id} className={`invoice-card card ${overdue?'overdue-card':''}`}>
                 <div className="invoice-header" onClick={()=>setExpanded(expanded===inv._id?null:inv._id)}>
                   <div className="invoice-num">
-                    <span className="inv-number">{inv.invoiceNumber}</span>
+                    <span className="inv-number">
+                      {inv.invoiceNumber}
+                      {inv.isRecurring && <span title={`Recurring — ${INTERVAL_LABELS[inv.recurringSettings?.interval] || ''}`} className="inv-recur-icon">🔄</span>}
+                    </span>
                     <span className="inv-customer">{inv.customer?.name}</span>
                     {inv.sentAt && (
                       <span className="inv-sent-badge"><RiCheckLine /> Sent {fmt(inv.sentAt)}</span>
+                    )}
+                    {inv.recurringParentId && (
+                      <span className="inv-generated-badge"><RiRepeatLine /> Generated from recurring</span>
                     )}
                   </div>
                   <div className="invoice-dates">
@@ -402,6 +496,119 @@ export default function Invoices() {
           })}
         </div>
       )}
+      </>
+      )}
+    </div>
+  );
+}
+
+/* ── Recurring invoice templates ─────────────────────────────────────────
+ * Lists every invoice with isRecurring:true — each row IS a real, usable
+ * invoice (occurrence #1) that also acts as the template the scheduler
+ * reads from for #2 onward. "Generate Now" bypasses the schedule/pause
+ * check but still respects endDate/maxOccurrences, and the unpaid-cycle
+ * health guard, same as the automatic scheduler — see
+ * utils/recurringInvoices.js on the backend. */
+function RecurringTab() {
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState(null);
+
+  const fmt = (dt) => dt ? new Date(dt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+  const fmtMoney = (n, cur='USD') => new Intl.NumberFormat('en-US',{style:'currency',currency:cur}).format(n||0);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const { data } = await invoiceService.getRecurring();
+      setTemplates(data.data);
+    } catch { toast.error('Failed to load recurring invoices'); }
+    finally { setLoading(false); }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function toggleActive(t) {
+    setBusyId(t._id);
+    try {
+      await invoiceService.toggleRecurring(t._id, { active: !t.recurringSettings.active });
+      toast.success(t.recurringSettings.active ? 'Paused' : 'Resumed');
+      load();
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to update'); }
+    finally { setBusyId(null); }
+  }
+
+  async function generateNow(t) {
+    if (!confirm(`Generate and send the next invoice for ${t.customer?.name} now?`)) return;
+    setBusyId(t._id);
+    try {
+      const { data } = await invoiceService.generateNow(t._id);
+      toast.success(`Invoice ${data.data.invoiceNumber} generated and sent`);
+      load();
+    } catch (err) { toast.error(err.response?.data?.message || 'Could not generate right now'); }
+    finally { setBusyId(null); }
+  }
+
+  const STATUS_LABEL = { active: 'Active', paused: 'Paused', ended: 'Ended' };
+  const STATUS_CLASS = { active: 'success', paused: 'warning', ended: 'neutral' };
+
+  if (loading) return <div className="card"><SkeletonTable rows={4} cols={6} /></div>;
+
+  if (!templates.length) {
+    return (
+      <div className="empty-state">
+        <div className="empty-state-icon"><RiRepeatLine /></div>
+        <h3>No recurring invoices yet</h3>
+        <p>Turn on "Make this recurring" when creating an invoice to bill a customer automatically on a schedule.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card">
+      <div className="table-wrapper">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Customer</th><th>Amount</th><th>Interval</th><th>Next Due</th>
+              <th>Total Generated</th><th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {templates.map((t) => {
+              const rs = t.recurringSettings || {};
+              const busy = busyId === t._id;
+              const ended = t.statusLabel === 'ended';
+              return (
+                <tr key={t._id}>
+                  <td><strong>{t.customer?.name}</strong><br /><span className="cell-sub">{t.invoiceNumber}</span></td>
+                  <td>{fmtMoney(t.total, t.currency)}</td>
+                  <td>{INTERVAL_LABELS[rs.interval] || rs.interval}</td>
+                  <td>{ended ? '—' : fmt(rs.nextDueDate)}</td>
+                  <td>{rs.totalGenerated || 0}{rs.maxOccurrences ? ` / ${rs.maxOccurrences}` : ''}</td>
+                  <td>
+                    <span className={`badge badge-${STATUS_CLASS[t.statusLabel]}`}>{STATUS_LABEL[t.statusLabel]}</span>
+                    {rs.pausedReason && <div className="cell-sub" style={{ marginTop: 4, maxWidth: 200 }}>{rs.pausedReason}</div>}
+                  </td>
+                  <td>
+                    <div className="row-actions">
+                      {!ended && (
+                        <button className="btn btn-sm btn-secondary" disabled={busy} onClick={() => toggleActive(t)}
+                          title={rs.active ? 'Pause' : 'Resume'}>
+                          {rs.active ? <RiPauseLine /> : <RiPlayLine />}
+                        </button>
+                      )}
+                      <button className="btn btn-sm btn-primary" disabled={busy || ended} onClick={() => generateNow(t)} title="Generate Now">
+                        {busy ? <RiLoader4Line className="spin" /> : <RiFlashlightLine />}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

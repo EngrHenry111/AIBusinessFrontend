@@ -32,6 +32,27 @@
   background: #dcfce7; border-radius: 999px; padding: 1px 8px; margin-top: 2px;
 }
 [data-theme='dark'] .inv-sent-badge { background: #064e3b; color: #6ee7b7; }
+
+.inv-generated-badge {
+  display: inline-flex; align-items: center; gap: 3px; width: fit-content;
+  font-size: 11px; font-weight: 600; color: #6366f1;
+  background: #eef2ff; border-radius: 999px; padding: 1px 8px; margin-top: 2px;
+}
+[data-theme='dark'] .inv-generated-badge { background: #312e81; color: #c7d2fe; }
+.inv-recur-icon { margin-left: 6px; font-size: 12px; }
+
+/* ── Tabs (Invoices / Recurring) ─────────────────────────────────────────── */
+.inv-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); }
+.inv-tab { display: flex; align-items: center; gap: 6px; padding: 10px 18px; font-size: 14px; font-weight: 500; color: var(--text-secondary); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; }
+.inv-tab.active { color: var(--color-brand); border-bottom-color: var(--color-brand); font-weight: 600; }
+
+/* ── Recurring toggle + fields on the create form ────────────────────────── */
+.inv-recurring-toggle { display: flex; align-items: center; gap: 14px; margin-top: 16px; padding: 14px 0; border-top: 1px solid var(--border); }
+.inv-recurring-toggle .t-label { font-size: 14px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+.inv-recurring-toggle .t-help { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.inv-recurring-fields { padding: 14px; margin-top: 4px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.inv-recurring-preview { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 13px; color: var(--text-secondary); }
+.inv-recurring-preview strong { color: var(--color-brand); }
 .invoice-dates { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--text-muted); flex: 1; }
 .invoice-dates span { display: flex; align-items: center; gap: 4px; }
 .overdue-tag { color: var(--color-danger) !important; font-weight: 600; }

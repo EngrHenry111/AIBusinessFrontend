@@ -127,6 +127,9 @@ export const invoiceService = {
   sendEmail: (id) => api.post(`/invoices/${id}/send-email`),
   sendReceipt: (id) => api.post(`/invoices/${id}/send-receipt`),
   getPDF: (id) => `${api.defaults.baseURL}/invoices/${id}/pdf`,
+  getRecurring: () => api.get('/invoices/recurring'),
+  toggleRecurring: (id, data) => api.patch(`/invoices/${id}/recurring`, data),
+  generateNow: (id) => api.post(`/invoices/${id}/recurring/generate-now`),
 };
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
