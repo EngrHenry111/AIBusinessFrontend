@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 const naira = (n) => `₦${Number(n || 0).toLocaleString()}`;
 
 const EMPTY = {
-  name: '', email: '', role: '', department: '',
+  name: '', email: '', phone: '', role: '', department: '',
   grossSalary: '', taxRate: 7.5, pensionRate: 8, otherDeduction: 0,
   bankCode: '', bankName: '', accountNumber: '', accountName: '',
   startDate: new Date().toISOString().slice(0, 10),
@@ -15,7 +15,7 @@ const EMPTY = {
 export default function StaffForm({ staff, onClose, onSaved }) {
   const isEdit = Boolean(staff);
   const [form, setForm] = useState(() => (staff ? {
-    name: staff.name || '', email: staff.email || '', role: staff.role || '', department: staff.department || '',
+    name: staff.name || '', email: staff.email || '', phone: staff.phone || '', role: staff.role || '', department: staff.department || '',
     grossSalary: staff.grossSalary || '', taxRate: staff.taxRate ?? 7.5, pensionRate: staff.pensionRate ?? 8,
     otherDeduction: staff.otherDeduction || 0, bankCode: staff.bankCode || '', bankName: staff.bankName || '',
     accountNumber: staff.accountNumber || '', accountName: staff.accountName || '',
@@ -92,6 +92,10 @@ export default function StaffForm({ staff, onClose, onSaved }) {
               <div className="form-group">
                 <label className="form-label">Email</label>
                 <input className="form-input" type="email" value={form.email} onChange={(e) => set('email', e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Phone <span className="pr-hint">(for payslip SMS)</span></label>
+                <input className="form-input" type="tel" placeholder="e.g. 08012345678" value={form.phone} onChange={(e) => set('phone', e.target.value)} />
               </div>
               <div className="form-group">
                 <label className="form-label">Role / Position</label>

@@ -241,6 +241,8 @@ export const companyService = {
   update: (data) => api.patch('/companies', data),
   getUsage: () => api.get('/companies/usage'),
   updateAISettings: (data) => api.patch('/companies/ai-settings', data),
+  updateSMSSettings: (data) => api.patch('/companies/sms-settings', data),
+  testSMS: (phone) => api.post('/companies/test-sms', phone ? { phone } : {}),
 };
 
 // ─── Storefront (public — no auth) ────────────────────────────────────────────

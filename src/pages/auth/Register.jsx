@@ -8,7 +8,7 @@ export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    name: '', email: '', password: '', companyName: '', industry: ''
+    name: '', email: '', password: '', companyName: '', industry: '', phone: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -94,6 +94,16 @@ export default function Register() {
                 <option value="agriculture">Agriculture</option>
                 <option value="other">Other</option>
               </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Phone Number <span className="form-hint">(for SMS updates, optional)</span></label>
+              <input
+                className="form-input"
+                type="tel"
+                placeholder="e.g. 08012345678"
+                value={form.phone}
+                onChange={e => f('phone', e.target.value)}
+              />
             </div>
           </div>
 

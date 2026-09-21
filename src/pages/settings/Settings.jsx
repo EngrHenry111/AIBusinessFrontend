@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { userService, companyService } from '../../services';
 import {
   RiUserLine, RiBuildingLine, RiRobot2Line, RiLockLine,
-  RiCheckLine, RiLoader4Line, RiMoonLine, RiSunLine, RiImageAddLine, RiShieldKeyholeLine
+  RiCheckLine, RiLoader4Line, RiMoonLine, RiSunLine, RiImageAddLine, RiShieldKeyholeLine,
+  RiMessage3Line, RiSendPlaneLine,
 } from 'react-icons/ri';
 import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
@@ -27,7 +28,22 @@ export default function Settings() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Profile form
-  const [profileForm, setProfileForm] = useState({ name: user?.name || '', preferences: user?.preferences || {} });
+  const [profileForm, setProfileForm] = useState({ name: user?.name || '', phone: user?.phone || '', preferences: user?.preferences || {} });
+
+  // SMS settings — fetched separately since the slim `company` from
+  // AuthContext doesn't carry smsSettings (same pattern StoreSettings.jsx
+  // uses for its own dedicated settings fetch).
+  const [smsForm, setSmsForm] = useState(null);
+  const [smsLoading, setSmsLoading] = useState(true);
+  const [savingSms, setSavingSms] = useState(false);
+  const [testingSms, setTestingSms] = useState(false);
+
+  useEffect(() => {
+    companyService.get()
+      .then(({ data }) => setSmsForm(data.data.smsSettings || { enabled: true, sendInvoiceSMS: true, sendOrderSMS: true, sendPayrollSMS: true, sendLowStockSMS: true }))
+      .catch(() => {})
+      .finally(() => setSmsLoading(false));
+  }, []);
 
   // Company form
   const [companyForm, setCompanyForm] = useState({
@@ -68,12 +84,40 @@ export default function Settings() {
   // Password form
   const [pwForm, setPwForm] = useState({ currentPassword:'', newPassword:'', confirmPassword:'' });
 
+  async function saveSmsSettings(overrides = {}) {
+    const next = { ...smsForm, ...overrides };
+    setSmsForm(next);
+    setSavingSms(true);
+    try {
+      const { data } = await companyService.updateSMSSettings(next);
+      setSmsForm(data.data);
+      toast.success('SMS settings saved');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save SMS settings');
+    } finally {
+      setSavingSms(false);
+    }
+  }
+
+  async function testSms() {
+    setTestingSms(true);
+    try {
+      const { data } = await companyService.testSMS();
+      toast.success(data.message || 'Test SMS sent');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to send test SMS');
+    } finally {
+      setTestingSms(false);
+    }
+  }
+
   async function saveProfile(e) {
     e.preventDefault();
     setSaving(true);
     try {
       const { data } = await userService.updateProfile({
         name: profileForm.name,
+        phone: profileForm.phone,
         preferences: profileForm.preferences || {},
       });
       updateUser(data.data);
@@ -243,6 +287,11 @@ export default function Settings() {
                   <span className="form-hint">Email cannot be changed</span>
                 </div>
                 <div className="form-group">
+                  <label className="form-label">Phone Number <span className="form-hint">(for SMS notifications)</span></label>
+                  <input className="form-input" type="tel" placeholder="e.g. 08012345678"
+                    value={profileForm.phone} onChange={e=>setProfileForm(p=>({...p,phone:e.target.value}))} />
+                </div>
+                <div className="form-group">
                   <label className="form-label">Notification Preferences</label>
                   <div className="pref-toggles">
                     <label className="pref-toggle">
@@ -394,6 +443,58 @@ export default function Settings() {
                   {!saving && <><RiCheckLine /> Save Company</>}
                 </button>
               </form>
+            </div>
+          )}
+
+          {/* SMS Notifications */}
+          {activeTab==='company' && (
+            <div className="card card-pad" style={{ marginTop: 20 }}>
+              <h2><RiMessage3Line style={{ verticalAlign: '-3px' }} /> SMS Notifications</h2>
+              <p className="settings-subtitle">Sent via Termii to Nigerian phone numbers. Toggle any category off without affecting the others.</p>
+
+              {smsLoading || !smsForm ? (
+                <div className="skeleton" style={{ height: 180, borderRadius: 10 }} />
+              ) : (
+                <>
+                  <div className="pref-toggles" style={{ flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
+                    <label className="pref-toggle">
+                      <input type="checkbox" checked={smsForm.enabled}
+                        onChange={e => saveSmsSettings({ enabled: e.target.checked })} />
+                      <strong>Enable SMS notifications</strong>
+                    </label>
+                    <label className="pref-toggle" style={{ opacity: smsForm.enabled ? 1 : 0.5 }}>
+                      <input type="checkbox" checked={smsForm.sendInvoiceSMS} disabled={!smsForm.enabled}
+                        onChange={e => saveSmsSettings({ sendInvoiceSMS: e.target.checked })} />
+                      Invoice SMS to customers
+                    </label>
+                    <label className="pref-toggle" style={{ opacity: smsForm.enabled ? 1 : 0.5 }}>
+                      <input type="checkbox" checked={smsForm.sendOrderSMS} disabled={!smsForm.enabled}
+                        onChange={e => saveSmsSettings({ sendOrderSMS: e.target.checked })} />
+                      Order confirmation SMS
+                    </label>
+                    <label className="pref-toggle" style={{ opacity: smsForm.enabled ? 1 : 0.5 }}>
+                      <input type="checkbox" checked={smsForm.sendPayrollSMS} disabled={!smsForm.enabled}
+                        onChange={e => saveSmsSettings({ sendPayrollSMS: e.target.checked })} />
+                      Payroll SMS to staff
+                    </label>
+                    <label className="pref-toggle" style={{ opacity: smsForm.enabled ? 1 : 0.5 }}>
+                      <input type="checkbox" checked={smsForm.sendLowStockSMS} disabled={!smsForm.enabled}
+                        onChange={e => saveSmsSettings({ sendLowStockSMS: e.target.checked })} />
+                      Low stock alerts SMS
+                    </label>
+                  </div>
+                  {savingSms && <span className="form-hint">Saving…</span>}
+
+                  <button type="button" className="btn btn-secondary" style={{ marginTop: 16 }} disabled={testingSms} onClick={testSms}>
+                    {testingSms ? <RiLoader4Line className="spin" /> : <RiSendPlaneLine />} Test SMS
+                  </button>
+                  {!user?.phone && (
+                    <span className="form-hint" style={{ display: 'block', marginTop: 6 }}>
+                      Add a phone number in the Profile tab first — test SMS sends there by default.
+                    </span>
+                  )}
+                </>
+              )}
             </div>
           )}
 
