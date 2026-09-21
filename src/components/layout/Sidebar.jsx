@@ -9,7 +9,7 @@ import {
   RiShoppingBagLine, RiVideoLine, RiMegaphoneLine, RiBriefcaseLine,
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
   RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine, RiStoreLine,
-  RiChat3Line, RiCodeLine,
+  RiChat3Line, RiCodeLine, RiContactsLine,
 } from 'react-icons/ri';
 import './Sidebar.css';
 
@@ -32,6 +32,7 @@ const NAV_ITEMS = [
   { label: 'Reports', icon: RiFileChartLine, path: '/reports' },
   { type: 'divider', label: 'Workspace' },
   { label: 'My Store', icon: RiStoreLine, path: '/settings/store' },
+  { label: 'My Card', icon: RiContactsLine, path: '/settings/card' },
   { label: 'Analytics', icon: RiBarChartLine, path: '/analytics' },
   { label: 'Team', icon: RiTeamLine, path: '/team' },
   { label: 'WhatsApp', icon: RiWhatsappLine, path: '/whatsapp' },
@@ -94,11 +95,18 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
 
   const storeNeedsSetup = Boolean(company) && !company?.paymentSettings?.isPaymentSetup;
 
+  // "New" badge for 7 days after the Digital Business Card feature launched —
+  // shown to every user (not gated on account age), since the point is to
+  // announce a feature that just shipped, not one they just signed up for.
+  const CARD_FEATURE_LAUNCHED_AT = new Date('2026-09-21T00:00:00Z').getTime();
+  const isNewFeature = (Date.now() - CARD_FEATURE_LAUNCHED_AT) / 86400000 <= 7;
+
   const badgeFor = (item) => {
     if (item.path === '/whatsapp') return waNeedsHuman > 0 ? waNeedsHuman : null;
     if (item.path === '/widget-inbox') return widgetNeedsHuman > 0 ? widgetNeedsHuman : null;
     if (item.path === '/products') return outOfStock > 0 ? outOfStock : null;
     if (item.path === '/settings/store') return storeNeedsSetup ? 'Setup' : null;
+    if (item.path === '/settings/card') return isNewFeature ? 'New' : null;
     return item.badge;
   };
 

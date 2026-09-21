@@ -248,6 +248,17 @@ export const companyService = {
   testSMS: (phone) => api.post('/companies/test-sms', phone ? { phone } : {}),
 };
 
+// ─── Digital Business Card ──────────────────────────────────────────────────
+export const cardService = {
+  getMyCard: () => api.get('/card/me/settings'),
+  updateMyCard: (data) => api.patch('/card/me/settings', data),
+  // Public — no auth, called from the standalone /card/:username page.
+  getPublicCard: (username) => axios.get(`${API_BASE}/card/${username}`),
+  saveContact: (username) => axios.post(`${API_BASE}/card/${username}/save`),
+  downloadVCardUrl: (username) => `${API_BASE}/card/${username}/vcard`,
+  qrCodeUrl: (username) => `${API_BASE}/card/${username}/qrcode`,
+};
+
 // ─── Storefront (public — no auth) ────────────────────────────────────────────
 export const storefrontService = {
   getStore: (slug) => axios.get(`${API_BASE}/store/${slug}`),

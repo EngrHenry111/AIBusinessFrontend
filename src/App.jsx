@@ -58,6 +58,8 @@ const WidgetInbox = lazy(() => import('./pages/widget/WidgetInbox'));
 const WidgetSettings = lazy(() => import('./pages/widget/WidgetSettings'));
 const Payroll = lazy(() => import('./pages/payroll/Payroll'));
 const PayrollDetail = lazy(() => import('./pages/payroll/PayrollDetail'));
+const CardEditor = lazy(() => import('./pages/card/CardEditor'));
+const BusinessCard = lazy(() => import('./pages/card/BusinessCard'));
 const Billing = lazy(() => import('./pages/billing/Billing'));
 const Messages = lazy(() => import('./pages/messages/Messages'));
 const Admin = lazy(() => import('./pages/admin/Admin'));
@@ -133,6 +135,9 @@ function AppRoutes() {
       <Route path="/store/:slug/checkout" element={<Suspense fallback={<PageLoader />}><StoreCheckout /></Suspense>} />
       <Route path="/store/:slug/success" element={<Suspense fallback={<PageLoader />}><StoreSuccess /></Suspense>} />
 
+      {/* Public digital business card — no auth, must load fast */}
+      <Route path="/card/:username" element={<Suspense fallback={<PageLoader />}><BusinessCard /></Suspense>} />
+
       {/* Protected app routes */}
       <Route path="/*" element={
         <ProtectedRoute>
@@ -168,6 +173,7 @@ function AppRoutes() {
                 <Route path="team" element={<Team />} />
                 <Route path="settings/audit-log" element={<AuditLog />} />
                 <Route path="settings/store" element={<StoreSettings />} />
+                <Route path="settings/card" element={<CardEditor />} />
                 <Route path="settings/*" element={<Settings />} />
                 <Route path="" element={<Navigate to="dashboard" replace />} />
                 <Route path="*" element={<Navigate to="dashboard" replace />} />
