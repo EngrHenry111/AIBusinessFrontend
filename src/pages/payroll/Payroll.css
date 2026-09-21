@@ -1,0 +1,49 @@
+.payroll-page { display: flex; flex-direction: column; gap: var(--space-4); }
+
+/* ── Summary cards ────────────────────────────────────────────────────────── */
+.pr-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+.pr-summary-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 18px; }
+.pr-summary-card .s-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+.pr-summary-card .s-value { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+.pr-summary-card.net .s-value { color: var(--color-success); }
+@media (max-width: 900px) { .pr-summary { grid-template-columns: repeat(2, 1fr); } }
+
+/* ── Tabs ─────────────────────────────────────────────────────────────────── */
+.pr-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); }
+.pr-tab { padding: 10px 18px; font-size: 14px; font-weight: 500; color: var(--text-secondary); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; }
+.pr-tab.active { color: var(--color-brand); border-bottom-color: var(--color-brand); font-weight: 600; }
+
+/* ── Tables ───────────────────────────────────────────────────────────────── */
+.pr-table-wrap { overflow-x: auto; }
+.pr-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.pr-table th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.pr-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--text-primary); }
+.pr-table tr:last-child td { border-bottom: none; }
+.pr-table .amt { text-align: right; font-variant-numeric: tabular-nums; }
+.pr-table .deduction { color: var(--color-danger); }
+.pr-table .pr-total-row td { font-weight: 700; border-top: 2px solid var(--color-brand); font-size: 15px; }
+.pr-table .pr-sub { display: block; font-size: 12px; color: var(--text-muted); }
+
+.pr-status { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 3px 9px; border-radius: var(--radius-full); }
+.pr-status.pending, .pr-status.draft { background: #f59e0b18; color: #f59e0b; }
+.pr-status.paid { background: #10b98118; color: #10b981; }
+.pr-status.processing { background: #6366f118; color: #6366f1; }
+
+/* ── Staff / history rows ─────────────────────────────────────────────────── */
+.pr-row-actions { display: flex; gap: 6px; }
+.pr-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 48px 20px; color: var(--text-muted); text-align: center; }
+.pr-empty svg { font-size: 36px; opacity: 0.4; }
+
+/* ── Add-staff form calculation preview ──────────────────────────────────── */
+.pr-hint { font-weight: 400; color: var(--text-muted); font-size: 12px; }
+.pr-preview { margin-top: 8px; padding: 14px 16px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.pr-preview-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; color: var(--text-secondary); }
+.pr-preview-row.deduction { color: var(--color-danger); }
+.pr-preview-row.total { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 8px; font-size: 16px; color: var(--color-success); }
+
+/* ── Print styles for payslips (opened in a new tab, so mostly informational
+   here — the payslip's own inline <style> in the generated HTML handles the
+   actual print layout) ───────────────────────────────────────────────────── */
+@media print {
+  .sidebar, .topbar, .page-header, .pr-tabs { display: none !important; }
+}

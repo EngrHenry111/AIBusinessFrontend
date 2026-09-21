@@ -56,6 +56,8 @@ const Agents = lazy(() => import('./pages/agents/Agents'));
 const WhatsApp = lazy(() => import('./pages/whatsapp/WhatsApp'));
 const WidgetInbox = lazy(() => import('./pages/widget/WidgetInbox'));
 const WidgetSettings = lazy(() => import('./pages/widget/WidgetSettings'));
+const Payroll = lazy(() => import('./pages/payroll/Payroll'));
+const PayrollDetail = lazy(() => import('./pages/payroll/PayrollDetail'));
 const Billing = lazy(() => import('./pages/billing/Billing'));
 const Messages = lazy(() => import('./pages/messages/Messages'));
 const Admin = lazy(() => import('./pages/admin/Admin'));
@@ -172,6 +174,8 @@ function AppRoutes() {
                 <Route path="whatsapp" element={<WhatsApp />} />
                 <Route path="widget-inbox" element={<WidgetInbox />} />
                 <Route path="widget-settings" element={<WidgetSettings />} />
+                <Route path="payroll" element={<Payroll />} />
+                <Route path="payroll/:id" element={<PayrollDetail />} />
                 <Route path="billing" element={<Billing />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="admin" element={<Admin />} />

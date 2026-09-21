@@ -180,6 +180,21 @@ export const expenseService = {
   getProfitLoss: (params) => api.get('/expenses/profit-loss', { params }),
 };
 
+// ─── Payroll ──────────────────────────────────────────────────────────────────
+export const payrollService = {
+  getStaff: () => api.get('/payroll/staff'),
+  addStaff: (data) => api.post('/payroll/staff', data),
+  updateStaff: (id, data) => api.put(`/payroll/staff/${id}`, data),
+  removeStaff: (id) => api.delete(`/payroll/staff/${id}`),
+  generate: (month, year) => api.post('/payroll/generate', { month, year }),
+  getAll: (params) => api.get('/payroll', { params }),
+  getOne: (id) => api.get(`/payroll/${id}`),
+  markPaid: (id) => api.patch(`/payroll/${id}/mark-paid`),
+  markEmployeePaid: (id, employeeId) => api.patch(`/payroll/${id}/employees/${employeeId}/mark-paid`),
+  getPayslip: (id, employeeId) => api.get(`/payroll/${id}/payslip/${employeeId}`),
+  payslipUrl: (id, employeeId) => `${api.defaults.baseURL}/payroll/${id}/payslip/${employeeId}`,
+};
+
 // ─── Appointments ─────────────────────────────────────────────────────────────
 export const appointmentService = {
   getAll: (params) => api.get('/appointments', { params }),
