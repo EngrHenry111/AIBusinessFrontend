@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { whatsappService, productService, widgetService } from '../../services';
+import { whatsappService, productService, widgetService, loyaltyService } from '../../services';
 import {
   RiDashboardLine, RiRobot2Line, RiFileTextLine, RiUserLine,
   RiCalendarLine, RiMoneyDollarCircleLine, RiBarChartLine,
@@ -9,7 +9,7 @@ import {
   RiShoppingBagLine, RiVideoLine, RiMegaphoneLine, RiBriefcaseLine,
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
   RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine, RiStoreLine,
-  RiChat3Line, RiCodeLine, RiContactsLine,
+  RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine,
 } from 'react-icons/ri';
 import './Sidebar.css';
 
@@ -25,6 +25,7 @@ const NAV_ITEMS = [
   { label: 'Invoices', icon: RiMoneyDollarCircleLine, path: '/invoices' },
   { label: 'Expenses', icon: RiMoneyDollarCircleLine, path: '/expenses' },
   { label: 'Payroll', icon: RiMoneyDollarCircleLine, path: '/payroll', roles: ['company_owner', 'manager', 'super_admin'] },
+  { label: 'Loyalty', icon: RiAwardLine, path: '/loyalty' },
   { label: 'Orders', icon: RiShoppingBagLine, path: '/orders' },
   { label: 'Products', icon: RiStore2Line, path: '/products' },
   { label: 'Appointments', icon: RiCalendarLine, path: '/appointments' },
@@ -50,6 +51,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const [waNeedsHuman, setWaNeedsHuman] = useState(0);
   const [widgetNeedsHuman, setWidgetNeedsHuman] = useState(0);
   const [outOfStock, setOutOfStock] = useState(0);
+  const [loyaltyMembers, setLoyaltyMembers] = useState(0);
 
   // Poll for WhatsApp conversations waiting on a human
   useEffect(() => {
@@ -93,6 +95,20 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     return () => { alive = false; clearInterval(iv); };
   }, []);
 
+  // Poll for enrolled loyalty members (badge only shows once the program has members)
+  useEffect(() => {
+    let alive = true;
+    const check = async () => {
+      try {
+        const { data } = await loyaltyService.getCustomers({ minimumPoints: 1, limit: 1 });
+        if (alive) setLoyaltyMembers(data.pagination?.total || 0);
+      } catch { /* program likely not set up yet — ignore */ }
+    };
+    check();
+    const iv = setInterval(check, 60000);
+    return () => { alive = false; clearInterval(iv); };
+  }, []);
+
   const storeNeedsSetup = Boolean(company) && !company?.paymentSettings?.isPaymentSetup;
 
   // "New" badge for 7 days after the Digital Business Card feature launched —
@@ -107,6 +123,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     if (item.path === '/products') return outOfStock > 0 ? outOfStock : null;
     if (item.path === '/settings/store') return storeNeedsSetup ? 'Setup' : null;
     if (item.path === '/settings/card') return isNewFeature ? 'New' : null;
+    if (item.path === '/loyalty') return loyaltyMembers > 0 ? loyaltyMembers : null;
     return item.badge;
   };
 

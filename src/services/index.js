@@ -266,6 +266,19 @@ export const storefrontService = {
   getCategories: (slug) => axios.get(`${API_BASE}/store/${slug}/categories`),
   checkout: (slug, data) => axios.post(`${API_BASE}/store/${slug}/checkout`, data),
   verifyPayment: (slug, reference) => axios.get(`${API_BASE}/store/${slug}/verify/${reference}`),
+  getLoyaltyStatus: (slug, email) => axios.get(`${API_BASE}/store/${slug}/loyalty`, { params: { email } }),
+};
+
+// ─── Loyalty & Rewards ─────────────────────────────────────────────────────────
+export const loyaltyService = {
+  getProgram: () => api.get('/loyalty/program'),
+  setupProgram: (data) => api.post('/loyalty/program', data),
+  getCustomers: (params) => api.get('/loyalty/customers', { params }),
+  getCustomer: (id) => api.get(`/loyalty/customers/${id}`),
+  awardPoints: (data) => api.post('/loyalty/award', data),
+  redeemPoints: (data) => api.post('/loyalty/redeem', data),
+  getLeaderboard: () => api.get('/loyalty/leaderboard'),
+  getStats: () => api.get('/loyalty/stats'),
 };
 
 // ─── Payment settings — Paystack subaccount (authenticated) ───────────────────

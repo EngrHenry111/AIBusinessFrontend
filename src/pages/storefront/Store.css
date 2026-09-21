@@ -136,6 +136,15 @@
   font-family: inherit; color: var(--sf-text); background: var(--sf-bg);
 }
 .sf-secure { text-align: center; font-size: 0.8rem; color: var(--sf-muted); margin-top: 10px; }
+
+.sf-loyalty { border-color: var(--sf-brand); background: color-mix(in srgb, var(--sf-brand) 6%, var(--sf-card)); }
+.sf-loyalty-row { display: flex; align-items: center; gap: 12px; }
+.sf-loyalty-icon { font-size: 26px; color: var(--sf-brand); flex-shrink: 0; }
+.sf-loyalty-row > div { flex: 1; }
+.sf-loyalty-row strong { display: block; font-size: 0.92rem; }
+.sf-loyalty-row p { margin: 2px 0 0; font-size: 0.82rem; color: var(--sf-muted); }
+.sf-loyalty-toggle { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.sf-loyalty-toggle input { width: 16px; height: 16px; accent-color: var(--sf-brand); cursor: pointer; }
 .sf-success-icon { font-size: 3.4rem; text-align: center; }
 .sf-success h1 { text-align: center; }
 .sf-success p { text-align: center; color: var(--sf-muted); }
