@@ -7,7 +7,7 @@ import {
   RiAddLine, RiShoppingBagLine, RiDeleteBinLine, RiSearchLine,
   RiArrowDownSLine, RiArrowUpSLine, RiTruckLine, RiCheckLine,
   RiTimeLine, RiMapPinLine, RiLoader4Line, RiRobot2Line, RiStore2Line,
-  RiGlobalLine,
+  RiGlobalLine, RiBankCardLine, RiCheckboxCircleLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './Orders.css';
@@ -36,6 +36,7 @@ export default function Orders() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [expanded, setExpanded] = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
   const [search, setSearch] = useState('');
   const [trackingId, setTrackingId] = useState(null);
   const [pickerIdx, setPickerIdx] = useState(null);
@@ -43,12 +44,12 @@ export default function Orders() {
   const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await orderService.getAll({ status: statusFilter || undefined, search: search || undefined });
+      const { data } = await orderService.getAll({ status: statusFilter || undefined, paymentMethod: paymentMethodFilter || undefined, search: search || undefined });
       setOrders(data.data);
     } catch { toast.error('Failed to load orders'); }
     finally { setLoading(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  }, [statusFilter, paymentMethodFilter]);
 
   useEffect(() => { loadOrders(); }, [loadOrders]);
 
@@ -105,10 +106,26 @@ export default function Orders() {
 
   async function handleStatusChange(id, status) {
     try {
-      const { data } = await orderService.update(id, { status });
+      const order = orders.find((o) => o._id === id);
+      const body = { status };
+      // Pay-on-delivery is collected in cash at the door — marking it
+      // delivered IS the payment-collection moment, so flip paymentStatus
+      // in the same update rather than leaving it "unpaid" forever.
+      if (order?.paymentMethod === 'pay_on_delivery' && status === 'delivered' && order.paymentStatus !== 'paid') {
+        body.paymentStatus = 'paid';
+      }
+      const { data } = await orderService.update(id, body);
       setOrders(prev => prev.map(o => o._id === id ? data.data : o));
-      toast.success('Status updated');
+      toast.success(body.paymentStatus ? 'Marked delivered and payment collected' : 'Status updated');
     } catch { toast.error('Failed to update'); }
+  }
+
+  async function handleApproveBankProof(id) {
+    try {
+      const { data } = await orderService.update(id, { paymentStatus: 'paid', status: 'confirmed' });
+      setOrders(prev => prev.map(o => o._id === id ? data.data : o));
+      toast.success('Payment approved');
+    } catch { toast.error('Failed to approve'); }
   }
 
   async function handleAddTracking(id, trackingNumber, carrier) {
@@ -157,6 +174,13 @@ export default function Orders() {
             </button>
           ))}
         </div>
+        <select className="form-input form-select" style={{ maxWidth: 200 }} value={paymentMethodFilter} onChange={(e) => setPaymentMethodFilter(e.target.value)}>
+          <option value="">All payment methods</option>
+          <option value="paystack">Paystack</option>
+          <option value="pay_on_delivery">Pay on Delivery</option>
+          <option value="bank_transfer">Bank Transfer</option>
+          <option value="split_payment">Split Payment</option>
+        </select>
       </div>
 
       {/* Create Form */}
@@ -262,10 +286,13 @@ export default function Orders() {
                   <span className="order-number">
                     {order.orderNumber}
                     {order.source === 'storefront' && (
-                      <span className="badge badge-info order-source-badge" title="Placed and paid for on your online store">
+                      <span className="badge badge-info order-source-badge" title="Placed on your online store">
                         <RiGlobalLine /> Online Order
                       </span>
                     )}
+                    {order.paymentMethod === 'pay_on_delivery' && <span className="badge badge-warning order-source-badge">Pay on Delivery</span>}
+                    {order.paymentMethod === 'bank_transfer' && order.paymentStatus !== 'paid' && <span className="badge badge-warning order-source-badge"><RiBankCardLine /> Awaiting Bank Proof</span>}
+                    {order.paymentMethod === 'split_payment' && <span className="badge badge-info order-source-badge">Split Payment</span>}
                   </span>
                   <span className="order-customer">{order.customer?.name}</span>
                 </div>
@@ -303,6 +330,26 @@ export default function Orders() {
 
               {expanded===order._id && (
                 <div className="order-expanded">
+                  {/* Bank transfer proof review */}
+                  {order.paymentMethod === 'bank_transfer' && order.bankTransferProof && (
+                    <div className="order-shipping" style={{ marginBottom: 16 }}>
+                      <h4><RiBankCardLine /> Bank Transfer Proof</h4>
+                      <a href={order.bankTransferProof} target="_blank" rel="noreferrer">
+                        <img src={order.bankTransferProof} alt="Payment proof" style={{ maxWidth: 220, borderRadius: 8, border: '1px solid var(--border)', display: 'block', marginBottom: 8 }} />
+                      </a>
+                      {order.paymentStatus !== 'paid' ? (
+                        <button className="btn btn-primary btn-sm" onClick={() => handleApproveBankProof(order._id)}>
+                          <RiCheckboxCircleLine /> Approve Payment
+                        </button>
+                      ) : (
+                        <span className="badge badge-success">Payment approved</span>
+                      )}
+                    </div>
+                  )}
+                  {order.paymentMethod === 'bank_transfer' && !order.bankTransferProof && order.paymentStatus !== 'paid' && (
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>Waiting for the customer to upload their transfer proof.</p>
+                  )}
+
                   {/* Items */}
                   {order.items?.length>0 && (
                     <div className="order-items-detail">

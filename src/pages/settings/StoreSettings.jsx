@@ -1,18 +1,27 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { storeAdminService, paymentSettingsService } from '../../services';
+import { storeAdminService, paymentSettingsService, couponService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import {
   RiStoreLine, RiFileCopyLine, RiCheckLine, RiExternalLinkLine, RiUploadCloud2Line,
+  RiAddLine, RiDeleteBinLine, RiCoupon3Line, RiTruckLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './StoreSettings.css';
 
 const naira = (n) => `₦${Number(n || 0).toLocaleString()}`;
+const NG_STATES = [
+  'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta',
+  'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi',
+  'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto',
+  'Taraba', 'Yobe', 'Zamfara', 'FCT Abuja',
+];
 
 const TABS = [
   { id: 'setup', label: 'Store Setup' },
   { id: 'payment', label: 'Payment Setup' },
   { id: 'appearance', label: 'Store Appearance' },
+  { id: 'coupons', label: 'Coupons' },
+  { id: 'delivery', label: 'Delivery Settings' },
   { id: 'analytics', label: 'Store Analytics' },
 ];
 
@@ -78,6 +87,8 @@ export default function StoreSettings() {
       {tab === 'setup' && <SetupTab store={store} paymentReady={paymentReady} onSaved={(d) => { setStore((s) => ({ ...s, ...d })); updateCompany?.({ storeEnabled: d.storeEnabled }); }} />}
       {tab === 'payment' && <PaymentTab pay={pay} onChanged={load} />}
       {tab === 'appearance' && <AppearanceTab store={store} onSaved={(settings) => setStore((s) => ({ ...s, settings }))} />}
+      {tab === 'coupons' && <CouponsTab />}
+      {tab === 'delivery' && <DeliveryTab store={store} onSaved={(deliverySettings) => setStore((s) => ({ ...s, deliverySettings }))} />}
       {tab === 'analytics' && <AnalyticsTab />}
     </div>
   );
@@ -365,6 +376,203 @@ function AppearanceTab({ store, onSaved }) {
 
       <button className="btn btn-primary" style={{ marginTop: 16 }} disabled={saving} onClick={save}>
         {saving ? 'Saving…' : 'Save appearance'}
+      </button>
+    </div>
+  );
+}
+
+/* ── Tab: Coupons ─────────────────────────────────────────────────────── */
+const EMPTY_COUPON = { code: '', type: 'percentage', value: '', minimumOrder: '', maximumDiscount: '', usageLimit: '', expiresAt: '' };
+
+function CouponsTab() {
+  const [coupons, setCoupons] = useState(null);
+  const [form, setForm] = useState(EMPTY_COUPON);
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(() => {
+    couponService.getAll().then(({ data }) => setCoupons(data.data)).catch(() => toast.error('Could not load coupons'));
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  async function create(e) {
+    e.preventDefault();
+    if (!form.code.trim() || !form.value) return toast.error('Code and value are required.');
+    setSaving(true);
+    try {
+      await couponService.create({
+        code: form.code.trim(), type: form.type, value: Number(form.value),
+        minimumOrder: form.minimumOrder || undefined, maximumDiscount: form.maximumDiscount || undefined,
+        usageLimit: form.usageLimit || undefined, expiresAt: form.expiresAt || undefined,
+      });
+      toast.success('Coupon created');
+      setForm(EMPTY_COUPON);
+      setShowForm(false);
+      load();
+    } catch (e2) {
+      toast.error(e2.response?.data?.message || 'Failed to create coupon');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function toggleActive(c) {
+    try {
+      await couponService.update(c._id, { isActive: !c.isActive });
+      load();
+    } catch { toast.error('Failed to update'); }
+  }
+
+  async function remove(c) {
+    if (!window.confirm(`Delete coupon "${c.code}"?`)) return;
+    try { await couponService.delete(c._id); load(); toast.success('Coupon deleted'); }
+    catch { toast.error('Failed to delete'); }
+  }
+
+  return (
+    <div className="card card-pad">
+      <div className="page-header-row" style={{ marginBottom: 16 }}>
+        <div>
+          <h2 style={{ margin: 0 }}><RiCoupon3Line style={{ verticalAlign: '-3px' }} /> Coupons</h2>
+          <p className="settings-subtitle" style={{ margin: '4px 0 0' }}>Discount codes shoppers can apply at checkout.</p>
+        </div>
+        <button className="btn btn-secondary" onClick={() => setShowForm((s) => !s)}><RiAddLine /> New Coupon</button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={create} className="ss-coupon-form">
+          <div className="form-grid-2">
+            <div className="form-group"><label className="form-label">Code</label>
+              <input className="form-input" value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="SAVE10" /></div>
+            <div className="form-group"><label className="form-label">Type</label>
+              <select className="form-input form-select" value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}>
+                <option value="percentage">Percentage</option>
+                <option value="fixed">Fixed Amount</option>
+              </select></div>
+            <div className="form-group"><label className="form-label">Value ({form.type === 'percentage' ? '%' : '₦'})</label>
+              <input className="form-input" type="number" value={form.value} onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))} /></div>
+            <div className="form-group"><label className="form-label">Minimum Order (₦)</label>
+              <input className="form-input" type="number" value={form.minimumOrder} onChange={(e) => setForm((f) => ({ ...f, minimumOrder: e.target.value }))} /></div>
+            {form.type === 'percentage' && (
+              <div className="form-group"><label className="form-label">Maximum Discount (₦)</label>
+                <input className="form-input" type="number" value={form.maximumDiscount} onChange={(e) => setForm((f) => ({ ...f, maximumDiscount: e.target.value }))} /></div>
+            )}
+            <div className="form-group"><label className="form-label">Usage Limit</label>
+              <input className="form-input" type="number" value={form.usageLimit} onChange={(e) => setForm((f) => ({ ...f, usageLimit: e.target.value }))} placeholder="Unlimited" /></div>
+            <div className="form-group"><label className="form-label">Expires</label>
+              <input className="form-input" type="date" value={form.expiresAt} onChange={(e) => setForm((f) => ({ ...f, expiresAt: e.target.value }))} /></div>
+          </div>
+          <button className="btn btn-primary" disabled={saving}>{saving ? 'Creating…' : 'Create Coupon'}</button>
+        </form>
+      )}
+
+      <table className="ss-table" style={{ marginTop: 16 }}>
+        <thead><tr><th>Code</th><th>Discount</th><th>Min. Order</th><th>Used</th><th>Expires</th><th>Status</th><th /></tr></thead>
+        <tbody>
+          {coupons === null && <tr><td colSpan={7}>Loading…</td></tr>}
+          {coupons?.length === 0 && <tr><td colSpan={7} style={{ color: 'var(--text-muted)' }}>No coupons yet.</td></tr>}
+          {coupons?.map((c) => (
+            <tr key={c._id}>
+              <td><strong>{c.code}</strong></td>
+              <td>{c.type === 'percentage' ? `${c.value}%` : naira(c.value)}{c.maximumDiscount ? ` (max ${naira(c.maximumDiscount)})` : ''}</td>
+              <td>{c.minimumOrder ? naira(c.minimumOrder) : '—'}</td>
+              <td>{c.usedCount}{c.usageLimit ? ` / ${c.usageLimit}` : ''}</td>
+              <td>{c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : 'Never'}</td>
+              <td>
+                <button className={`badge ${c.isActive ? 'badge-success' : 'badge-neutral'}`} style={{ border: 0, cursor: 'pointer' }} onClick={() => toggleActive(c)}>
+                  {c.isActive ? 'Active' : 'Disabled'}
+                </button>
+              </td>
+              <td><button className="btn btn-ghost btn-icon btn-sm" onClick={() => remove(c)}><RiDeleteBinLine /></button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* ── Tab: Delivery Settings ───────────────────────────────────────────── */
+function DeliveryTab({ store, onSaved }) {
+  const ds = store.deliverySettings || {};
+  const [feesByState, setFeesByState] = useState(ds.feesByState || {});
+  const [defaultFee, setDefaultFee] = useState(ds.defaultFee ?? 2000);
+  const [freeDeliveryMinimum, setFreeDeliveryMinimum] = useState(ds.freeDeliveryMinimum ?? '');
+  const [estimatedDeliveryDays, setEstimatedDeliveryDays] = useState(ds.estimatedDeliveryDays ?? 3);
+  const [podEnabled, setPodEnabled] = useState(Boolean(ds.podEnabled));
+  const [podMaxAmount, setPodMaxAmount] = useState(ds.podMaxAmount ?? 50000);
+  const [saving, setSaving] = useState(false);
+
+  function setStateFee(state, value) {
+    setFeesByState((f) => {
+      const next = { ...f };
+      if (value === '' || value == null) delete next[state];
+      else next[state] = Number(value);
+      return next;
+    });
+  }
+
+  async function save() {
+    setSaving(true);
+    try {
+      const { data } = await storeAdminService.updateSettings({
+        deliverySettings: {
+          feesByState, defaultFee: Number(defaultFee) || 0,
+          freeDeliveryMinimum: freeDeliveryMinimum === '' ? null : Number(freeDeliveryMinimum),
+          estimatedDeliveryDays: Number(estimatedDeliveryDays) || 3,
+          podEnabled, podMaxAmount: Number(podMaxAmount) || 0,
+        },
+      });
+      toast.success('Delivery settings saved');
+      onSaved(data.data.deliverySettings);
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="card card-pad">
+      <h2 style={{ marginTop: 0 }}><RiTruckLine style={{ verticalAlign: '-3px' }} /> Delivery Settings</h2>
+
+      <div className="form-grid-2">
+        <div className="form-group"><label className="form-label">Default delivery fee (₦)</label>
+          <input className="form-input" type="number" value={defaultFee} onChange={(e) => setDefaultFee(e.target.value)} />
+          <span className="ss-hint">Used for any state not set below.</span></div>
+        <div className="form-group"><label className="form-label">Free delivery from (₦)</label>
+          <input className="form-input" type="number" value={freeDeliveryMinimum} onChange={(e) => setFreeDeliveryMinimum(e.target.value)} placeholder="No free delivery" /></div>
+        <div className="form-group"><label className="form-label">Estimated delivery (days)</label>
+          <input className="form-input" type="number" value={estimatedDeliveryDays} onChange={(e) => setEstimatedDeliveryDays(e.target.value)} /></div>
+      </div>
+
+      <div className="ss-toggle-row">
+        <div>
+          <div className="t-label">Enable Pay on Delivery</div>
+          <div className="t-help">Let shoppers pay in cash when their order arrives.</div>
+        </div>
+        <Switch checked={podEnabled} onChange={setPodEnabled} />
+      </div>
+      {podEnabled && (
+        <div className="form-group" style={{ maxWidth: 260 }}>
+          <label className="form-label">Maximum order for Pay on Delivery (₦)</label>
+          <input className="form-input" type="number" value={podMaxAmount} onChange={(e) => setPodMaxAmount(e.target.value)} />
+        </div>
+      )}
+
+      <h3 style={{ fontSize: 14, marginTop: 20 }}>Delivery Fee by State</h3>
+      <p className="ss-hint" style={{ marginBottom: 10 }}>Leave blank to use the default fee above.</p>
+      <div className="ss-state-fees">
+        {NG_STATES.map((state) => (
+          <div key={state} className="ss-state-fee-row">
+            <span>{state}</span>
+            <input className="form-input" type="number" placeholder={String(defaultFee)} value={feesByState[state] ?? ''} onChange={(e) => setStateFee(state, e.target.value)} />
+          </div>
+        ))}
+      </div>
+
+      <button className="btn btn-primary" style={{ marginTop: 16 }} disabled={saving} onClick={save}>
+        {saving ? 'Saving…' : 'Save Delivery Settings'}
       </button>
     </div>
   );

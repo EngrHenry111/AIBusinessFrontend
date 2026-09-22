@@ -42,8 +42,10 @@ const CustomerDetail = lazy(() => import('./pages/customers/CustomerDetail'));
 const Expenses = lazy(() => import('./pages/expenses/Expenses'));
 const ProfitLoss = lazy(() => import('./pages/expenses/ProfitLoss'));
 const Store = lazy(() => import('./pages/storefront/Store'));
+const StoreProduct = lazy(() => import('./pages/storefront/ProductPage'));
 const StoreCheckout = lazy(() => import('./pages/storefront/Checkout'));
 const StoreSuccess = lazy(() => import('./pages/storefront/OrderSuccess'));
+const StoreTracking = lazy(() => import('./pages/storefront/OrderTracking'));
 const StoreSettings = lazy(() => import('./pages/settings/StoreSettings'));
 const Appointments = lazy(() => import('./pages/appointments/Appointments'));
 const Social = lazy(() => import('./pages/social/Social'));
@@ -137,8 +139,11 @@ function AppRoutes() {
 
       {/* Public customer storefront — no auth */}
       <Route path="/store/:slug" element={<Suspense fallback={<PageLoader />}><Store /></Suspense>} />
+      <Route path="/store/:slug/product/:productId" element={<Suspense fallback={<PageLoader />}><StoreProduct /></Suspense>} />
       <Route path="/store/:slug/checkout" element={<Suspense fallback={<PageLoader />}><StoreCheckout /></Suspense>} />
       <Route path="/store/:slug/success" element={<Suspense fallback={<PageLoader />}><StoreSuccess /></Suspense>} />
+      <Route path="/store/:slug/track" element={<Suspense fallback={<PageLoader />}><StoreTracking /></Suspense>} />
+      <Route path="/store/:slug/track/:orderNumber" element={<Suspense fallback={<PageLoader />}><StoreTracking /></Suspense>} />
 
       {/* Public digital business card — no auth, must load fast */}
       <Route path="/card/:username" element={<Suspense fallback={<PageLoader />}><BusinessCard /></Suspense>} />

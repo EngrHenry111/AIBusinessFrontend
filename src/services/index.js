@@ -263,10 +263,16 @@ export const cardService = {
 export const storefrontService = {
   getStore: (slug) => axios.get(`${API_BASE}/store/${slug}`),
   getProducts: (slug, params) => axios.get(`${API_BASE}/store/${slug}/products`, { params }),
+  getProduct: (slug, id) => axios.get(`${API_BASE}/store/${slug}/products/${id}`),
+  addReview: (slug, id, data) => axios.post(`${API_BASE}/store/${slug}/products/${id}/review`, data),
   getCategories: (slug) => axios.get(`${API_BASE}/store/${slug}/categories`),
   checkout: (slug, data) => axios.post(`${API_BASE}/store/${slug}/checkout`, data),
   verifyPayment: (slug, reference) => axios.get(`${API_BASE}/store/${slug}/verify/${reference}`),
   getLoyaltyStatus: (slug, email) => axios.get(`${API_BASE}/store/${slug}/loyalty`, { params: { email } }),
+  track: (slug, orderNumber, email) => axios.get(`${API_BASE}/store/${slug}/track/${orderNumber}`, { params: { email } }),
+  uploadBankProof: (slug, orderNumber, formData) => axios.post(`${API_BASE}/store/${slug}/orders/${orderNumber}/bank-proof`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
 };
 
 // ─── Loyalty & Rewards ─────────────────────────────────────────────────────────
@@ -297,6 +303,15 @@ export const contractService = {
   send: (id) => api.post(`/contracts/${id}/send`),
   getPDF: (id) => `${api.defaults.baseURL}/contracts/${id}/pdf`,
   duplicate: (id) => api.post(`/contracts/${id}/duplicate`),
+};
+
+// ─── Coupons ─────────────────────────────────────────────────────────────────
+export const couponService = {
+  validate: (slug, code, orderTotal) => axios.post(`${API_BASE}/store/${slug}/coupon/validate`, { code, orderTotal }),
+  getAll: () => api.get('/coupons'),
+  create: (data) => api.post('/coupons', data),
+  update: (id, data) => api.put(`/coupons/${id}`, data),
+  delete: (id) => api.delete(`/coupons/${id}`),
 };
 
 // ─── Payment settings — Paystack subaccount (authenticated) ───────────────────
