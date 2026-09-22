@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { storefrontService } from '../../services';
+import { storefrontService, storeCustomerService } from '../../services';
 import {
   RiShoppingCart2Line, RiSearchLine, RiStore2Line, RiCloseLine, RiAddLine, RiSubtractLine,
-  RiHeartLine, RiHeartFill, RiStarFill, RiFlashlightLine, RiMapPin2Line,
+  RiHeartLine, RiHeartFill, RiStarFill, RiFlashlightLine, RiMapPin2Line, RiUserLine,
 } from 'react-icons/ri';
 import {
   readCart, writeCart, cartCount, cartTotal, addToCart, setQty, removeItem,
 } from './cart';
 import { readWishlist, toggleWishlist } from './wishlist';
+import { getStoreToken } from './storeAuth';
 import './Store.css';
 
 const naira = (n) => `₦${Number(n || 0).toLocaleString()}`;
@@ -165,7 +166,17 @@ export default function Store() {
 
   const sync = useCallback((next) => { setCart(next); writeCart(slug, next); }, [slug]);
   const handleAdd = (p) => { sync(addToCart(slug, p)); setDrawerOpen(true); };
-  const handleToggleWish = (productId) => setWishlist(toggleWishlist(slug, productId));
+  const storeToken = getStoreToken(slug);
+  const handleToggleWish = (productId) => {
+    const next = toggleWishlist(slug, productId);
+    setWishlist(next);
+    // Logged-in shoppers get a synced wishlist too — best-effort, the
+    // localStorage copy (source of truth for guests) is already updated.
+    if (storeToken) {
+      const nowWishlisted = next.includes(productId);
+      (nowWishlisted ? storeCustomerService.addToWishlist : storeCustomerService.removeFromWishlist)(slug, storeToken, productId).catch(() => {});
+    }
+  };
 
   const brand = store?.settings?.primaryColor || '#6366f1';
   const canBuy = store?.acceptsPayments;
@@ -203,6 +214,9 @@ export default function Store() {
           </div>
           <div className="sf-nav-actions">
             <Link to={`/store/${slug}/track`} className="sf-nav-link">Track Order</Link>
+            <Link to={storeToken ? `/store/${slug}/account` : `/store/${slug}/login`} className="sf-cart-btn" title="My Account">
+              <RiUserLine />
+            </Link>
             <button className="sf-cart-btn" onClick={() => setDrawerOpen(true)}>
               <RiShoppingCart2Line />
               {cartCount(cart) > 0 && <span className="sf-cart-badge">{cartCount(cart)}</span>}

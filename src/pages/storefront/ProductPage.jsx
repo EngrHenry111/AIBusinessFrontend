@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { storefrontService } from '../../services';
+import { storefrontService, storeCustomerService } from '../../services';
 import {
   RiArrowLeftLine, RiHeartLine, RiHeartFill, RiStarFill, RiWhatsappLine,
   RiFacebookBoxLine, RiShareForwardLine, RiCheckboxCircleFill, RiStore2Line, RiFlashlightLine,
@@ -8,6 +8,7 @@ import {
 import toast from 'react-hot-toast';
 import { readCart, writeCart, addToCart } from './cart';
 import { isWishlisted, toggleWishlist } from './wishlist';
+import { getStoreToken } from './storeAuth';
 import './Store.css';
 import './ProductPage.css';
 
@@ -106,7 +107,12 @@ export default function ProductPage() {
   }
 
   function handleToggleWish() {
-    setWished(toggleWishlist(slug, productId).includes(productId));
+    const nowWishlisted = toggleWishlist(slug, productId).includes(productId);
+    setWished(nowWishlisted);
+    const token = getStoreToken(slug);
+    if (token) {
+      (nowWishlisted ? storeCustomerService.addToWishlist : storeCustomerService.removeFromWishlist)(slug, token, productId).catch(() => {});
+    }
   }
 
   const shareUrl = `${window.location.origin}/store/${slug}/product/${productId}`;

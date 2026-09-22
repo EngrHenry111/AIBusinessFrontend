@@ -264,6 +264,19 @@
 .ot-stage p { margin: 2px 0 0; font-size: 0.78rem; color: var(--sf-muted); }
 .ot-stage:not(.done) strong, .ot-stage:not(.done) p { color: var(--sf-muted); }
 
+/* Customer account */
+.acc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0 24px; }
+.acc-stat { background: var(--sf-card); border: 1px solid var(--sf-border); border-radius: 14px; padding: 16px; text-align: center; }
+.acc-stat-num { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 1.3rem; font-weight: 800; }
+.acc-stat span:last-child { display: block; font-size: 0.75rem; color: var(--sf-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .03em; }
+@media (max-width: 560px) { .acc-stats { grid-template-columns: 1fr; } }
+
+.acc-orders { display: flex; flex-direction: column; gap: 10px; }
+.acc-order-row { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.acc-order-row:hover { border-color: var(--sf-brand); }
+
+.acc-address-row { border: 1px solid var(--sf-border); border-radius: 10px; padding: 14px; margin-bottom: 14px; background: var(--sf-bg); }
+
 .sf-loyalty { border-color: var(--sf-brand); background: color-mix(in srgb, var(--sf-brand) 6%, var(--sf-card)); }
 .sf-loyalty-row { display: flex; align-items: center; gap: 12px; }
 .sf-loyalty-icon { font-size: 26px; color: var(--sf-brand); flex-shrink: 0; }

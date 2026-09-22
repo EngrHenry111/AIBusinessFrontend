@@ -95,11 +95,16 @@ export default function StoreSettings() {
 }
 
 /* ── Tab 1: Store Setup ──────────────────────────────────────────────── */
+const MARKETPLACE_CATEGORIES = ['Fashion', 'Food', 'Electronics', 'Beauty', 'Home', 'Services', 'Agriculture', 'Other'];
+
 function SetupTab({ store, paymentReady, onSaved }) {
   const [slug, setSlug] = useState(store.storeSlug || '');
   const [description, setDescription] = useState(store.settings.description || '');
   const [announcement, setAnnouncement] = useState(store.settings.announcement || '');
   const [enabled, setEnabled] = useState(store.storeEnabled);
+  const [mpCategory, setMpCategory] = useState(store.marketplace?.category || 'Other');
+  const [mpLocation, setMpLocation] = useState(store.marketplace?.location || '');
+  const [mpTags, setMpTags] = useState((store.marketplace?.tags || []).join(', '));
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -117,9 +122,14 @@ function SetupTab({ store, paymentReady, onSaved }) {
     try {
       const { data } = await storeAdminService.updateSettings({
         storeSlug: slug, storeEnabled: enabled, description, announcement,
+        marketplace: { category: mpCategory, location: mpLocation, tags: mpTags.split(',').map((t) => t.trim()).filter(Boolean) },
       });
       toast.success('Store settings saved');
-      onSaved({ storeSlug: data.data.storeSlug, storeEnabled: data.data.storeEnabled, settings: { ...store.settings, description, announcement } });
+      onSaved({
+        storeSlug: data.data.storeSlug, storeEnabled: data.data.storeEnabled,
+        settings: { ...store.settings, description, announcement },
+        marketplace: data.data.marketplace,
+      });
     } catch (e) {
       toast.error(e.response?.data?.message || 'Failed to save');
     } finally {
@@ -170,6 +180,21 @@ function SetupTab({ store, paymentReady, onSaved }) {
         <input className="form-input" value={announcement}
           onChange={(e) => setAnnouncement(e.target.value)}
           placeholder="e.g. Free delivery within Lagos this week!" />
+      </div>
+
+      <h3 style={{ fontSize: 14, marginTop: 20 }}>Marketplace Listing</h3>
+      <p className="ss-hint" style={{ marginBottom: 10 }}>How your store appears in the central BizlyAI marketplace at bislyai.com/market.</p>
+      <div className="form-grid-2">
+        <div className="form-group"><label className="form-label">Category</label>
+          <select className="form-input form-select" value={mpCategory} onChange={(e) => setMpCategory(e.target.value)}>
+            {MARKETPLACE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select></div>
+        <div className="form-group"><label className="form-label">Location</label>
+          <input className="form-input" value={mpLocation} onChange={(e) => setMpLocation(e.target.value)} placeholder="e.g. Lagos" /></div>
+      </div>
+      <div className="form-group">
+        <label className="form-label">Tags (comma-separated)</label>
+        <input className="form-input" value={mpTags} onChange={(e) => setMpTags(e.target.value)} placeholder="ankara, handmade, wholesale" />
       </div>
 
       <button className="btn btn-primary" disabled={saving} onClick={save}>

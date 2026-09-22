@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { storefrontService, couponService } from '../../services';
+import { storefrontService, couponService, storeCustomerService } from '../../services';
 import { RiArrowLeftLine, RiArrowRightLine, RiSecurePaymentLine, RiCoinLine, RiTruckLine, RiBankCardLine, RiWallet3Line } from 'react-icons/ri';
 import { readCart, cartTotal, setQty, removeItem, writeCart } from './cart';
+import { getStoreToken } from './storeAuth';
 import './Store.css';
 
 const naira = (n) => `₦${Number(n || 0).toLocaleString()}`;
@@ -43,9 +44,23 @@ export default function Checkout() {
 
   const [paymentMethod, setPaymentMethod] = useState('paystack');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState([]);
 
   useEffect(() => {
     storefrontService.getStore(slug).then(({ data }) => setStore(data.data.store)).catch(() => {});
+  }, [slug]);
+
+  // Pre-fill from the shopper's account, if they're logged in on this store.
+  useEffect(() => {
+    const token = getStoreToken(slug);
+    if (!token) return;
+    storeCustomerService.getMe(slug, token).then(({ data }) => {
+      const c = data.data;
+      setForm((f) => ({ ...f, name: f.name || c.name, email: f.email || c.email, phone: f.phone || c.phone || '' }));
+      setSavedAddresses(c.addresses || []);
+      const def = (c.addresses || []).find((a) => a.isDefault) || c.addresses?.[0];
+      if (def) setForm((f) => ({ ...f, address: f.address || def.address, city: f.city || def.city, state: f.state || def.state }));
+    }).catch(() => {});
   }, [slug]);
 
   useEffect(() => {
@@ -208,6 +223,18 @@ export default function Checkout() {
               <div className="sf-field"><label>Full name *</label><input value={form.name} onChange={(e) => set('name', e.target.value)} /></div>
               <div className="sf-field"><label>Email address *</label><input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} /></div>
               <div className="sf-field"><label>Phone number *</label><input value={form.phone} onChange={(e) => set('phone', e.target.value)} /></div>
+              {savedAddresses.length > 0 && (
+                <div className="sf-field">
+                  <label>Use a saved address</label>
+                  <select onChange={(e) => {
+                    const addr = savedAddresses[e.target.value];
+                    if (addr) setForm((f) => ({ ...f, address: addr.address, city: addr.city, state: addr.state }));
+                  }}>
+                    <option value="">Enter a new address below…</option>
+                    {savedAddresses.map((a, i) => <option key={i} value={i}>{a.label} — {a.address}</option>)}
+                  </select>
+                </div>
+              )}
               <div className="sf-field"><label>Delivery address *</label><input value={form.address} onChange={(e) => set('address', e.target.value)} /></div>
               <div className="co-field-grid">
                 <div className="sf-field"><label>City</label><input value={form.city} onChange={(e) => set('city', e.target.value)} /></div>

@@ -314,6 +314,29 @@ export const couponService = {
   delete: (id) => api.delete(`/coupons/${id}`),
 };
 
+// ─── Store customer accounts (public — bearer token, not the app's cookie) ────
+const authHeaders = (token) => ({ headers: { Authorization: `Bearer ${token}` } });
+export const storeCustomerService = {
+  register: (slug, data) => axios.post(`${API_BASE}/store/${slug}/customer/register`, data),
+  login: (slug, data) => axios.post(`${API_BASE}/store/${slug}/customer/login`, data),
+  getMe: (slug, token) => axios.get(`${API_BASE}/store/${slug}/customer/me`, authHeaders(token)),
+  updateProfile: (slug, token, data) => axios.patch(`${API_BASE}/store/${slug}/customer/me`, data, authHeaders(token)),
+  updateAddresses: (slug, token, addresses) => axios.put(`${API_BASE}/store/${slug}/customer/addresses`, { addresses }, authHeaders(token)),
+  getOrders: (slug, token) => axios.get(`${API_BASE}/store/${slug}/customer/orders`, authHeaders(token)),
+  getWishlist: (slug, token) => axios.get(`${API_BASE}/store/${slug}/customer/wishlist`, authHeaders(token)),
+  addToWishlist: (slug, token, productId) => axios.post(`${API_BASE}/store/${slug}/customer/wishlist/${productId}`, null, authHeaders(token)),
+  removeFromWishlist: (slug, token, productId) => axios.delete(`${API_BASE}/store/${slug}/customer/wishlist/${productId}`, authHeaders(token)),
+  syncWishlist: (slug, token, productIds) => axios.post(`${API_BASE}/store/${slug}/customer/wishlist/sync`, { productIds }, authHeaders(token)),
+};
+
+// ─── Central marketplace (public) ──────────────────────────────────────────────
+export const marketplaceService = {
+  getStores: (params) => axios.get(`${API_BASE}/marketplace`, { params }),
+  getFeatured: () => axios.get(`${API_BASE}/marketplace/featured`),
+  search: (q) => axios.get(`${API_BASE}/marketplace/search`, { params: { q } }),
+  getCategories: () => axios.get(`${API_BASE}/marketplace/categories`),
+};
+
 // ─── Payment settings — Paystack subaccount (authenticated) ───────────────────
 export const paymentSettingsService = {
   getSettings: () => api.get('/payment-settings'),
