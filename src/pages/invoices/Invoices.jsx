@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { invoiceService, portalService } from '../../services';
+import { invoiceService, portalService, currencyService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import {
   RiAddLine, RiMoneyDollarCircleLine, RiRobot2Line, RiDeleteBinLine,
@@ -36,10 +36,33 @@ function addInterval(date, interval) {
 const EMPTY_FORM = {
   customer: { name:'', email:'', phone:'', address:'' },
   items: [{ description:'', quantity:1, unitPrice:0, total:0 }],
-  dueAt:'', notes:'', currency:'USD',
+  dueAt:'', notes:'', currency:'NGN',
   isRecurring: false,
   recurringSettings: { interval: 'monthly', startDate: '', endDate: '', maxOccurrences: '' },
 };
+
+const CURRENCY_OPTIONS = [
+  { code: 'NGN', label: 'NGN (₦) — Nigerian Naira' },
+  { code: 'USD', label: 'USD ($) — US Dollar' },
+  { code: 'GBP', label: 'GBP (£) — British Pound' },
+  { code: 'EUR', label: 'EUR (€) — Euro' },
+  { code: 'GHS', label: 'GHS (₵) — Ghana Cedi' },
+  { code: 'KES', label: 'KES (KSh) — Kenyan Shilling' },
+  { code: 'ZAR', label: 'ZAR (R) — South African Rand' },
+  { code: 'UGX', label: 'UGX (USh) — Uganda Shilling' },
+  { code: 'TZS', label: 'TZS (TSh) — Tanzania Shilling' },
+  { code: 'XOF', label: 'XOF (CFA) — West African CFA' },
+  { code: 'CAD', label: 'CAD (CA$) — Canadian Dollar' },
+  { code: 'AUD', label: 'AUD (A$) — Australian Dollar' },
+];
+
+// Mirrors the backend's currencyService.convertAmount — rates are NGN-based
+// (rates[X] = how much of X equals 1 NGN), same shape GET /currency/rates returns.
+function toNGN(amount, currency, rates) {
+  if (!rates || currency === 'NGN') return amount;
+  const rate = rates[currency];
+  return rate ? amount / rate : null;
+}
 
 export default function Invoices() {
   const { company } = useAuth();
@@ -49,7 +72,8 @@ export default function Invoices() {
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState(() => ({ ...EMPTY_FORM, currency: company?.defaultCurrency || 'NGN' }));
+  const [rates, setRates] = useState(null);
   const [expanded, setExpanded] = useState(null);
   const [draftingReminder, setDraftingReminder] = useState(null);
   const [sharingId, setSharingId] = useState(null);
@@ -58,6 +82,9 @@ export default function Invoices() {
   const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => { loadInvoices(); }, [statusFilter]);
+  useEffect(() => {
+    currencyService.getRates().then(({ data }) => setRates(data.data.rates)).catch(() => {});
+  }, []);
 
   async function loadInvoices() {
     setLoading(true);
@@ -272,9 +299,13 @@ export default function Invoices() {
               <div className="form-group"><label className="form-label">Currency</label>
                 <select className="form-input form-select" value={form.currency}
                   onChange={e=>setForm(p=>({...p,currency:e.target.value}))}>
-                  <option value="USD">USD</option><option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option><option value="NGN">NGN</option>
-                </select></div>
+                  {CURRENCY_OPTIONS.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}
+                </select>
+                {form.currency !== 'NGN' && rates && toNGN(1, form.currency, rates) && (
+                  <div className="inv-rate-hint">
+                    1 {form.currency} = ₦{toNGN(1, form.currency, rates).toLocaleString(undefined,{maximumFractionDigits:2})} (live rate)
+                  </div>
+                )}</div>
             </div>
 
             {/* Line Items */}
@@ -304,6 +335,9 @@ export default function Invoices() {
               </button>
               <div className="invoice-subtotal">
                 Total: <strong>{fmtMoney(subtotal, form.currency)}</strong>
+                {form.currency !== 'NGN' && rates && toNGN(subtotal, form.currency, rates) != null && (
+                  <div className="inv-ngn-equiv">≈ ₦{Math.round(toNGN(subtotal, form.currency, rates)).toLocaleString()} at today's rate</div>
+                )}
               </div>
             </div>
 

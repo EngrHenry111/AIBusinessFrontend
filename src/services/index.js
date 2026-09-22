@@ -281,6 +281,12 @@ export const loyaltyService = {
   getStats: () => api.get('/loyalty/stats'),
 };
 
+// ─── Currency ────────────────────────────────────────────────────────────────
+export const currencyService = {
+  getRates: () => api.get('/currency/rates'),
+  convert: (amount, from, to) => api.get('/currency/convert', { params: { amount, from, to } }),
+};
+
 // ─── Payment settings — Paystack subaccount (authenticated) ───────────────────
 export const paymentSettingsService = {
   getSettings: () => api.get('/payment-settings'),

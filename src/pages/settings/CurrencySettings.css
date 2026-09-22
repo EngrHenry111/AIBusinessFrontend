@@ -1,0 +1,27 @@
+.cs-hint { font-size: 12.5px; color: var(--text-muted); margin: 4px 0 12px; }
+
+.cs-default-select { max-width: 420px; }
+
+.cs-currency-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.cs-currency-chip {
+  display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px;
+  border: 1.5px solid var(--border); background: var(--bg-tertiary); color: var(--text-muted);
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: .15s;
+}
+.cs-currency-chip input { display: none; }
+.cs-currency-chip.active { border-color: var(--color-brand); color: var(--color-brand); background: rgba(99,102,241,0.08); }
+
+.cs-rates-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.cs-rates-header h3 { margin: 0 0 4px; }
+
+.cs-rates-table-wrap { overflow-x: auto; }
+.cs-rates-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.cs-rates-table th { text-align: left; padding: 10px 12px; color: var(--text-muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; border-bottom: 1px solid var(--border); }
+.cs-rates-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); }
+
+.spin { animation: cs-spin 0.7s linear infinite; }
+@keyframes cs-spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 700px) {
+  .cs-rates-header { flex-direction: column; }
+}

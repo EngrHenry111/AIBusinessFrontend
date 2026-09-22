@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { userService, companyService } from '../../services';
 import {
   RiUserLine, RiBuildingLine, RiRobot2Line, RiLockLine,
   RiCheckLine, RiLoader4Line, RiMoonLine, RiSunLine, RiImageAddLine, RiShieldKeyholeLine,
-  RiMessage3Line, RiSendPlaneLine,
+  RiMessage3Line, RiSendPlaneLine, RiMoneyDollarCircleLine, RiArrowRightLine,
 } from 'react-icons/ri';
 import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
@@ -20,6 +21,7 @@ const TABS = [
 ];
 
 export default function Settings() {
+  const navigate = useNavigate();
   const { user, company, updateUser, updateCompany } = useAuth();
   const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('profile');
@@ -495,6 +497,19 @@ export default function Settings() {
                   )}
                 </>
               )}
+            </div>
+          )}
+
+          {/* Currency */}
+          {activeTab==='company' && (
+            <div className="card card-pad" style={{ marginTop: 20 }}>
+              <h2><RiMoneyDollarCircleLine style={{ verticalAlign: '-3px' }} /> Currency</h2>
+              <p className="settings-subtitle">
+                Default currency: <strong>{company?.defaultCurrency || 'NGN'}</strong>. All new invoices will use this currency unless changed at creation.
+              </p>
+              <button type="button" className="btn btn-secondary" onClick={() => navigate('/settings/currency')}>
+                Manage Currency Settings <RiArrowRightLine />
+              </button>
             </div>
           )}
 

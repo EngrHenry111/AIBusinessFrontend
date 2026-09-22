@@ -22,6 +22,11 @@ const MOCK_CHART = [
   { name: 'Sun', questions: 5, leads: 0 },
 ];
 
+const CURRENCY_SYMBOLS = {
+  NGN: '₦', USD: '$', GBP: '£', EUR: '€', GHS: '₵', KES: 'KSh',
+  ZAR: 'R', UGX: 'USh', TZS: 'TSh', XOF: 'CFA', CAD: 'CA$', AUD: 'A$',
+};
+
 const usageColor = (pct) => (pct > 80 ? 'red' : pct >= 60 ? 'amber' : 'green');
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 
@@ -210,6 +215,26 @@ export default function Dashboard() {
           onClick={() => navigate('/expenses/profit-loss')}
         />
       </div>
+      )}
+
+      {/* Currency breakdown — only worth showing once more than one currency is in play */}
+      {metrics?.finance?.currencyBreakdown?.length > 1 && (
+        <div className="card card-pad currency-breakdown">
+          <h3>Revenue by Currency (this month)</h3>
+          <div className="currency-breakdown-list">
+            {metrics.finance.currencyBreakdown.map((c) => (
+              <div key={c.currency} className="currency-breakdown-row">
+                <span className="cb-currency">{c.currency} invoices</span>
+                <span className="cb-amount">{CURRENCY_SYMBOLS[c.currency] || c.currency}{Number(c.total).toLocaleString()}</span>
+                {c.currency !== 'NGN' && <span className="cb-ngn">≈ ₦{Math.round(c.ngnEquivalent).toLocaleString()}</span>}
+              </div>
+            ))}
+            <div className="currency-breakdown-row currency-breakdown-total">
+              <span className="cb-currency">Total NGN equivalent</span>
+              <span className="cb-amount">₦{Math.round(metrics.finance.currencyBreakdown.reduce((s, c) => s + c.ngnEquivalent, 0)).toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Usage vs plan limits */}

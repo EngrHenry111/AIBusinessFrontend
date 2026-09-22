@@ -61,6 +61,7 @@ const PayrollDetail = lazy(() => import('./pages/payroll/PayrollDetail'));
 const CardEditor = lazy(() => import('./pages/card/CardEditor'));
 const BusinessCard = lazy(() => import('./pages/card/BusinessCard'));
 const Loyalty = lazy(() => import('./pages/loyalty/Loyalty'));
+const CurrencySettings = lazy(() => import('./pages/settings/CurrencySettings'));
 const Billing = lazy(() => import('./pages/billing/Billing'));
 const Messages = lazy(() => import('./pages/messages/Messages'));
 const Admin = lazy(() => import('./pages/admin/Admin'));
@@ -176,6 +177,7 @@ function AppRoutes() {
                 <Route path="settings/audit-log" element={<AuditLog />} />
                 <Route path="settings/store" element={<StoreSettings />} />
                 <Route path="settings/card" element={<CardEditor />} />
+                <Route path="settings/currency" element={<CurrencySettings />} />
                 <Route path="settings/*" element={<Settings />} />
                 <Route path="" element={<Navigate to="dashboard" replace />} />
                 <Route path="*" element={<Navigate to="dashboard" replace />} />

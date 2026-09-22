@@ -84,6 +84,22 @@
 .feedback-row:last-child { border-bottom: none; }
 .feedback-row strong { color: var(--text-primary); }
 
+/* ── Currency breakdown ───────────────────────────────────────────────────── */
+.currency-breakdown { margin-bottom: var(--space-6); }
+.currency-breakdown h3 { font-size: 15px; margin: 0 0 12px; }
+.currency-breakdown-list { display: flex; flex-direction: column; gap: 2px; }
+.currency-breakdown-row {
+  display: flex; align-items: baseline; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+.currency-breakdown-row:last-child { border-bottom: none; }
+.cb-currency { flex: 1; color: var(--text-secondary); font-weight: 500; }
+.cb-amount { font-weight: 700; color: var(--text-primary); }
+.cb-ngn { font-size: 12px; color: var(--text-muted); }
+.currency-breakdown-total { margin-top: 4px; padding-top: 12px; border-top: 2px solid var(--border); font-weight: 700; }
+.currency-breakdown-total .cb-currency { color: var(--text-primary); }
+.currency-breakdown-total .cb-amount { color: var(--color-brand); font-size: 15px; }
+
 /* ── Usage vs plan limits ─────────────────────────────────────────────────── */
 .usage-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4);
