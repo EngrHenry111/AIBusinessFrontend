@@ -153,6 +153,7 @@ function OverviewTab({ program }) {
           <div><span>Earning rate</span><strong>{program.pointsPerNaira} point(s) per ₦1 spent</strong></div>
           <div><span>Redemption value</span><strong>₦{program.nairaPerPoint} per point</strong></div>
           <div><span>Minimum redemption</span><strong>{program.minimumRedemption} points</strong></div>
+          <div><span>Max points per order</span><strong>{program.maxPointsPerOrder ? `${program.maxPointsPerOrder.toLocaleString()} points` : 'No limit'}</strong></div>
           <div><span>Points expire after</span><strong>{program.expiryDays} days</strong></div>
           <div><span>Welcome bonus</span><strong>{program.welcomePoints} points</strong></div>
           <div><span>Referral bonus</span><strong>{program.referralPoints} points</strong></div>
@@ -425,6 +426,7 @@ function SettingsTab({ program, onSaved }) {
   const [pointsPerNaira, setPointsPerNaira] = useState(program.pointsPerNaira);
   const [nairaPerPoint, setNairaPerPoint] = useState(program.nairaPerPoint);
   const [minimumRedemption, setMinimumRedemption] = useState(program.minimumRedemption);
+  const [maxPointsPerOrder, setMaxPointsPerOrder] = useState(program.maxPointsPerOrder ?? '');
   const [expiryDays, setExpiryDays] = useState(program.expiryDays);
   const [welcomePoints, setWelcomePoints] = useState(program.welcomePoints);
   const [referralPoints, setReferralPoints] = useState(program.referralPoints);
@@ -439,6 +441,7 @@ function SettingsTab({ program, onSaved }) {
       const { data } = await loyaltyService.setupProgram({
         name, pointsPerNaira: Number(pointsPerNaira), nairaPerPoint: Number(nairaPerPoint),
         minimumRedemption: Number(minimumRedemption), expiryDays: Number(expiryDays),
+        maxPointsPerOrder: maxPointsPerOrder === '' ? null : Number(maxPointsPerOrder),
         welcomePoints: Number(welcomePoints), referralPoints: Number(referralPoints),
         tiers: tiers.map((t) => ({ ...t, minimumPoints: Number(t.minimumPoints), discountPercent: Number(t.discountPercent) })),
       });
@@ -469,6 +472,10 @@ function SettingsTab({ program, onSaved }) {
         <label className="ce-field">
           <span>Minimum redemption (points)</span>
           <input type="number" min={0} value={minimumRedemption} onChange={(e) => setMinimumRedemption(e.target.value)} />
+        </label>
+        <label className="ce-field">
+          <span>Max points per order (optional)</span>
+          <input type="number" min={0} value={maxPointsPerOrder} onChange={(e) => setMaxPointsPerOrder(e.target.value)} placeholder="No limit" />
         </label>
         <label className="ce-field">
           <span>Points expire after (days)</span>
