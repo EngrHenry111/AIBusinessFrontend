@@ -287,6 +287,18 @@ export const currencyService = {
   convert: (amount, from, to) => api.get('/currency/convert', { params: { amount, from, to } }),
 };
 
+// ─── Contracts ─────────────────────────────────────────────────────────────
+export const contractService = {
+  generate: (data) => api.post('/contracts/generate', data),
+  getAll: (params) => api.get('/contracts', { params }),
+  getOne: (id) => api.get(`/contracts/${id}`),
+  update: (id, data) => api.put(`/contracts/${id}`, data),
+  delete: (id) => api.delete(`/contracts/${id}`),
+  send: (id) => api.post(`/contracts/${id}/send`),
+  getPDF: (id) => `${api.defaults.baseURL}/contracts/${id}/pdf`,
+  duplicate: (id) => api.post(`/contracts/${id}/duplicate`),
+};
+
 // ─── Payment settings — Paystack subaccount (authenticated) ───────────────────
 export const paymentSettingsService = {
   getSettings: () => api.get('/payment-settings'),

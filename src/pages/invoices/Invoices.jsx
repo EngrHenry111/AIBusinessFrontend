@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { invoiceService, portalService, currencyService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -6,7 +7,7 @@ import {
   RiCalendarLine, RiLoader4Line, RiArrowDownSLine, RiArrowUpSLine,
   RiMailLine, RiAlertLine, RiCheckLine, RiTimeLine, RiDownloadLine,
   RiShareForwardLine, RiMailSendLine, RiCheckboxCircleLine, RiRepeatLine,
-  RiPlayLine, RiPauseLine, RiFlashlightLine,
+  RiPlayLine, RiPauseLine, RiFlashlightLine, RiFileTextLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import { SkeletonTable } from '../../components/ui/Skeleton';
@@ -65,6 +66,7 @@ function toNGN(amount, currency, rates) {
 }
 
 export default function Invoices() {
+  const navigate = useNavigate();
   const { company } = useAuth();
   const companyId = company?.id || company?._id;
   const [tab, setTab] = useState('invoices');
@@ -470,6 +472,15 @@ export default function Invoices() {
                       onClick={()=>handleSharePortal(inv)} disabled={sharingId===inv._id || !inv.customer?.email}
                       title={inv.customer?.email ? `Email portal link to ${inv.customer.email}` : 'No customer email on file'}>
                       {sharingId===inv._id ? <RiLoader4Line className="spin" /> : <RiShareForwardLine />}
+                    </button>
+                    <button className="btn btn-ghost btn-icon btn-sm" title="Generate Contract" onClick={() => navigate('/contracts/new', {
+                      state: {
+                        party2: { name: inv.customer?.name || '', email: inv.customer?.email || '', phone: inv.customer?.phone || '', address: inv.customer?.address || '', role: 'Client' },
+                        terms: { value: inv.total, currency: inv.currency },
+                        linkedInvoiceId: inv._id,
+                      },
+                    })}>
+                      <RiFileTextLine />
                     </button>
                     <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>handleDelete(inv._id)} title="Delete">
                       <RiDeleteBinLine />

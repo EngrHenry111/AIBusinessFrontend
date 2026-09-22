@@ -5,7 +5,7 @@ import { leadService } from '../../services';
 import {
   RiAddLine, RiSearchLine, RiRobot2Line, RiUserLine, RiMailLine, RiPhoneLine,
   RiDeleteBinLine, RiLoader4Line, RiUploadCloud2Line, RiCloseLine, RiArrowRightSLine,
-  RiArrowLeftSLine, RiCheckLine, RiArrowRightLine,
+  RiArrowLeftSLine, RiCheckLine, RiArrowRightLine, RiFileTextLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import { SkeletonTable } from '../../components/ui/Skeleton';
@@ -169,6 +169,11 @@ export default function Leads() {
                   </button>
                   <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleAnalyze(lead._id)} disabled={analyzing === lead._id} title="AI Analyze">
                     {analyzing === lead._id ? <RiLoader4Line className="spin" /> : <RiRobot2Line />}
+                  </button>
+                  <button className="btn btn-ghost btn-icon btn-sm" title="Generate Contract" onClick={() => navigate('/contracts/new', {
+                    state: { party2: { name: lead.name, email: lead.email || '', phone: lead.phone || '', role: 'Client' }, linkedLeadId: lead._id },
+                  })}>
+                    <RiFileTextLine />
                   </button>
                   <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleDelete(lead._id)} title="Delete">
                     <RiDeleteBinLine />

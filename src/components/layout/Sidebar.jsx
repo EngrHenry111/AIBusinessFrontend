@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { whatsappService, productService, widgetService, loyaltyService } from '../../services';
+import { whatsappService, productService, widgetService, loyaltyService, contractService } from '../../services';
 import {
   RiDashboardLine, RiRobot2Line, RiFileTextLine, RiUserLine,
   RiCalendarLine, RiMoneyDollarCircleLine, RiBarChartLine,
@@ -23,6 +23,7 @@ const NAV_ITEMS = [
   { label: 'Customers', icon: RiUserStarLine, path: '/customers' },
   { label: 'Meetings', icon: RiVideoLine, path: '/meetings' },
   { label: 'Invoices', icon: RiMoneyDollarCircleLine, path: '/invoices' },
+  { label: 'Contracts', icon: RiFileTextLine, path: '/contracts' },
   { label: 'Expenses', icon: RiMoneyDollarCircleLine, path: '/expenses' },
   { label: 'Payroll', icon: RiMoneyDollarCircleLine, path: '/payroll', roles: ['company_owner', 'manager', 'super_admin'] },
   { label: 'Loyalty', icon: RiAwardLine, path: '/loyalty' },
@@ -52,6 +53,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const [widgetNeedsHuman, setWidgetNeedsHuman] = useState(0);
   const [outOfStock, setOutOfStock] = useState(0);
   const [loyaltyMembers, setLoyaltyMembers] = useState(0);
+  const [draftContracts, setDraftContracts] = useState(0);
 
   // Poll for WhatsApp conversations waiting on a human
   useEffect(() => {
@@ -109,6 +111,20 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     return () => { alive = false; clearInterval(iv); };
   }, []);
 
+  // Poll for draft contracts awaiting review/sending
+  useEffect(() => {
+    let alive = true;
+    const check = async () => {
+      try {
+        const { data } = await contractService.getAll({ status: 'draft', limit: 1 });
+        if (alive) setDraftContracts(data.pagination?.total || 0);
+      } catch { /* ignore */ }
+    };
+    check();
+    const iv = setInterval(check, 60000);
+    return () => { alive = false; clearInterval(iv); };
+  }, []);
+
   const storeNeedsSetup = Boolean(company) && !company?.paymentSettings?.isPaymentSetup;
 
   // "New" badge for 7 days after the Digital Business Card feature launched —
@@ -124,6 +140,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     if (item.path === '/settings/store') return storeNeedsSetup ? 'Setup' : null;
     if (item.path === '/settings/card') return isNewFeature ? 'New' : null;
     if (item.path === '/loyalty') return loyaltyMembers > 0 ? loyaltyMembers : null;
+    if (item.path === '/contracts') return draftContracts > 0 ? draftContracts : null;
     return item.badge;
   };
 

@@ -62,6 +62,9 @@ const CardEditor = lazy(() => import('./pages/card/CardEditor'));
 const BusinessCard = lazy(() => import('./pages/card/BusinessCard'));
 const Loyalty = lazy(() => import('./pages/loyalty/Loyalty'));
 const CurrencySettings = lazy(() => import('./pages/settings/CurrencySettings'));
+const Contracts = lazy(() => import('./pages/contracts/Contracts'));
+const ContractGenerator = lazy(() => import('./pages/contracts/ContractGenerator'));
+const ContractView = lazy(() => import('./pages/contracts/ContractView'));
 const Billing = lazy(() => import('./pages/billing/Billing'));
 const Messages = lazy(() => import('./pages/messages/Messages'));
 const Admin = lazy(() => import('./pages/admin/Admin'));
@@ -172,6 +175,9 @@ function AppRoutes() {
                 <Route path="social" element={<Social />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="loyalty" element={<Loyalty />} />
+                <Route path="contracts" element={<Contracts />} />
+                <Route path="contracts/new" element={<ContractGenerator />} />
+                <Route path="contracts/:id" element={<ContractView />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="team" element={<Team />} />
                 <Route path="settings/audit-log" element={<AuditLog />} />
