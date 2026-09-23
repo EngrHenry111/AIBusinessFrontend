@@ -8,7 +8,8 @@ import {
   RiFileTextLine, RiRobot2Line, RiArrowUpLine, RiArrowDownLine,
   RiMoneyDollarCircleLine, RiPulseLine, RiRefreshLine, RiMailSendLine,
   RiDatabase2Line, RiServerLine, RiCpuLine, RiTimeLine, RiEyeLine,
-  RiSearchEyeLine,
+  RiSearchEyeLine, RiStore2Line, RiStarFill, RiStarLine, RiExternalLinkLine,
+  RiShoppingBag3Line,
 } from 'react-icons/ri';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip,
@@ -27,8 +28,10 @@ const TABS = [
   { id: 'companies', label: 'Companies', icon: RiBuilding2Line },
   { id: 'users', label: 'Users', icon: RiUserLine },
   { id: 'revenue', label: 'Revenue', icon: RiMoneyDollarCircleLine },
+  { id: 'marketplace', label: 'Marketplace', icon: RiStore2Line },
   { id: 'system', label: 'System', icon: RiPulseLine },
 ];
+const STORE_URL = (slug) => `https://bislyai.com/store/${slug}`;
 
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 const fmtMoney = (n) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n || 0);
@@ -91,6 +94,7 @@ export default function Admin() {
       {tab === 'companies' && <CompaniesTab />}
       {tab === 'users' && <UsersTab />}
       {tab === 'revenue' && <RevenueTab />}
+      {tab === 'marketplace' && <MarketplaceTab />}
       {tab === 'system' && <SystemTab />}
     </div>
   );
@@ -671,6 +675,190 @@ function RevenueTab() {
             {sending ? <RiLoader4Line className="spin" /> : <RiMailSendLine />} Send broadcast
           </button>
         </form>
+      </div>
+    </>
+  );
+}
+
+/* ───────────────────────── Marketplace ───────────────────────── */
+function MarketplaceTab() {
+  const [data, setData] = useState(null);
+  const [orders, setOrders] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [ov, ord] = await Promise.all([
+        adminService.getMarketplaceOverview(),
+        adminService.getMarketplaceOrders({ limit: 20 }),
+      ]);
+      setData(ov.data.data);
+      setOrders(ord.data);
+    } catch { toast.error('Failed to load marketplace data'); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function toggleFeature(store) {
+    try {
+      const { data: r } = await adminService.featureStore(store._id);
+      toast.success(r.data.isFeatured ? `${store.companyName} is now featured` : `${store.companyName} unfeatured`);
+      await load();
+    } catch { toast.error('Failed to update feature status'); }
+  }
+
+  async function toggleSuspend(store) {
+    const suspending = !store.isSuspended;
+    if (!window.confirm(`${suspending ? 'Suspend' : 'Reactivate'} "${store.companyName}" on the marketplace? ${suspending ? 'Their store link and central listing will both stop working — their BizlyAI account stays active.' : ''}`)) return;
+    try {
+      await adminService.suspendStore(store._id);
+      toast.success(suspending ? `${store.companyName} suspended` : `${store.companyName} reactivated`);
+      await load();
+    } catch { toast.error('Action failed'); }
+  }
+
+  if (loading) return <Spinner />;
+  if (!data) return <div className="admin-empty">No data available</div>;
+
+  const cards = [
+    { label: 'Total Stores', value: fmtNum(data.totalStores), icon: RiStore2Line, color: '#6366f1', sub: `${data.activeStores} active` },
+    { label: 'Marketplace Orders', value: fmtNum(data.totalMarketplaceOrders), icon: RiShoppingBag3Line, color: '#8b5cf6' },
+    { label: 'Total GMV', value: fmtMoney(data.totalMarketplaceRevenue), icon: RiMoneyDollarCircleLine, color: '#10b981' },
+    { label: 'BizlyAI Commission', value: fmtMoney(data.totalCommission), icon: RiBarChartLine, color: '#f59e0b', sub: `${data.newStoresThisMonth} new store(s) this month` },
+  ];
+
+  return (
+    <>
+      <div className="admin-toolbar">
+        <div />
+        <button className="btn btn-secondary btn-sm" onClick={load}><RiRefreshLine /> Refresh</button>
+      </div>
+
+      <div className="admin-stats-grid">
+        {cards.map((c, i) => {
+          const Icon = c.icon;
+          return (
+            <div key={i} className="admin-stat card">
+              <div className="as-icon" style={{ background: `${c.color}18`, color: c.color }}><Icon /></div>
+              <div className="as-value">{c.value}</div>
+              <div className="as-label">{c.label}</div>
+              {c.sub && <div className="as-sub">{c.sub}</div>}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="admin-charts">
+        <div className="card card-pad">
+          <h3>Daily Commission <span className="muted">· last 14 days</span></h3>
+          {!data.dailyCommission?.some((d) => d.commission > 0) ? (
+            <div className="chart-empty">No commission earned in this window</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={data.dailyCommission} barSize={18}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false}
+                  tickFormatter={(v) => (v >= 1000 ? `₦${(v / 1000).toFixed(0)}k` : `₦${v}`)} />
+                <Tooltip contentStyle={chartTooltip} formatter={(v) => fmtMoney(v)} cursor={{ fill: 'var(--bg-hover)' }} />
+                <Bar dataKey="commission" name="Commission" radius={[4, 4, 0, 0]} fill="#f59e0b" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        <div className="card">
+          <div className="card-header-row"><h3>Top Earning Stores</h3></div>
+          <div className="table-wrapper">
+            <table className="table compact">
+              <thead><tr><th>Store</th><th>Orders</th><th>Revenue</th><th>Commission</th></tr></thead>
+              <tbody>
+                {data.topSellingStores.map((s) => (
+                  <tr key={s._id}>
+                    <td><strong>{s.companyName}</strong></td>
+                    <td>{fmtNum(s.ordersCount)}</td>
+                    <td>{fmtMoney(s.revenue)}</td>
+                    <td className="muted">{fmtMoney(s.commission)}</td>
+                  </tr>
+                ))}
+                {!data.topSellingStores.length && <tr><td colSpan={4} className="muted">No marketplace sales yet</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header-row"><h3>Stores ({data.stores.length})</h3></div>
+        <div className="table-wrapper">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Store</th><th>Owner</th><th>Products</th><th>Orders</th><th>Revenue</th>
+                <th>Commission</th><th>Featured</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.stores.map((s) => (
+                <tr key={s._id}>
+                  <td>
+                    <a href={STORE_URL(s.storeSlug)} target="_blank" rel="noreferrer" className="link-btn">
+                      <strong>{s.companyName}</strong> <RiExternalLinkLine style={{ fontSize: 12 }} />
+                    </a>
+                  </td>
+                  <td className="cell-sub">{s.owner?.name}<br /><span>{s.owner?.email}</span></td>
+                  <td>{fmtNum(s.productsCount)}</td>
+                  <td>{fmtNum(s.ordersCount)}</td>
+                  <td>{s.revenue ? fmtMoney(s.revenue) : '—'}</td>
+                  <td className="muted">{s.commission ? fmtMoney(s.commission) : '—'} <span className="muted">({s.commissionPercent}%)</span></td>
+                  <td>
+                    <button className="btn btn-sm btn-ghost" onClick={() => toggleFeature(s)} title={s.isFeatured ? 'Unfeature' : 'Feature'}>
+                      {s.isFeatured ? <RiStarFill style={{ color: '#f59e0b' }} /> : <RiStarLine />}
+                    </button>
+                  </td>
+                  <td>
+                    {s.isSuspended ? <span className="badge badge-danger">Suspended</span>
+                      : s.listed ? <span className="badge badge-success">Listed</span>
+                      : <span className="badge badge-neutral">Disabled</span>}
+                  </td>
+                  <td>
+                    <div className="row-actions">
+                      <button className={`btn btn-sm ${s.isSuspended ? 'btn-secondary' : 'btn-danger'}`} onClick={() => toggleSuspend(s)}>
+                        {s.isSuspended ? 'Reactivate' : 'Suspend'}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {!data.stores.length && <tr><td colSpan={9} className="muted">No stores yet</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header-row"><h3>Recent Marketplace Transactions <span className="muted">· total commission {fmtMoney(orders?.totalCommission || 0)}</span></h3></div>
+        <div className="table-wrapper">
+          <table className="table">
+            <thead><tr><th>Order</th><th>Store</th><th>Customer</th><th>Total</th><th>Commission</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody>
+              {orders?.data.map((o) => (
+                <tr key={o._id}>
+                  <td className="muted mono">{o.orderNumber}</td>
+                  <td>{o.company?.name || '—'}</td>
+                  <td className="muted">{o.customer || '—'}</td>
+                  <td><strong>{fmtMoney(o.total)}</strong></td>
+                  <td className="muted">{fmtMoney(o.commission)}</td>
+                  <td><span className={`badge badge-${statusBadge(o.status === 'delivered' ? 'active' : o.status)}`}>{o.status}</span></td>
+                  <td className="muted">{fmtDate(o.createdAt)}</td>
+                </tr>
+              ))}
+              {!orders?.data?.length && <tr><td colSpan={7} className="muted">No marketplace orders yet</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
     </>
   );
