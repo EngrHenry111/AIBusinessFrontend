@@ -232,6 +232,19 @@ export const analyticsService = {
   getUsage: () => api.get('/analytics/usage'),
 };
 
+// ─── Advanced Analytics Dashboard ───────────────────────────────────────────
+export const advancedAnalyticsService = {
+  getRevenue: (params) => api.get('/analytics/revenue', { params }),
+  getCustomers: (params) => api.get('/analytics/customers', { params }),
+  getProducts: (params) => api.get('/analytics/products', { params }),
+  getLeads: (params) => api.get('/analytics/leads', { params }),
+  getFinancial: (params) => api.get('/analytics/financial', { params }),
+  getOperational: (params) => api.get('/analytics/operational', { params }),
+  // Distinct from analyticsService.getInsights — this one is Groq-powered
+  // and cached 6h server-side, see analyticsRoutes.js.
+  getInsights: () => api.get('/analytics/ai-insights'),
+};
+
 // ─── Agents ───────────────────────────────────────────────────────────────────
 export const agentService = {
   getAll: () => api.get('/agents'),
