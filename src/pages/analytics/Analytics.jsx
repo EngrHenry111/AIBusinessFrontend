@@ -88,6 +88,9 @@ export default function Analytics() {
   }, [period]);
 
   useEffect(() => {
+    // 'overview' isn't a real endpoint — it's assembled from revenue/
+    // financial/customers/leads, which the effect above already loads.
+    if (tab === 'overview') return;
     if (!data[tab] && !loading[tab]) load(tab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
