@@ -84,7 +84,7 @@ export default function Procurement() {
           <RiGovernmentLine style={{ fontSize: 40, color: 'var(--color-brand)' }} />
           <h2>e-Procurement is a Business Plan feature</h2>
           <p>Government-grade procurement management — requisitions, sequential approvals, vendor register, budget control and audit-ready reporting.</p>
-          <Link to="/settings/billing" className="btn btn-primary">Upgrade to Business Plan</Link>
+          <Link to="/billing" className="btn btn-primary">Upgrade to Business Plan</Link>
         </div>
       </div>
     );

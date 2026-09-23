@@ -9,7 +9,7 @@ import {
   RiShoppingBagLine, RiVideoLine, RiMegaphoneLine, RiBriefcaseLine,
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
   RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine, RiStoreLine,
-  RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine, RiGovernmentLine,
+  RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine, RiGovernmentLine, RiBankCardLine,
 } from 'react-icons/ri';
 import './Sidebar.css';
 
@@ -36,6 +36,7 @@ const NAV_ITEMS = [
   { type: 'divider', label: 'Workspace' },
   { label: 'My Store', icon: RiStoreLine, path: '/settings/store' },
   { label: 'My Card', icon: RiContactsLine, path: '/settings/card' },
+  { label: 'Billing', icon: RiBankCardLine, path: '/billing' },
   { label: 'Analytics', icon: RiBarChartLine, path: '/analytics' },
   { label: 'Team', icon: RiTeamLine, path: '/team' },
   { label: 'WhatsApp', icon: RiWhatsappLine, path: '/whatsapp' },

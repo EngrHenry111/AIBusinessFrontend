@@ -5,7 +5,7 @@ import { userService, companyService } from '../../services';
 import {
   RiUserLine, RiBuildingLine, RiRobot2Line, RiLockLine,
   RiCheckLine, RiLoader4Line, RiMoonLine, RiSunLine, RiImageAddLine, RiShieldKeyholeLine,
-  RiMessage3Line, RiSendPlaneLine, RiMoneyDollarCircleLine, RiArrowRightLine,
+  RiMessage3Line, RiSendPlaneLine, RiMoneyDollarCircleLine, RiArrowRightLine, RiBankCardLine,
 } from 'react-icons/ri';
 import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
@@ -18,6 +18,9 @@ const TABS = [
   { id:'ai', label:'AI Settings', icon: RiRobot2Line },
   { id:'security', label:'Security', icon: RiShieldKeyholeLine },
   { id:'password', label:'Password', icon: RiLockLine },
+  // Not a real tab — clicking it navigates straight to the standalone
+  // /billing page instead of switching activeTab.
+  { id:'billing', label:'Billing', icon: RiBankCardLine, path: '/billing' },
 ];
 
 export default function Settings() {
@@ -228,7 +231,7 @@ export default function Settings() {
             const Icon = t.icon;
             return (
               <button key={t.id} className={`settings-nav-btn ${activeTab===t.id?'active':''}`}
-                onClick={() => setActiveTab(t.id)}>
+                onClick={() => (t.path ? navigate(t.path) : setActiveTab(t.id))}>
                 <Icon /> {t.label}
               </button>
             );
