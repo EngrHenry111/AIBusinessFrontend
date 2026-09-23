@@ -1,0 +1,115 @@
+/* This page tree doesn't import Admin.css/Contracts.css, so every shared-
+   looking class it relies on (tabs, wizard steps, filters, detail grid,
+   usage bars, mono, etc.) is reproduced here rather than assumed global. */
+.procurement-page { display: flex; flex-direction: column; gap: var(--space-5); }
+.muted { color: var(--text-muted); font-weight: 400; }
+.mono { font-family: var(--font-mono); font-size: 12px; }
+
+.admin-tabs {
+  display: flex; gap: 4px; background: var(--bg-tertiary);
+  border-radius: var(--radius-md); padding: 4px; width: fit-content;
+  overflow-x: auto; max-width: 100%;
+}
+.admin-tab {
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  padding: 8px 16px; border-radius: 7px; font-size: 14px; font-weight: 500;
+  color: var(--text-secondary); background: transparent; border: none;
+  cursor: pointer; transition: all var(--transition);
+}
+.admin-tab.active { background: var(--bg-card); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+
+.card-header-row { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--border); }
+.card-header-row h3 { font-size: 15px; font-weight: 700; margin: 0; }
+
+.upgrade-card { text-align: center; max-width: 480px; margin: 60px auto; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.upgrade-card h2 { margin: 0; font-size: 20px; }
+
+.procurement-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+@media (max-width: 700px) { .procurement-stats { grid-template-columns: repeat(2, 1fr); } }
+.proc-stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; text-align: center; display: flex; flex-direction: column; gap: 4px; }
+.ps-num { font-size: 26px; font-weight: 800; color: var(--text-primary); }
+.ps-label { font-size: 12px; color: var(--text-muted); }
+
+/* Filters / search (ported from Contracts.css) */
+.contract-filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.contract-search { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; padding: 9px 12px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-muted); }
+.contract-search input { border: 0; background: none; outline: none; flex: 1; color: var(--text-primary); font-size: 14px; }
+.contract-filters select { padding: 9px 12px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); font-size: 13.5px; }
+.contract-row { cursor: pointer; transition: background .1s; }
+.contract-row:hover { background: var(--bg-hover); }
+.cell-sub { font-size: 12.5px; }
+.cell-sub span { color: var(--text-muted); }
+.total-row td { font-weight: 700; border-top: 2px solid var(--border); }
+
+/* Approval progress mini-indicator (list view) */
+.approval-progress { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; font-size: 11px; }
+.ap-step-wrap { display: flex; align-items: center; gap: 4px; }
+.ap-step { display: inline-flex; align-items: center; gap: 3px; padding: 3px 7px; border-radius: 999px; font-weight: 700; white-space: nowrap; }
+.ap-step.ap-done { background: color-mix(in srgb, var(--color-success) 15%, transparent); color: var(--color-success); }
+.ap-step.ap-rejected { background: color-mix(in srgb, var(--color-danger) 15%, transparent); color: var(--color-danger); }
+.ap-step.ap-current { background: color-mix(in srgb, var(--color-warning) 20%, transparent); color: #b45309; }
+.ap-step.ap-pending { background: var(--bg-tertiary); color: var(--text-muted); }
+.ap-arrow { color: var(--text-muted); font-size: 11px; }
+
+/* Approval chain stepper (detail view) */
+.approval-stepper { display: flex; flex-direction: column; gap: 14px; }
+.approval-stepper-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: var(--radius-lg); background: var(--bg-secondary); }
+.asi-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--bg-tertiary); color: var(--text-muted); }
+.approval-stepper-item.approved .asi-icon { background: color-mix(in srgb, var(--color-success) 18%, transparent); color: var(--color-success); }
+.approval-stepper-item.rejected .asi-icon { background: color-mix(in srgb, var(--color-danger) 18%, transparent); color: var(--color-danger); }
+.asi-body { display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
+.asi-comment { font-size: 12.5px; color: var(--text-secondary); font-style: italic; margin: 4px 0 0; }
+.proc-approve-box { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+.proc-warning-banner {
+  display: flex; align-items: center; gap: 8px; background: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  color: #b45309; padding: 10px 14px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600;
+}
+
+/* Wizard steps (ported from Contracts.css) */
+.setup-steps { display: flex; justify-content: space-between; position: relative; }
+.setup-steps::before { content: ''; position: absolute; top: 14px; left: 30px; right: 30px; height: 2px; background: var(--border); z-index: 0; }
+.setup-step-dot { display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; z-index: 1; flex: 1; }
+.setup-step-dot span {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--bg-tertiary); border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; color: var(--text-muted);
+}
+.setup-step-dot.active span { border-color: var(--color-brand); color: var(--color-brand); background: var(--bg-card); }
+.setup-step-dot.done span { border-color: var(--color-success); background: var(--color-success); color: #fff; }
+.setup-step-dot label { font-size: 10.5px; color: var(--text-muted); text-align: center; }
+.setup-step-dot.active label { color: var(--text-primary); font-weight: 600; }
+.setup-nav { display: flex; align-items: center; gap: 8px; margin-top: 24px; flex-wrap: wrap; }
+
+.proc-error { color: var(--color-danger); font-size: 13.5px; margin: 0; }
+
+.pf-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+.pf-field span { font-weight: 600; }
+.proc-form-panel { margin-top: -8px; }
+.proc-form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 14px 0; }
+@media (max-width: 700px) { .proc-form-grid { grid-template-columns: 1fr; } }
+
+.proc-total-row { display: flex; justify-content: space-between; padding: 12px 0; margin-top: 10px; border-top: 1px solid var(--border); font-size: 15px; }
+.proc-budget-check { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
+.proc-budget-check.over { color: var(--color-danger); font-weight: 700; }
+
+.proc-review-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.proc-review-grid p { margin: 2px 0 0; font-weight: 600; }
+.proc-review-item { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13.5px; border-bottom: 1px solid var(--border); }
+
+.proc-report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); }
+@media (max-width: 700px) { .proc-report-grid { grid-template-columns: 1fr; } }
+.proc-report-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; text-transform: capitalize; }
+
+.proc-audit-list { display: flex; flex-direction: column; }
+.proc-audit-row { display: flex; flex-direction: column; gap: 2px; padding: 12px 20px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.proc-audit-row:last-child { border-bottom: none; }
+.proc-audit-action { font-weight: 700; text-transform: capitalize; color: var(--text-primary); }
+
+/* Detail grid + usage bars (ported from Admin.css, used in vendor modal / budget lines) */
+.detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-5); }
+@media (max-width: 640px) { .detail-grid { grid-template-columns: repeat(2, 1fr); } }
+.detail-item { display: flex; flex-direction: column; gap: 2px; background: var(--bg-secondary); border-radius: var(--radius-md); padding: 10px 12px; }
+.detail-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; }
+.detail-value { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.usage-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.usage-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }

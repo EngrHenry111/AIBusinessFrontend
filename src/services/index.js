@@ -303,6 +303,25 @@ export const loyaltyService = {
   getStats: () => api.get('/loyalty/stats'),
 };
 
+// ─── e-Procurement (Business plan) ─────────────────────────────────────────
+export const procurementService = {
+  getAll: (params) => api.get('/procurement', { params }),
+  getOne: (id) => api.get(`/procurement/${id}`),
+  create: (data) => api.post('/procurement', data),
+  update: (id, data) => api.put(`/procurement/${id}`, data),
+  approve: (id, comment) => api.post(`/procurement/${id}/approve`, { comment }),
+  reject: (id, reason) => api.post(`/procurement/${id}/reject`, { reason }),
+  addVendor: (id, data) => api.post(`/procurement/${id}/vendors`, data),
+  selectVendor: (id, vendorId) => api.post(`/procurement/${id}/select-vendor`, { vendorId }),
+  getPO: (id) => `${api.defaults.baseURL}/procurement/${id}/purchase-order`,
+  markDelivered: (id, data) => api.patch(`/procurement/${id}/delivered`, data),
+  getReports: (params) => api.get('/procurement/reports', { params }),
+  getBudgets: () => api.get('/procurement/budgets'),
+  createBudget: (data) => api.post('/procurement/budgets', data),
+  getVendors: (params) => api.get('/procurement/vendors', { params }),
+  createVendor: (data) => api.post('/procurement/vendors', data),
+};
+
 // ─── Currency ────────────────────────────────────────────────────────────────
 export const currencyService = {
   getRates: () => api.get('/currency/rates'),

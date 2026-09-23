@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { whatsappService, productService, widgetService, loyaltyService, contractService } from '../../services';
+import { whatsappService, productService, widgetService, loyaltyService, contractService, procurementService } from '../../services';
 import {
   RiDashboardLine, RiRobot2Line, RiFileTextLine, RiUserLine,
   RiCalendarLine, RiMoneyDollarCircleLine, RiBarChartLine,
@@ -9,7 +9,7 @@ import {
   RiShoppingBagLine, RiVideoLine, RiMegaphoneLine, RiBriefcaseLine,
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
   RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine, RiStoreLine,
-  RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine,
+  RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine, RiGovernmentLine,
 } from 'react-icons/ri';
 import './Sidebar.css';
 
@@ -23,6 +23,7 @@ const NAV_ITEMS = [
   { label: 'Customers', icon: RiUserStarLine, path: '/customers' },
   { label: 'Meetings', icon: RiVideoLine, path: '/meetings' },
   { label: 'Invoices', icon: RiMoneyDollarCircleLine, path: '/invoices' },
+  { label: 'e-Procurement', icon: RiGovernmentLine, path: '/procurement', businessPlanOnly: true },
   { label: 'Contracts', icon: RiFileTextLine, path: '/contracts' },
   { label: 'Expenses', icon: RiMoneyDollarCircleLine, path: '/expenses' },
   { label: 'Payroll', icon: RiMoneyDollarCircleLine, path: '/payroll', roles: ['company_owner', 'manager', 'super_admin'] },
@@ -54,6 +55,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const [outOfStock, setOutOfStock] = useState(0);
   const [loyaltyMembers, setLoyaltyMembers] = useState(0);
   const [draftContracts, setDraftContracts] = useState(0);
+  const [pendingRequisitions, setPendingRequisitions] = useState(0);
 
   // Poll for WhatsApp conversations waiting on a human
   useEffect(() => {
@@ -125,6 +127,23 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     return () => { alive = false; clearInterval(iv); };
   }, []);
 
+  const isBusinessPlan = company?.subscription?.plan === 'business';
+
+  // Poll for procurement requisitions awaiting approval (Business plan only)
+  useEffect(() => {
+    if (!isBusinessPlan) return;
+    let alive = true;
+    const check = async () => {
+      try {
+        const { data } = await procurementService.getAll({ status: 'pending_approval', limit: 1 });
+        if (alive) setPendingRequisitions(data.pagination?.total || 0);
+      } catch { /* ignore */ }
+    };
+    check();
+    const iv = setInterval(check, 60000);
+    return () => { alive = false; clearInterval(iv); };
+  }, [isBusinessPlan]);
+
   const storeNeedsSetup = Boolean(company) && !company?.paymentSettings?.isPaymentSetup;
 
   // "New" badge for 7 days after the Digital Business Card feature launched —
@@ -141,6 +160,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     if (item.path === '/settings/card') return isNewFeature ? 'New' : null;
     if (item.path === '/loyalty') return loyaltyMembers > 0 ? loyaltyMembers : null;
     if (item.path === '/contracts') return draftContracts > 0 ? draftContracts : null;
+    if (item.path === '/procurement') return pendingRequisitions > 0 ? pendingRequisitions : null;
     return item.badge;
   };
 
@@ -169,6 +189,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
         {NAV_ITEMS.map((item, idx) => {
           if (item.adminOnly && user?.role !== 'super_admin') return null;
           if (item.roles && !item.roles.includes(user?.role)) return null;
+          if (item.businessPlanOnly && !isBusinessPlan && user?.role !== 'super_admin') return null;
           if (item.type === 'divider') {
             return (
               <div key={idx} className="nav-divider">
