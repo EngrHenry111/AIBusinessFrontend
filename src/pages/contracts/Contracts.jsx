@@ -4,7 +4,7 @@ import { contractService } from '../../services';
 import toast from 'react-hot-toast';
 import {
   RiFileTextLine, RiAddLine, RiSearchLine, RiEyeLine, RiMailSendLine,
-  RiDownloadLine, RiDeleteBinLine, RiLoader4Line,
+  RiDownloadLine, RiDeleteBinLine, RiLoader4Line, RiFileCopyLine,
 } from 'react-icons/ri';
 import './Contracts.css';
 
@@ -31,6 +31,7 @@ export default function Contracts() {
   const [sort, setSort] = useState('-createdAt');
   const [sendingId, setSendingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [duplicatingId, setDuplicatingId] = useState(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -63,6 +64,19 @@ export default function Contracts() {
       toast.error(e.response?.data?.message || 'Failed to send contract');
     } finally {
       setSendingId(null);
+    }
+  }
+
+  async function handleDuplicate(c) {
+    setDuplicatingId(c._id);
+    try {
+      const { data } = await contractService.duplicate(c._id);
+      toast.success('Duplicated as a new draft');
+      navigate(`/contracts/${data.data._id}`);
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to duplicate');
+    } finally {
+      setDuplicatingId(null);
     }
   }
 
@@ -158,6 +172,9 @@ export default function Contracts() {
                       <a className="btn btn-ghost btn-icon btn-sm" title="Download" href={contractService.getPDF(c._id)} target="_blank" rel="noreferrer">
                         <RiDownloadLine />
                       </a>
+                      <button className="btn btn-ghost btn-icon btn-sm" title="Duplicate" disabled={duplicatingId === c._id} onClick={() => handleDuplicate(c)}>
+                        {duplicatingId === c._id ? <RiLoader4Line className="spin" /> : <RiFileCopyLine />}
+                      </button>
                       <button className="btn btn-ghost btn-icon btn-sm" title="Delete" disabled={deletingId === c._id} onClick={() => handleDelete(c)}>
                         {deletingId === c._id ? <RiLoader4Line className="spin" /> : <RiDeleteBinLine />}
                       </button>

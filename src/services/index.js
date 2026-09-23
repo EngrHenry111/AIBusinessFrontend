@@ -306,6 +306,7 @@ export const contractService = {
   send: (id) => api.post(`/contracts/${id}/send`),
   getPDF: (id) => `${api.defaults.baseURL}/contracts/${id}/pdf`,
   duplicate: (id) => api.post(`/contracts/${id}/duplicate`),
+  markSigned: (id) => api.patch(`/contracts/${id}/sign`),
 };
 
 // ─── Coupons ─────────────────────────────────────────────────────────────────

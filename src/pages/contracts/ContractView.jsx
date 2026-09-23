@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import {
   RiFileTextLine, RiEditLine, RiMailSendLine, RiDownloadLine, RiFileCopyLine,
   RiDeleteBinLine, RiSaveLine, RiCloseLine, RiCheckLine, RiTimeLine, RiArrowLeftLine,
+  RiQuillPenLine,
 } from 'react-icons/ri';
 import './Contracts.css';
 
@@ -28,6 +29,7 @@ export default function ContractView() {
   const [title, setTitle] = useState('');
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
+  const [signing, setSigning] = useState(false);
 
   useEffect(() => { load(); }, [id]);
 
@@ -64,6 +66,20 @@ export default function ContractView() {
       toast.error(e.response?.data?.message || 'Failed to send contract');
     } finally {
       setSending(false);
+    }
+  }
+
+  async function handleMarkSigned() {
+    if (!window.confirm(`Mark "${contract.title}" as signed? This confirms both parties have executed the contract.`)) return;
+    setSigning(true);
+    try {
+      const { data } = await contractService.markSigned(id);
+      setContract(data.data);
+      toast.success('Contract marked as signed');
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to mark as signed');
+    } finally {
+      setSigning(false);
     }
   }
 
@@ -113,10 +129,13 @@ export default function ContractView() {
           <p>{TYPE_LABELS[contract.type] || contract.type} · <span className={`badge badge-${STATUS_COLORS[contract.status]}`}>{contract.status}</span></p>
         </div>
         <div className="contract-view-actions">
-          {!editing && <button className="btn btn-secondary" onClick={() => setEditing(true)}><RiEditLine /> Edit</button>}
+          {contract.status === 'draft' && !editing && <button className="btn btn-secondary" onClick={() => setEditing(true)}><RiEditLine /> Edit</button>}
           <button className="btn btn-secondary" disabled={sending} onClick={handleSend}><RiMailSendLine /> {sending ? 'Sending…' : 'Send'}</button>
           <a className="btn btn-secondary" href={contractService.getPDF(id)} target="_blank" rel="noreferrer"><RiDownloadLine /> Download</a>
           <button className="btn btn-secondary" onClick={handleDuplicate}><RiFileCopyLine /> Duplicate</button>
+          {contract.status !== 'signed' && contract.status !== 'cancelled' && (
+            <button className="btn btn-secondary" disabled={signing} onClick={handleMarkSigned}><RiQuillPenLine /> {signing ? 'Saving…' : 'Mark Signed'}</button>
+          )}
           {contract.status === 'draft' && <button className="btn btn-ghost" onClick={handleDelete}><RiDeleteBinLine /> Delete</button>}
         </div>
       </div>
