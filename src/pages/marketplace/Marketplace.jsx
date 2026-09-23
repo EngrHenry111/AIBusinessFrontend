@@ -65,12 +65,16 @@ export default function Marketplace() {
   const [stores, setStores] = useState(null);
   const [productResults, setProductResults] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
+  const [trending, setTrending] = useState([]);
 
   useEffect(() => { document.title = 'BizlyAI Marketplace — Shop Nigerian Businesses'; }, []);
 
   useEffect(() => {
     marketplaceService.getFeatured().then(({ data }) => setFeatured(data.data)).catch(() => setFeatured([]));
     marketplaceService.getCategories().then(({ data }) => setCategories(data.data)).catch(() => setCategories([]));
+    marketplaceService.getStats().then(({ data }) => setStats(data.data)).catch(() => setStats(null));
+    marketplaceService.getTrending().then(({ data }) => setTrending(data.data)).catch(() => setTrending([]));
   }, []);
 
   const loadStores = useCallback(() => {
@@ -106,16 +110,31 @@ export default function Marketplace() {
   return (
     <div className="mk">
       <header className="mk-header">
-        <Link to="/" className="mk-brand"><RiStore2Line /> BizlyAI Market</Link>
+        <div className="mk-header-inner">
+          <Link to="/" className="mk-brand"><RiStore2Line /> BizlyAI Market</Link>
+          <div className="mk-header-actions">
+            <Link to="/register" className="mk-btn-ghost">List Your Store</Link>
+            <Link to="/login" className="mk-btn-ghost">Login</Link>
+          </div>
+        </div>
       </header>
 
       <section className="mk-hero">
         <h1>Shop from hundreds of Nigerian businesses</h1>
-        <p>Discover trusted local stores, all in one place.</p>
+        <p>Discover unique products from verified local businesses.</p>
         <form className="mk-search" onSubmit={submitSearch}>
           <RiSearchLine />
           <input placeholder="Search products or stores…" value={search} onChange={(e) => setSearch(e.target.value)} />
         </form>
+        {stats && (
+          <div className="mk-hero-stats">
+            <span>{stats.totalProducts.toLocaleString()}+ Products</span>
+            <span>·</span>
+            <span>{stats.totalStores.toLocaleString()}+ Stores</span>
+            <span>·</span>
+            <span>Secure Payments</span>
+          </div>
+        )}
       </section>
 
       <div className="mk-container">
@@ -159,6 +178,24 @@ export default function Marketplace() {
             <h2>Featured Stores</h2>
             <div className="mk-store-grid mk-store-grid-featured">
               {featured.map((s) => <StoreCard key={s.storeSlug} store={s} />)}
+            </div>
+          </section>
+        )}
+
+        {!search && trending.length > 0 && (
+          <section className="mk-section">
+            <h2>Trending Products</h2>
+            <div className="mk-product-grid">
+              {trending.map((p) => (
+                <Link key={p._id} to={`/store/${p.store.slug}/product/${p._id}`} className="mk-product-card">
+                  <div className="mk-product-img">{p.images?.[0] ? <img src={p.images[0]} alt={p.name} /> : <RiStore2Line />}</div>
+                  <div className="mk-product-body">
+                    <div className="mk-product-name">{p.name}</div>
+                    <div className="mk-product-price">{naira(p.effectivePrice)}</div>
+                    <div className="mk-product-store"><RiStore2Line /> {p.store.name}</div>
+                  </div>
+                </Link>
+              ))}
             </div>
           </section>
         )}

@@ -330,6 +330,11 @@ export const storeCustomerService = {
   addToWishlist: (slug, token, productId) => axios.post(`${API_BASE}/store/${slug}/customer/wishlist/${productId}`, null, authHeaders(token)),
   removeFromWishlist: (slug, token, productId) => axios.delete(`${API_BASE}/store/${slug}/customer/wishlist/${productId}`, authHeaders(token)),
   syncWishlist: (slug, token, productIds) => axios.post(`${API_BASE}/store/${slug}/customer/wishlist/sync`, { productIds }, authHeaders(token)),
+  getPoints: (slug, token) => axios.get(`${API_BASE}/store/${slug}/customer/points`, authHeaders(token)),
+  changePassword: (slug, token, data) => axios.patch(`${API_BASE}/store/${slug}/customer/password`, data, authHeaders(token)),
+  deleteAccount: (slug, token) => axios.delete(`${API_BASE}/store/${slug}/customer/me`, authHeaders(token)),
+  forgotPassword: (slug, email) => axios.post(`${API_BASE}/store/${slug}/customer/forgot-password`, { email }),
+  resetPassword: (slug, token, password) => axios.post(`${API_BASE}/store/${slug}/customer/reset-password/${token}`, { password }),
 };
 
 // ─── Central marketplace (public) ──────────────────────────────────────────────
@@ -338,6 +343,8 @@ export const marketplaceService = {
   getFeatured: () => axios.get(`${API_BASE}/marketplace/featured`),
   search: (q) => axios.get(`${API_BASE}/marketplace/search`, { params: { q } }),
   getCategories: () => axios.get(`${API_BASE}/marketplace/categories`),
+  getStats: () => axios.get(`${API_BASE}/marketplace/stats`),
+  getTrending: () => axios.get(`${API_BASE}/marketplace/trending`),
 };
 
 // ─── Payment settings — Paystack subaccount (authenticated) ───────────────────

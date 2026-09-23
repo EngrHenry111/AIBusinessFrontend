@@ -257,6 +257,13 @@ export default function Store() {
           </div>
           <div className="sf-nav-actions">
             <Link to={`/store/${slug}/track`} className="sf-nav-link">Track Order</Link>
+            <Link
+              to={storeToken ? `/store/${slug}/account?tab=wishlist` : `/store/${slug}/login?redirect=${encodeURIComponent(`/store/${slug}/account?tab=wishlist`)}`}
+              className="sf-cart-btn" title="Wishlist"
+            >
+              {wishlist.length > 0 ? <RiHeartFill className="wished" /> : <RiHeartLine />}
+              {wishlist.length > 0 && <span className="sf-cart-badge">{wishlist.length}</span>}
+            </Link>
             <Link to={storeToken ? `/store/${slug}/account` : `/store/${slug}/login`} className="sf-cart-btn" title="My Account">
               <RiUserLine />
             </Link>

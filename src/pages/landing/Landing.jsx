@@ -425,6 +425,7 @@ export default function Landing() {
             {NAV_LINKS.map((l) => (
               <button key={l.id} onClick={() => scrollTo(l.id)}>{l.label}</button>
             ))}
+            <Link to="/market">Marketplace</Link>
           </nav>
 
           <div className="lp-nav-cta">
@@ -442,6 +443,7 @@ export default function Landing() {
             {NAV_LINKS.map((l) => (
               <button key={l.id} onClick={() => scrollTo(l.id)}>{l.label}</button>
             ))}
+            <Link to="/market" onClick={() => setMenuOpen(false)}>Marketplace</Link>
             <Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link>
             <Link to="/register" className="lp-btn lp-btn-primary" onClick={() => setMenuOpen(false)}>Get Started Free</Link>
           </div>
@@ -761,6 +763,7 @@ export default function Landing() {
             <button onClick={() => scrollTo('pricing')}>Pricing</button>
             <button onClick={() => scrollTo('testimonials')}>About</button>
             <button onClick={() => scrollTo('contact')}>Contact</button>
+            <Link to="/market">Browse Marketplace</Link>
             <Link to="/security">Security</Link>
             <Link to="/privacy">Privacy</Link>
             <Link to="/terms">Terms</Link>

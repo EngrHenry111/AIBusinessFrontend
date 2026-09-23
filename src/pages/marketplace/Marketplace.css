@@ -15,8 +15,17 @@
 .mk-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 
 .mk-header { background: var(--mk-card); border-bottom: 1px solid var(--mk-border); padding: 16px 20px; }
-.mk-brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.15rem; max-width: 1200px; margin: 0 auto; }
+.mk-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; max-width: 1200px; margin: 0 auto; }
+.mk-brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.15rem; }
 .mk-brand svg { color: var(--mk-brand); font-size: 22px; }
+.mk-header-actions { display: flex; align-items: center; gap: 10px; }
+.mk-btn-ghost {
+  padding: 8px 16px; border-radius: 9px; border: 1.5px solid var(--mk-border); font-size: 0.85rem; font-weight: 700;
+  color: var(--mk-text); white-space: nowrap;
+}
+.mk-btn-ghost:hover { border-color: var(--mk-brand); color: var(--mk-brand); }
+
+.mk-hero-stats { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 18px; font-size: 0.9rem; font-weight: 600; opacity: 0.9; flex-wrap: wrap; }
 
 .mk-hero {
   text-align: center; padding: 56px 20px 40px;

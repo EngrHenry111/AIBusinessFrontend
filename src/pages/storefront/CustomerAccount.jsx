@@ -1,13 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { storefrontService, storeCustomerService } from '../../services';
 import {
   RiArrowLeftLine, RiUserLine, RiLogoutBoxLine, RiCoinLine, RiHeartLine,
-  RiMapPin2Line, RiAddLine, RiDeleteBinLine, RiStore2Line,
+  RiMapPin2Line, RiAddLine, RiDeleteBinLine, RiStore2Line, RiRefreshLine,
+  RiLockPasswordLine, RiAlertLine, RiShoppingCart2Line,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import { getStoreToken, clearStoreToken } from './storeAuth';
+import { addToCart } from './cart';
 import './Store.css';
+
+const TIER_COLORS = { Bronze: '#cd7f32', Silver: '#94a3b8', Gold: '#f59e0b', Platinum: '#6366f1' };
 
 const naira = (n) => `₦${Number(n || 0).toLocaleString()}`;
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—');
@@ -21,12 +25,13 @@ const NG_STATES = [
 export default function CustomerAccount() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const token = getStoreToken(slug);
 
   const [store, setStore] = useState(null);
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('orders');
+  const [tab, setTab] = useState(searchParams.get('tab') || 'orders');
 
   useEffect(() => {
     storefrontService.getStore(slug).then(({ data }) => setStore(data.data.store)).catch(() => {});
@@ -78,39 +83,77 @@ export default function CustomerAccount() {
         <div className="pp-tabs" style={{ marginBottom: 20 }}>
           <button className={tab === 'orders' ? 'active' : ''} onClick={() => setTab('orders')}>My Orders</button>
           <button className={tab === 'wishlist' ? 'active' : ''} onClick={() => setTab('wishlist')}>My Wishlist</button>
+          <button className={tab === 'points' ? 'active' : ''} onClick={() => setTab('points')}>My Points</button>
           <button className={tab === 'addresses' ? 'active' : ''} onClick={() => setTab('addresses')}>Saved Addresses</button>
           <button className={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}>Account Settings</button>
         </div>
 
-        {tab === 'orders' && <OrdersTab slug={slug} token={token} />}
+        {tab === 'orders' && <OrdersTab slug={slug} token={token} navigate={navigate} />}
         {tab === 'wishlist' && <WishlistTab slug={slug} token={token} />}
+        {tab === 'points' && <PointsTab slug={slug} token={token} />}
         {tab === 'addresses' && <AddressesTab slug={slug} token={token} customer={customer} onSaved={setCustomer} />}
-        {tab === 'settings' && <SettingsTab slug={slug} token={token} customer={customer} onSaved={setCustomer} />}
+        {tab === 'settings' && <SettingsTab slug={slug} token={token} customer={customer} onSaved={setCustomer} navigate={navigate} />}
       </div>
     </div>
   );
 }
 
-function OrdersTab({ slug, token }) {
+function OrdersTab({ slug, token, navigate }) {
   const [orders, setOrders] = useState(null);
+  const [expanded, setExpanded] = useState(null);
   useEffect(() => { storeCustomerService.getOrders(slug, token).then(({ data }) => setOrders(data.data)).catch(() => setOrders([])); }, [slug, token]);
 
   if (orders === null) return <p style={{ color: 'var(--sf-muted)' }}>Loading orders…</p>;
   if (orders.length === 0) return <div className="sf-empty"><h3>No orders yet</h3><p>Your order history will show up here.</p></div>;
 
+  function reorder(o, e) {
+    e.preventDefault();
+    // Order.items only stores a flat "Size: Large" label, not the raw
+    // variantGroup/variantValue pair checkout needs to re-resolve price and
+    // stock — so a variant item can't be safely re-added at the right price.
+    // Only items without a variant are auto-added; the rest need reselecting.
+    let added = 0;
+    let skipped = 0;
+    o.items.forEach((i) => {
+      if (i.variant) { skipped += 1; return; }
+      if (!i.productId) { skipped += 1; return; }
+      addToCart(slug, { _id: i.productId, name: i.name, images: i.image ? [i.image] : [], effectivePrice: i.price, price: i.price }, i.quantity, null);
+      added += 1;
+    });
+    if (added) toast.success(`${added} item${added === 1 ? '' : 's'} added to cart`);
+    if (skipped) toast(`${skipped} item${skipped === 1 ? '' : 's'} need their options reselected on the product page`, { icon: '⚠️' });
+    if (added) navigate(`/store/${slug}/checkout`);
+  }
+
   return (
     <div className="acc-orders">
       {orders.map((o) => (
-        <Link key={o._id} to={`/store/${slug}/track/${o.orderNumber}`} className="sf-panel acc-order-row">
-          <div>
-            <strong>{o.orderNumber}</strong>
-            <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: 'var(--sf-muted)' }}>{fmtDate(o.createdAt)} · {o.items.length} item{o.items.length === 1 ? '' : 's'}</p>
+        <div key={o._id} className="sf-panel acc-order-row" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer' }} onClick={() => setExpanded(expanded === o._id ? null : o._id)}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+            <div>
+              <strong>{o.orderNumber}</strong>
+              <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: 'var(--sf-muted)' }}>{fmtDate(o.createdAt)} · {o.items.length} item{o.items.length === 1 ? '' : 's'}</p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <strong>{naira(o.total)}</strong>
+              <p style={{ margin: '2px 0 0' }}><span className={`badge badge-${o.status === 'delivered' ? 'success' : o.status === 'cancelled' ? 'neutral' : 'info'}`}>{o.status}</span></p>
+            </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <strong>{naira(o.total)}</strong>
-            <p style={{ margin: '2px 0 0' }}><span className={`badge badge-${o.status === 'delivered' ? 'success' : o.status === 'cancelled' ? 'neutral' : 'info'}`}>{o.status}</span></p>
-          </div>
-        </Link>
+          {expanded === o._id && (
+            <div style={{ marginTop: 12, borderTop: '1px solid var(--sf-border)', paddingTop: 12 }}>
+              {o.items.map((i, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', padding: '4px 0' }}>
+                  <span>{i.name}{i.variant ? ` (${i.variant})` : ''} × {i.quantity}</span>
+                  <span>{naira(i.price * i.quantity)}</span>
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: 10, marginTop: 12 }} onClick={(e) => e.stopPropagation()}>
+                <Link to={`/store/${slug}/track/${o.orderNumber}`} className="sf-btn-ghost" style={{ width: 'auto', padding: '8px 16px', fontSize: '0.82rem' }}>Track Order</Link>
+                <button className="sf-btn-ghost" style={{ width: 'auto', padding: '8px 16px', fontSize: '0.82rem' }} onClick={(e) => reorder(o, e)}><RiRefreshLine /> Reorder</button>
+              </div>
+            </div>
+          )}
+        </div>
       ))}
     </div>
   );
@@ -129,20 +172,70 @@ function WishlistTab({ slug, token }) {
   if (items === null) return <p style={{ color: 'var(--sf-muted)' }}>Loading wishlist…</p>;
   if (items.length === 0) return <div className="sf-empty"><h3>Your wishlist is empty</h3><p>Tap the heart on any product to save it here.</p></div>;
 
+  function addProductToCart(p) {
+    if (p.variants?.length) { toast('This item has options — pick one on its product page.', { icon: '🛍️' }); return; }
+    addToCart(slug, p, 1, null);
+    toast.success('Added to cart');
+  }
+
   return (
     <div className="sf-grid">
       {items.map((p) => (
         <div key={p._id} className="sf-card">
           <Link to={`/store/${slug}/product/${p._id}`} className="sf-card-img">
             {p.images?.[0] ? <img src={p.images[0]} alt={p.name} /> : <span className="ph"><RiStore2Line /></span>}
+            {p.isFlashSale && <span className="sf-badge-sale">SALE</span>}
           </Link>
           <div className="sf-card-body">
             <Link to={`/store/${slug}/product/${p._id}`} className="sf-card-name">{p.name}</Link>
-            <div className="sf-card-price">{naira(p.effectivePrice)}</div>
-            <button className="sf-add" style={{ background: '#ef4444' }} onClick={() => remove(p._id)}><RiDeleteBinLine /> Remove</button>
+            <div className="sf-card-price">
+              {naira(p.effectivePrice)}
+              {p.isFlashSale && p.effectivePrice < p.price && <span className="sf-price-was">{naira(p.price)}</span>}
+            </div>
+            <button className="sf-add" onClick={() => addProductToCart(p)}><RiShoppingCart2Line /> Add to Cart</button>
+            <button className="sf-line-rm" style={{ marginTop: 6 }} onClick={() => remove(p._id)}><RiDeleteBinLine /> Remove</button>
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function PointsTab({ slug, token }) {
+  const [data, setData] = useState(null);
+  useEffect(() => { storeCustomerService.getPoints(slug, token).then(({ data: d }) => setData(d.data)).catch(() => setData({ points: 0, tier: 'Bronze', transactions: [] })); }, [slug, token]);
+
+  if (!data) return <p style={{ color: 'var(--sf-muted)' }}>Loading points…</p>;
+
+  return (
+    <div>
+      <div className="sf-panel" style={{ textAlign: 'center', marginBottom: 20 }}>
+        <div style={{ fontSize: '2.4rem', fontWeight: 800, color: 'var(--sf-brand)' }}>{data.points.toLocaleString()}</div>
+        <p style={{ color: 'var(--sf-muted)', margin: '2px 0 10px' }}>points available</p>
+        <span style={{ display: 'inline-block', padding: '4px 14px', borderRadius: 999, fontSize: '0.78rem', fontWeight: 700, color: '#fff', background: TIER_COLORS[data.tier] || '#cd7f32' }}>
+          {data.tier} Tier
+        </span>
+        <p style={{ color: 'var(--sf-muted)', fontSize: '0.8rem', marginTop: 14 }}>Redeem your points for a discount at checkout.</p>
+      </div>
+
+      <div className="sf-panel">
+        <h2>Points History</h2>
+        {data.transactions.length === 0 ? (
+          <p style={{ color: 'var(--sf-muted)' }}>No points activity yet.</p>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <tbody>
+              {data.transactions.map((t, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid var(--sf-border)' }}>
+                  <td style={{ padding: '8px 0', fontSize: '0.85rem' }}>{t.description || t.type}</td>
+                  <td style={{ padding: '8px 0', fontSize: '0.78rem', color: 'var(--sf-muted)' }}>{fmtDate(t.createdAt)}</td>
+                  <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 700, color: t.points >= 0 ? '#16a34a' : '#ef4444' }}>{t.points >= 0 ? '+' : ''}{t.points}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }
@@ -200,10 +293,17 @@ function AddressesTab({ slug, token, customer, onSaved }) {
   );
 }
 
-function SettingsTab({ slug, token, customer, onSaved }) {
+function SettingsTab({ slug, token, customer, onSaved, navigate }) {
   const [name, setName] = useState(customer.name);
   const [phone, setPhone] = useState(customer.phone || '');
   const [saving, setSaving] = useState(false);
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [changingPw, setChangingPw] = useState(false);
+
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function save() {
     setSaving(true);
@@ -218,13 +318,62 @@ function SettingsTab({ slug, token, customer, onSaved }) {
     }
   }
 
+  async function changePassword() {
+    if (newPassword.length < 6) return toast.error('New password must be at least 6 characters.');
+    setChangingPw(true);
+    try {
+      await storeCustomerService.changePassword(slug, token, { currentPassword, newPassword });
+      toast.success('Password updated');
+      setCurrentPassword(''); setNewPassword('');
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to change password');
+    } finally {
+      setChangingPw(false);
+    }
+  }
+
+  async function deleteAccount() {
+    setDeleting(true);
+    try {
+      await storeCustomerService.deleteAccount(slug, token);
+      clearStoreToken(slug);
+      toast.success('Account deleted');
+      navigate(`/store/${slug}`);
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to delete account');
+      setDeleting(false);
+    }
+  }
+
   return (
-    <div className="sf-panel">
-      <h2>Account Settings</h2>
-      <div className="sf-field"><label>Full name</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
-      <div className="sf-field"><label>Email</label><input value={customer.email} disabled style={{ opacity: 0.6 }} /></div>
-      <div className="sf-field"><label>Phone</label><input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
-      <button className="sf-btn" disabled={saving} onClick={save}>{saving ? 'Saving…' : 'Save Changes'}</button>
-    </div>
+    <>
+      <div className="sf-panel">
+        <h2>Account Settings</h2>
+        <div className="sf-field"><label>Full name</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
+        <div className="sf-field"><label>Email</label><input value={customer.email} disabled style={{ opacity: 0.6 }} /></div>
+        <div className="sf-field"><label>Phone</label><input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+        <button className="sf-btn" disabled={saving} onClick={save}>{saving ? 'Saving…' : 'Save Changes'}</button>
+      </div>
+
+      <div className="sf-panel" style={{ marginTop: 20 }}>
+        <h2><RiLockPasswordLine style={{ verticalAlign: '-3px' }} /> Change Password</h2>
+        <div className="sf-field"><label>Current password</label><input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} /></div>
+        <div className="sf-field"><label>New password</label><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} /></div>
+        <button className="sf-btn" disabled={changingPw} onClick={changePassword}>{changingPw ? 'Updating…' : 'Change Password'}</button>
+      </div>
+
+      <div className="sf-panel" style={{ marginTop: 20, borderColor: '#fecaca' }}>
+        <h2 style={{ color: '#ef4444' }}><RiAlertLine style={{ verticalAlign: '-3px' }} /> Delete Account</h2>
+        <p style={{ color: 'var(--sf-muted)', fontSize: '0.85rem' }}>This permanently deletes your account on this store, including your saved addresses and wishlist. Your past orders remain on record with the store.</p>
+        {!confirmDelete ? (
+          <button className="sf-btn-ghost" style={{ width: 'auto', padding: '10px 18px', color: '#ef4444', borderColor: '#fecaca' }} onClick={() => setConfirmDelete(true)}>Delete My Account</button>
+        ) : (
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button className="sf-add" style={{ background: '#ef4444', width: 'auto', padding: '10px 18px' }} disabled={deleting} onClick={deleteAccount}>{deleting ? 'Deleting…' : 'Yes, delete permanently'}</button>
+            <button className="sf-btn-ghost" style={{ width: 'auto', padding: '10px 18px' }} onClick={() => setConfirmDelete(false)}>Cancel</button>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

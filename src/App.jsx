@@ -47,6 +47,7 @@ const StoreCheckout = lazy(() => import('./pages/storefront/Checkout'));
 const StoreSuccess = lazy(() => import('./pages/storefront/OrderSuccess'));
 const StoreTracking = lazy(() => import('./pages/storefront/OrderTracking'));
 const StoreLogin = lazy(() => import('./pages/storefront/StoreLogin'));
+const StoreResetPassword = lazy(() => import('./pages/storefront/StoreResetPassword'));
 const StoreAccount = lazy(() => import('./pages/storefront/CustomerAccount'));
 const Marketplace = lazy(() => import('./pages/marketplace/Marketplace'));
 const StoreSettings = lazy(() => import('./pages/settings/StoreSettings'));
@@ -148,6 +149,8 @@ function AppRoutes() {
       <Route path="/store/:slug/track" element={<Suspense fallback={<PageLoader />}><StoreTracking /></Suspense>} />
       <Route path="/store/:slug/track/:orderNumber" element={<Suspense fallback={<PageLoader />}><StoreTracking /></Suspense>} />
       <Route path="/store/:slug/login" element={<Suspense fallback={<PageLoader />}><StoreLogin /></Suspense>} />
+      <Route path="/store/:slug/register" element={<Suspense fallback={<PageLoader />}><StoreLogin /></Suspense>} />
+      <Route path="/store/:slug/reset-password/:token" element={<Suspense fallback={<PageLoader />}><StoreResetPassword /></Suspense>} />
       <Route path="/store/:slug/account" element={<Suspense fallback={<PageLoader />}><StoreAccount /></Suspense>} />
       <Route path="/market" element={<Suspense fallback={<PageLoader />}><Marketplace /></Suspense>} />
 
