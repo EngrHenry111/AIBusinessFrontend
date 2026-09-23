@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { storefrontService, storeCustomerService } from '../../services';
 import {
   RiShoppingCart2Line, RiSearchLine, RiStore2Line, RiCloseLine, RiAddLine, RiSubtractLine,
@@ -102,6 +103,7 @@ function ProductRow({ title, icon, products, slug, canBuy, onAdd, wishlist, onTo
 export default function Store() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -140,6 +142,47 @@ export default function Store() {
   useEffect(() => {
     if (store?.name) document.title = `${store.name} — Online Store`;
   }, [store]);
+
+  // "?recover=<sessionId>" — arrives from an abandoned-cart reminder email.
+  // Restore the saved cart, let the shopper know, and open the drawer.
+  useEffect(() => {
+    const recoverId = searchParams.get('recover');
+    if (!recoverId || !store) return;
+    storefrontService.recoverCart(slug, recoverId)
+      .then(({ data }) => {
+        const items = data.data.items || [];
+        if (items.length === 0) return;
+        setCart(items);
+        writeCart(slug, items);
+        setDrawerOpen(true);
+        toast.success('Your saved cart has been restored!');
+      })
+      .catch(() => {})
+      .finally(() => {
+        searchParams.delete('recover');
+        setSearchParams(searchParams, { replace: true });
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store, slug]);
+
+  // Every store page automatically gets the AI chat widget — injected once
+  // the store (and its slug, the widget's `data-company`) is known. Guarded
+  // against re-injecting for the same store on remount within the same tab.
+  useEffect(() => {
+    if (!store?.slug) return;
+    if (window.__bizlyaiWidgetSlug === store.slug) return;
+    document.getElementById('bizlyai-widget')?.remove();
+    document.querySelector('script[data-bizlyai-widget]')?.remove();
+    window.__bizlyaiWidgetSlug = store.slug;
+
+    const script = document.createElement('script');
+    script.src = 'https://bislyai.com/widget.js';
+    script.setAttribute('data-company', store.slug);
+    script.setAttribute('data-position', 'bottom-left');
+    script.setAttribute('data-bizlyai-widget', 'true');
+    script.async = true;
+    document.body.appendChild(script);
+  }, [store?.slug]);
 
   // Showcase rows — fetched once, independent of the active filters below.
   useEffect(() => {

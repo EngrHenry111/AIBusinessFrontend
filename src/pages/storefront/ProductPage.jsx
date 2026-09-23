@@ -50,6 +50,7 @@ export default function ProductPage() {
   const [wished, setWished] = useState(false);
   const [reviewForm, setReviewForm] = useState({ customerName: '', customerEmail: '', rating: 5, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [recs, setRecs] = useState({ youMayAlsoLike: [], frequentlyBoughtTogether: [] });
 
   useEffect(() => {
     let alive = true;
@@ -58,6 +59,14 @@ export default function ProductPage() {
       .then(({ data }) => { if (alive) { setProduct(data.data); setWished(isWishlisted(slug, productId)); } })
       .catch((e) => { if (alive) setError(e.response?.data?.message || 'Product not found'); })
       .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [slug, productId]);
+
+  useEffect(() => {
+    let alive = true;
+    storefrontService.getRecommendations(slug, productId)
+      .then(({ data }) => { if (alive) setRecs(data.data); })
+      .catch(() => { if (alive) setRecs({ youMayAlsoLike: [], frequentlyBoughtTogether: [] }); });
     return () => { alive = false; };
   }, [slug, productId]);
 
@@ -104,6 +113,12 @@ export default function ProductPage() {
     const cartVariant = selectedVariant ? { groupName: selectedVariant.groupName, value: selectedVariant.value, price: selectedVariant.price, stock: undefined } : null;
     writeCart(slug, addToCart(slug, product, qty, cartVariant));
     toast.success('Added to cart');
+  }
+
+  function handleAddAllToCart() {
+    addToCart(slug, product, 1, null);
+    recs.frequentlyBoughtTogether.forEach((p) => addToCart(slug, p, 1, null));
+    toast.success('Added all to cart');
   }
 
   function handleToggleWish() {
@@ -311,11 +326,35 @@ export default function ProductPage() {
         )}
       </div>
 
-      {product.relatedProducts?.length > 0 && (
+      {recs.frequentlyBoughtTogether.length > 0 && (
+        <div className="sf-container sf-row-section">
+          <div className="sf-row-head"><h2>Frequently Bought Together</h2></div>
+          <div className="pp-fbt-row">
+            {[product, ...recs.frequentlyBoughtTogether].map((fp, i) => (
+              <div key={fp._id} className="pp-fbt-item">
+                {i > 0 && <span className="pp-fbt-plus">+</span>}
+                <Link to={i === 0 ? '#' : `/store/${slug}/product/${fp._id}`} className="sf-card pp-related-card" onClick={(e) => i === 0 && e.preventDefault()}>
+                  <div className="sf-card-img">{fp.images?.[0] ? <img src={fp.images[0]} alt={fp.name} /> : <span className="ph"><RiStore2Line /></span>}</div>
+                  <div className="sf-card-body">
+                    <div className="sf-card-name">{fp.name}</div>
+                    <div className="sf-card-price">{naira(fp.effectivePrice)}</div>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+          <div className="pp-fbt-foot">
+            <span>Combined price: <strong>{naira([product, ...recs.frequentlyBoughtTogether].reduce((s, p) => s + p.effectivePrice, 0))}</strong></span>
+            <button className="sf-btn" style={{ width: 'auto', padding: '10px 22px' }} onClick={handleAddAllToCart}>Add All to Cart</button>
+          </div>
+        </div>
+      )}
+
+      {recs.youMayAlsoLike.length > 0 && (
         <div className="sf-container sf-row-section">
           <div className="sf-row-head"><h2>You may also like</h2></div>
           <div className="sf-hscroll">
-            {product.relatedProducts.map((rp) => (
+            {recs.youMayAlsoLike.map((rp) => (
               <div key={rp._id} className="sf-hscroll-item">
                 <Link to={`/store/${slug}/product/${rp._id}`} className="sf-card pp-related-card">
                   <div className="sf-card-img">{rp.images?.[0] ? <img src={rp.images[0]} alt={rp.name} /> : <span className="ph"><RiStore2Line /></span>}</div>

@@ -4,6 +4,7 @@ import { storefrontService, couponService, storeCustomerService } from '../../se
 import { RiArrowLeftLine, RiArrowRightLine, RiSecurePaymentLine, RiCoinLine, RiTruckLine, RiBankCardLine, RiWallet3Line } from 'react-icons/ri';
 import { readCart, cartTotal, setQty, removeItem, writeCart } from './cart';
 import { getStoreToken } from './storeAuth';
+import { getCartSessionId } from './cartSession';
 import './Store.css';
 
 const naira = (n) => `₦${Number(n || 0).toLocaleString()}`;
@@ -78,6 +79,27 @@ export default function Checkout() {
     return () => { alive = false; clearTimeout(t); };
   }, [form.email, slug]);
 
+  // Save the cart as "abandoned" once the shopper has entered a valid email —
+  // if they leave before paying, a reminder email can bring them back. Kept
+  // in sync (debounced) as the cart or their details change afterward.
+  useEffect(() => {
+    if (!EMAIL_RE.test(form.email.trim()) || cart.length === 0) return;
+    const t = setTimeout(() => {
+      storefrontService.saveAbandonedCart(slug, {
+        sessionId: getCartSessionId(slug),
+        email: form.email.trim(),
+        name: form.name,
+        phone: form.phone,
+        items: cart.map((i) => ({
+          productId: i.productId, name: i.name, image: i.image, price: i.price,
+          quantity: i.quantity, variantGroup: i.variantGroup, variantValue: i.variantValue,
+        })),
+        total: cartTotal(cart),
+      }).catch(() => {});
+    }, 800);
+    return () => clearTimeout(t);
+  }, [form.email, form.name, form.phone, cart, slug]);
+
   const sync = (next) => { setCart(next); writeCart(slug, next); };
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -143,6 +165,7 @@ export default function Checkout() {
         couponCode: coupon?.code,
         redeemPoints: usePoints && canRedeem ? loyalty.points : 0,
         paymentMethod,
+        cartSessionId: getCartSessionId(slug),
       });
 
       if (data.data.directOrder) {

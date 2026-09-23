@@ -84,3 +84,12 @@
 .pp-rating-input .off { color: #e2e8f0; }
 
 .pp-related-card { display: flex; flex-direction: column; height: 100%; }
+
+.pp-fbt-row { display: flex; align-items: center; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
+.pp-fbt-item { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.pp-fbt-item .sf-card { width: 150px; }
+.pp-fbt-plus { font-size: 1.4rem; font-weight: 700; color: var(--sf-muted); }
+.pp-fbt-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--sf-border);
+}

@@ -269,6 +269,9 @@ export const storefrontService = {
   checkout: (slug, data) => axios.post(`${API_BASE}/store/${slug}/checkout`, data),
   verifyPayment: (slug, reference) => axios.get(`${API_BASE}/store/${slug}/verify/${reference}`),
   getLoyaltyStatus: (slug, email) => axios.get(`${API_BASE}/store/${slug}/loyalty`, { params: { email } }),
+  saveAbandonedCart: (slug, data) => axios.post(`${API_BASE}/store/${slug}/cart/save`, data),
+  recoverCart: (slug, sessionId) => axios.get(`${API_BASE}/store/${slug}/cart/recover/${sessionId}`),
+  getRecommendations: (slug, productId) => axios.get(`${API_BASE}/store/${slug}/products/${productId}/recommendations`),
   track: (slug, orderNumber, email) => axios.get(`${API_BASE}/store/${slug}/track/${orderNumber}`, { params: { email } }),
   uploadBankProof: (slug, orderNumber, formData) => axios.post(`${API_BASE}/store/${slug}/orders/${orderNumber}/bank-proof`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
