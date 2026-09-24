@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { userService, departmentService } from '../../services';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { userService, departmentService, auditService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import {
   RiAddLine, RiUserLine, RiMailLine, RiShieldLine,
-  RiDeleteBinLine, RiEditLine, RiCheckLine, RiCloseLine
+  RiDeleteBinLine, RiEditLine, RiCheckLine, RiCloseLine,
+  RiMailSendLine, RiUploadCloud2Line, RiHistoryLine, RiTimeLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './Team.css';
@@ -27,8 +28,18 @@ export default function Team() {
   const [inviting, setInviting] = useState(false);
   const [departments, setDepartments] = useState({ standard: [], custom: [] });
   const [showDeptManager, setShowDeptManager] = useState(false);
+  const [showBulkInvite, setShowBulkInvite] = useState(false);
+  const [resendingId, setResendingId] = useState(null);
+  const [activity, setActivity] = useState(null);
 
-  useEffect(() => { loadTeam(); loadDepartments(); }, []);
+  useEffect(() => { loadTeam(); loadDepartments(); loadActivity(); }, []);
+
+  async function loadActivity() {
+    try {
+      const { data } = await auditService.getLogs({ action: 'team', limit: 8 });
+      setActivity(data.logs);
+    } catch { setActivity([]); }
+  }
 
   async function loadTeam() {
     setLoading(true);
@@ -66,8 +77,19 @@ export default function Team() {
       setShowInvite(false);
       setInviteForm({ name:'', email:'', role:'employee' });
       toast.success(`${inviteForm.name} invited successfully`);
+      loadActivity();
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to invite'); }
     finally { setInviting(false); }
+  }
+
+  async function handleResendInvite(id, email) {
+    setResendingId(id);
+    try {
+      await userService.resendInvite(id);
+      toast.success(`Invite reminder sent to ${email}`);
+      loadActivity();
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to resend'); }
+    finally { setResendingId(null); }
   }
 
   async function handleRoleChange(id, role) {
@@ -76,6 +98,7 @@ export default function Team() {
       setMembers(prev => prev.map(m => m._id===id ? data.data : m));
       setEditingRole(null);
       toast.success('Role updated');
+      loadActivity();
     } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
   }
 
@@ -85,6 +108,7 @@ export default function Team() {
       await userService.removeMember(id);
       setMembers(prev => prev.map(m => m._id===id ? {...m, status:'inactive'} : m));
       toast.success(`${name} removed`);
+      loadActivity();
     } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
   }
 
@@ -105,6 +129,9 @@ export default function Team() {
                 Manage Departments
               </button>
             )}
+            <button className="btn btn-secondary" onClick={() => setShowBulkInvite(v=>!v)}>
+              <RiUploadCloud2Line /> Bulk Invite (CSV)
+            </button>
             <button className="btn btn-primary" onClick={() => setShowInvite(v=>!v)}>
               <RiAddLine /> Invite Member
             </button>
@@ -114,6 +141,14 @@ export default function Team() {
 
       {showDeptManager && isOwner && (
         <DepartmentManager departments={departments} onChanged={loadDepartments} />
+      )}
+
+      {showBulkInvite && (
+        <BulkInviteForm
+          isOwner={isOwner}
+          onClose={() => setShowBulkInvite(false)}
+          onDone={() => { setShowBulkInvite(false); loadTeam(); loadActivity(); }}
+        />
       )}
 
       {/* Invite form */}
@@ -177,12 +212,15 @@ export default function Team() {
                   <div className="member-name">
                     {member.name}
                     {member._id===currentUser?._id && <span className="you-tag">You</span>}
+                    {!member.lastLogin && <span className="badge badge-warning" style={{marginLeft:8,fontSize:11}}>Pending</span>}
                   </div>
                   <div className="member-email"><RiMailLine /> {member.email}</div>
-                  {member.lastLogin && (
+                  {member.lastLogin ? (
                     <div className="member-last-login">
                       Last login: {new Date(member.lastLogin).toLocaleDateString()}
                     </div>
+                  ) : (
+                    <div className="member-last-login">Hasn't set up their account yet</div>
                   )}
                 </div>
 
@@ -235,6 +273,14 @@ export default function Team() {
                   )}
                 </div>
 
+                {!member.lastLogin && (
+                  <button className="btn btn-ghost btn-icon btn-sm" title="Resend invite reminder"
+                    disabled={resendingId===member._id}
+                    onClick={()=>handleResendInvite(member._id, member.email)}>
+                    <RiMailSendLine />
+                  </button>
+                )}
+
                 {member._id!==currentUser?._id && member.role!=='company_owner' && (
                   <button className="btn btn-ghost btn-icon btn-sm remove-btn"
                     onClick={()=>handleRemove(member._id, member.name)} title="Remove">
@@ -244,6 +290,26 @@ export default function Team() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {activity !== null && (
+        <div className="card card-pad" style={{marginTop:20}}>
+          <h3 style={{marginBottom:12,display:'flex',alignItems:'center',gap:8}}><RiHistoryLine /> Recent Team Activity</h3>
+          {activity.length === 0 ? (
+            <p style={{fontSize:13,color:'var(--text-muted)'}}>No team activity yet.</p>
+          ) : (
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              {activity.map(log => (
+                <div key={log._id} style={{display:'flex',justifyContent:'space-between',gap:12,fontSize:13,borderBottom:'1px solid var(--border)',paddingBottom:8}}>
+                  <span><strong>{log.user?.name || 'System'}</strong> — {log.description}</span>
+                  <span style={{color:'var(--text-muted)',whiteSpace:'nowrap',display:'flex',alignItems:'center',gap:4}}>
+                    <RiTimeLine /> {new Date(log.timestamp).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -272,6 +338,133 @@ export default function Team() {
           <h3>No team members yet</h3>
           <p>Invite your first team member to collaborate.</p>
           <button className="btn btn-primary" onClick={()=>setShowInvite(true)}><RiAddLine /> Invite Member</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Minimal CSV parser — handles quoted fields with embedded commas, which is
+// as much as a "name,email,role" invite sheet realistically needs.
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const splitRow = (line) => {
+    const cells = []; let cur = ''; let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQuotes = !inQuotes; }
+      else if (c === ',' && !inQuotes) { cells.push(cur.trim()); cur = ''; }
+      else { cur += c; }
+    }
+    cells.push(cur.trim());
+    return cells;
+  };
+  let rows = lines.map(splitRow);
+  const header = rows[0]?.map(c => c.toLowerCase());
+  if (header?.includes('email')) rows = rows.slice(1); // drop header row if present
+
+  return rows.map(cells => {
+    const nameIdx = header?.indexOf('name') ?? 0;
+    const emailIdx = header?.indexOf('email') ?? 1;
+    const roleIdx = header?.indexOf('role') ?? 2;
+    return {
+      name: cells[nameIdx >= 0 ? nameIdx : 0] || '',
+      email: cells[emailIdx >= 0 ? emailIdx : 1] || '',
+      role: (cells[roleIdx >= 0 ? roleIdx : 2] || 'employee').toLowerCase() === 'manager' ? 'manager' : 'employee',
+    };
+  }).filter(r => r.name || r.email);
+}
+
+function downloadSampleCSV() {
+  const csv = 'name,email,role\nJane Doe,jane@example.com,employee\nJohn Smith,john@example.com,manager\n';
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'bizlyai-team-invite-template.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function BulkInviteForm({ isOwner, onClose, onDone }) {
+  const [rows, setRows] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [results, setResults] = useState(null);
+  const fileRef = useRef(null);
+
+  function handleFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setRows(parseCSV(String(reader.result || '')));
+    reader.readAsText(file);
+  }
+
+  async function submit() {
+    if (rows.length === 0) return toast.error('Add at least one row first.');
+    setSubmitting(true);
+    try {
+      const { data } = await userService.bulkInviteMembers(rows);
+      setResults(data.data);
+      if (data.invited > 0) toast.success(`Invited ${data.invited} of ${rows.length} member(s)`);
+      if (data.failed > 0) toast.error(`${data.failed} row(s) failed — see details below`);
+      if (data.failed === 0) onDone();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Bulk invite failed');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="card card-pad" style={{marginBottom:20}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+        <div>
+          <h3 style={{marginBottom:4}}>Bulk Invite from CSV</h3>
+          <p style={{fontSize:13,color:'var(--text-muted)',marginBottom:0}}>
+            Columns: name, email, role (role optional — employee, {isOwner ? 'or manager' : 'manager rows will be rejected unless you\'re the owner'}).
+          </p>
+        </div>
+        <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose}><RiCloseLine /></button>
+      </div>
+
+      <div style={{display:'flex',gap:8,alignItems:'center',margin:'16px 0'}}>
+        <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={handleFile} />
+        <button type="button" className="btn btn-ghost btn-sm" onClick={downloadSampleCSV}>Download template</button>
+      </div>
+
+      {rows.length > 0 && !results && (
+        <>
+          <div className="table-wrapper" style={{marginBottom:16}}>
+            <table className="table">
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+              <tbody>
+                {rows.map((r,i) => <tr key={i}><td>{r.name}</td><td>{r.email}</td><td>{ROLE_LABELS[r.role]}</td></tr>)}
+              </tbody>
+            </table>
+          </div>
+          <button className="btn btn-primary" disabled={submitting} onClick={submit}>
+            {submitting ? 'Inviting…' : `Invite ${rows.length} Member${rows.length===1?'':'s'}`}
+          </button>
+        </>
+      )}
+
+      {results && (
+        <div className="table-wrapper" style={{marginTop:8}}>
+          <table className="table">
+            <thead><tr><th>Email</th><th>Result</th></tr></thead>
+            <tbody>
+              {results.map((r,i) => (
+                <tr key={i}>
+                  <td>{r.email}</td>
+                  <td>
+                    {r.status === 'invited'
+                      ? <span className="badge badge-success">Invited</span>
+                      : <span className="badge badge-danger" title={r.message}>{r.message}</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button className="btn btn-secondary" style={{marginTop:12}} onClick={onDone}>Done</button>
         </div>
       )}
     </div>
