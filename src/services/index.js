@@ -451,7 +451,15 @@ export const userService = {
   getTeam: () => api.get('/users/team'),
   inviteMember: (data) => api.post('/users/team/invite', data),
   updateMemberRole: (id, role) => api.patch(`/users/team/${id}/role`, { role }),
+  updateMemberDepartment: (id, department) => api.patch(`/users/team/${id}/department`, { department }),
   removeMember: (id) => api.delete(`/users/team/${id}`),
+};
+
+// ─── Departments ──────────────────────────────────────────────────────────────
+export const departmentService = {
+  getAll: () => api.get('/companies/departments'),
+  add: (name) => api.post('/companies/departments', { name }),
+  remove: (name) => api.delete(`/companies/departments/${encodeURIComponent(name)}`),
 };
 
 // ─── Payments ─────────────────────────────────────────────────────────────────
