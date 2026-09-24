@@ -51,6 +51,7 @@ const StoreResetPassword = lazy(() => import('./pages/storefront/StoreResetPassw
 const GiftCard = lazy(() => import('./pages/storefront/GiftCard'));
 const SubscriptionPlans = lazy(() => import('./pages/storefront/SubscriptionPlans'));
 const Subscribe = lazy(() => import('./pages/storefront/Subscribe'));
+const GroupBuy = lazy(() => import('./pages/storefront/GroupBuy'));
 const StoreAccount = lazy(() => import('./pages/storefront/CustomerAccount'));
 const Marketplace = lazy(() => import('./pages/marketplace/Marketplace'));
 const StoreSettings = lazy(() => import('./pages/settings/StoreSettings'));
@@ -70,6 +71,7 @@ const PayrollDetail = lazy(() => import('./pages/payroll/PayrollDetail'));
 const CardEditor = lazy(() => import('./pages/card/CardEditor'));
 const BusinessCard = lazy(() => import('./pages/card/BusinessCard'));
 const Loyalty = lazy(() => import('./pages/loyalty/Loyalty'));
+const GroupBuys = lazy(() => import('./pages/groupbuy/GroupBuys'));
 const CurrencySettings = lazy(() => import('./pages/settings/CurrencySettings'));
 const Contracts = lazy(() => import('./pages/contracts/Contracts'));
 const ContractGenerator = lazy(() => import('./pages/contracts/ContractGenerator'));
@@ -160,6 +162,7 @@ function AppRoutes() {
       <Route path="/store/:slug/gift-card" element={<Suspense fallback={<PageLoader />}><GiftCard /></Suspense>} />
       <Route path="/store/:slug/subscriptions" element={<Suspense fallback={<PageLoader />}><SubscriptionPlans /></Suspense>} />
       <Route path="/store/:slug/subscribe/:planId" element={<Suspense fallback={<PageLoader />}><Subscribe /></Suspense>} />
+      <Route path="/store/:slug/group/:shareCode" element={<Suspense fallback={<PageLoader />}><GroupBuy /></Suspense>} />
       <Route path="/store/:slug/account" element={<Suspense fallback={<PageLoader />}><StoreAccount /></Suspense>} />
       <Route path="/market" element={<Suspense fallback={<PageLoader />}><Marketplace /></Suspense>} />
 
@@ -198,6 +201,7 @@ function AppRoutes() {
                 <Route path="social" element={<Social />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="loyalty" element={<Loyalty />} />
+                <Route path="group-buys" element={<GroupBuys />} />
                 <Route path="contracts" element={<Contracts />} />
                 <Route path="contracts/new" element={<ContractGenerator />} />
                 <Route path="contracts/:id" element={<ContractView />} />

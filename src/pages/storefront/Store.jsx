@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { storefrontService, storeCustomerService, subscriptionPlanService } from '../../services';
+import { storefrontService, storeCustomerService, subscriptionPlanService, groupBuyService } from '../../services';
 import {
   RiShoppingCart2Line, RiSearchLine, RiStore2Line, RiCloseLine, RiAddLine, RiSubtractLine,
   RiHeartLine, RiHeartFill, RiStarFill, RiFlashlightLine, RiMapPin2Line, RiUserLine,
@@ -127,6 +127,7 @@ export default function Store() {
   const [wishlist, setWishlist] = useState(() => readWishlist(slug));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [subscriptionPlans, setSubscriptionPlans] = useState([]);
+  const [groupBuys, setGroupBuys] = useState([]);
 
   useEffect(() => {
     let alive = true;
@@ -137,6 +138,9 @@ export default function Store() {
       .finally(() => { if (alive) setLoading(false); });
     subscriptionPlanService.getPublic(slug)
       .then(({ data: r }) => { if (alive) setSubscriptionPlans(r.data || []); })
+      .catch(() => {});
+    groupBuyService.getPublicList(slug)
+      .then(({ data: r }) => { if (alive) setGroupBuys(r.data || []); })
       .catch(() => {});
     return () => { alive = false; };
   }, [slug]);
@@ -310,6 +314,32 @@ export default function Store() {
             <span>🎁 Give the gift of {store.name}! Buy a gift card from {naira(store.giftCardSettings.minAmount)}</span>
             <span className="sf-giftcard-banner-cta">Buy Gift Card →</span>
           </Link>
+        )}
+
+        {groupBuys.length > 0 && !filtersActive && (
+          <div className="sf-groupdeals">
+            <h2 className="sf-groupdeals-title">🔥 Limited Time Group Deals</h2>
+            <div className="sf-groupdeals-grid">
+              {groupBuys.map((gb) => {
+                const pct = Math.min(100, Math.round((gb.currentParticipants / gb.minimumParticipants) * 100));
+                return (
+                  <Link key={gb.shareCode} to={`/store/${slug}/group/${gb.shareCode}`} className="sf-groupdeal-card">
+                    {gb.productImage && <img src={gb.productImage} alt={gb.productName} />}
+                    <div className="sf-groupdeal-body">
+                      <strong>{gb.productName}</strong>
+                      <div className="sf-groupdeal-price">
+                        <span className="orig">{naira(gb.originalPrice)}</span>
+                        <span className="group">{naira(gb.groupPrice)}</span>
+                      </div>
+                      <div className="sf-groupdeal-track"><div className="sf-groupdeal-fill" style={{ width: `${pct}%` }} /></div>
+                      <span className="sf-groupdeal-sub">{gb.currentParticipants} of {gb.minimumParticipants} joined</span>
+                      <span className="sf-btn-ghost sf-groupdeal-btn">Join Deal</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         )}
 
         {!filtersActive && (

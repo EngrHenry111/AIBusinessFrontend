@@ -1,0 +1,57 @@
+.gb-page .muted { color: var(--sf-muted); }
+.gb-layout { max-width: 640px; }
+
+.gb-hero { text-align: center; margin-bottom: 20px; }
+.gb-hero-img { width: 100%; max-width: 320px; height: 220px; margin: 0 auto 14px; border-radius: 14px; overflow: hidden; background: var(--sf-bg); display: flex; align-items: center; justify-content: center; }
+.gb-hero-img img { width: 100%; height: 100%; object-fit: cover; }
+.gb-hero-img svg { font-size: 48px; color: var(--sf-muted); }
+.gb-hero-badge { display: inline-flex; align-items: center; gap: 6px; background: #fef3c7; color: #92400e; font-weight: 700; font-size: 13px; padding: 4px 14px; border-radius: 999px; margin-bottom: 10px; }
+.gb-hero h1 { font-size: 1.5rem; margin: 0 0 10px; }
+
+.gb-price-row { display: flex; align-items: baseline; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.gb-price-original { color: var(--sf-muted); text-decoration: line-through; font-size: 1rem; }
+.gb-price-group { color: #16a34a; font-size: 2rem; font-weight: 800; }
+.gb-save-badge { background: #dcfce7; color: #166534; font-weight: 700; font-size: 12px; padding: 3px 10px; border-radius: 999px; }
+
+.gb-progress-track { background: var(--sf-border); border-radius: 999px; height: 12px; overflow: hidden; }
+.gb-progress-fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+.gb-progress-fill.red { background: #ef4444; }
+.gb-progress-fill.yellow { background: #f59e0b; }
+.gb-progress-fill.green { background: #16a34a; }
+.gb-progress-label { text-align: center; font-size: 0.85rem; font-weight: 600; margin-top: 8px; }
+
+.gb-unlocked { display: flex; align-items: center; gap: 8px; justify-content: center; color: #16a34a; font-weight: 700; margin-top: 12px; }
+.gb-unlocked svg { font-size: 20px; }
+.gb-closed-note { text-align: center; color: var(--sf-muted); margin-top: 12px; font-size: 0.9rem; }
+.gb-need-more { text-align: center; color: var(--sf-brand); font-weight: 600; margin-top: 10px; font-size: 0.92rem; }
+
+.gb-countdown { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; padding: 10px; border-radius: 10px; background: var(--sf-bg); font-size: 0.9rem; }
+.gb-countdown strong { font-variant-numeric: tabular-nums; letter-spacing: 0.5px; }
+.gb-countdown.urgent { background: #fee2e2; color: #991b1b; }
+
+.gb-participants { margin-top: 16px; text-align: center; }
+.gb-avatars { display: flex; justify-content: center; }
+.gb-avatar {
+  width: 34px; height: 34px; border-radius: 50%; background: var(--sf-brand); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
+  border: 2px solid var(--sf-card); margin-left: -10px;
+}
+.gb-avatar:first-child { margin-left: 0; }
+.gb-feed-item { margin-top: 8px; font-size: 0.85rem; color: var(--sf-muted); }
+
+.gb-joined-banner { display: flex; align-items: center; gap: 10px; color: #16a34a; font-weight: 600; text-align: center; justify-content: center; }
+.gb-joined-banner svg { font-size: 22px; flex-shrink: 0; }
+
+.gb-qty-row { display: flex; align-items: center; gap: 14px; }
+.gb-qty-row button { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--sf-border); background: var(--sf-card); font-size: 18px; cursor: pointer; }
+.gb-qty-row span { font-weight: 700; min-width: 20px; text-align: center; }
+.gb-total-row { font-size: 0.95rem; margin: 8px 0 16px; }
+.gb-join-btn { font-weight: 700; }
+.gb-safety-note { font-size: 12px; color: var(--sf-muted); text-align: center; margin: 10px 0 0; }
+
+.gb-share-panel { text-align: center; }
+.gb-share-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+.gb-share-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; border: 1px solid var(--sf-border); background: var(--sf-card); font-weight: 600; cursor: pointer; font-size: 0.88rem; }
+.gb-share-btn.whatsapp { background: #25d366; color: #fff; border-color: #25d366; }
+.gb-qr { margin-top: 16px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.gb-qr img { width: 140px; height: 140px; border-radius: 8px; border: 1px solid var(--sf-border); }

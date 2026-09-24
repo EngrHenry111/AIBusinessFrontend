@@ -40,6 +40,21 @@
 }
 .sf-giftcard-banner-cta { font-weight: 800; white-space: nowrap; }
 
+.sf-groupdeals { margin: 0 0 28px; }
+.sf-groupdeals-title { font-size: 1.2rem; margin: 0 0 14px; }
+.sf-groupdeals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.sf-groupdeal-card { display: block; background: var(--sf-card); border: 1px solid var(--sf-border); border-radius: 12px; overflow: hidden; transition: box-shadow 0.15s; }
+.sf-groupdeal-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.sf-groupdeal-card img { width: 100%; height: 120px; object-fit: cover; }
+.sf-groupdeal-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.sf-groupdeal-price { display: flex; align-items: baseline; gap: 8px; }
+.sf-groupdeal-price .orig { color: var(--sf-muted); text-decoration: line-through; font-size: 0.8rem; }
+.sf-groupdeal-price .group { color: #16a34a; font-weight: 800; font-size: 1.1rem; }
+.sf-groupdeal-track { background: var(--sf-border); border-radius: 999px; height: 6px; overflow: hidden; }
+.sf-groupdeal-fill { height: 100%; background: var(--sf-brand); border-radius: 999px; }
+.sf-groupdeal-sub { font-size: 0.75rem; color: var(--sf-muted); }
+.sf-groupdeal-btn { display: block; text-align: center; margin-top: 4px; padding: 7px; border-radius: 8px; font-size: 0.82rem; font-weight: 700; }
+
 .sf-banner {
   width: 100%; height: 220px; object-fit: cover; display: block; background: #e2e8f0;
 }

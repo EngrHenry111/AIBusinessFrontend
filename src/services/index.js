@@ -321,6 +321,20 @@ export const subscriptionPlanService = {
   cancelSubscriber: (id, reason) => api.patch(`/store-subscriptions/${id}/cancel`, { reason }),
 };
 
+// ─── Group Buying ───────────────────────────────────────────────────────────────
+export const groupBuyService = {
+  // Protected (store owner, inside the app)
+  create: (data) => api.post('/group-buys', data),
+  getAll: (params) => api.get('/group-buys', { params }),
+  cancel: (id) => api.delete(`/group-buys/${id}`),
+  // Public (storefront)
+  getPublicList: (slug) => axios.get(`${API_BASE}/store/${slug}/group-buys`),
+  getPublic: (slug, code) => axios.get(`${API_BASE}/store/${slug}/group-buys/${code}`),
+  join: (slug, code, data) => axios.post(`${API_BASE}/store/${slug}/group-buys/${code}/join`, data),
+  verify: (slug, code, reference) => axios.post(`${API_BASE}/store/${slug}/group-buys/${code}/verify`, { reference }),
+  share: (slug, code) => axios.get(`${API_BASE}/store/${slug}/group-buys/${code}/share`),
+};
+
 // ─── Loyalty & Rewards ─────────────────────────────────────────────────────────
 export const loyaltyService = {
   getProgram: () => api.get('/loyalty/program'),

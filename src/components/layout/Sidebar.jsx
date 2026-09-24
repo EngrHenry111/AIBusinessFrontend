@@ -10,6 +10,7 @@ import {
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
   RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine, RiStoreLine,
   RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine, RiGovernmentLine, RiBankCardLine,
+  RiGroupLine,
 } from 'react-icons/ri';
 import './Sidebar.css';
 
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { label: 'Expenses', icon: RiMoneyDollarCircleLine, path: '/expenses' },
   { label: 'Payroll', icon: RiMoneyDollarCircleLine, path: '/payroll', roles: ['company_owner', 'manager', 'super_admin'] },
   { label: 'Loyalty', icon: RiAwardLine, path: '/loyalty' },
+  { label: 'Group Buying', icon: RiGroupLine, path: '/group-buys' },
   { label: 'Orders', icon: RiShoppingBagLine, path: '/orders' },
   { label: 'Products', icon: RiStore2Line, path: '/products' },
   { label: 'Appointments', icon: RiCalendarLine, path: '/appointments' },
