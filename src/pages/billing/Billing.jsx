@@ -5,7 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import {
   RiCheckLine, RiLoader4Line, RiShieldCheckLine, RiTimeLine, RiArrowUpLine,
   RiMoneyDollarCircleLine, RiAlertLine, RiBankCardLine, RiRefreshLine,
-  RiCloseCircleLine, RiCheckboxCircleLine, RiRepeatLine,
+  RiCloseCircleLine, RiCheckboxCircleLine, RiRepeatLine, RiWhatsappLine,
+  RiVipCrownLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './Billing.css';
@@ -15,11 +16,23 @@ const PLAN_COLORS = {
   business: '#f59e0b', enterprise: '#10b981',
 };
 
+const ENTERPRISE_GOLD = '#ffd700';
+
 const PLAN_FEATURES = {
   starter: ['5 team members', '500 documents', '2,000 AI questions/month', 'All business modules', 'AI chat widget (your store only)', 'Email support'],
   professional: ['25 team members', '2,000 documents', '10,000 AI questions/month', 'All business modules', 'AI chat widget on 1 external website', 'Priority support', 'Analytics & Reports'],
   business: ['100 team members', '10,000 documents', '50,000 AI questions/month', 'All business modules', 'AI chat widget on unlimited websites', 'Dedicated support', 'Custom AI settings', 'API access'],
 };
+
+const ENTERPRISE_FEATURES = [
+  'Unlimited team members', 'Unlimited documents', 'Unlimited AI questions',
+  'All business modules', 'AI chat widget — unlimited websites', 'e-Procurement module',
+  'White-label options', 'Dedicated account manager', 'Custom AI training',
+  'API access + webhooks', 'SLA guarantee (99.9% uptime)', 'Priority 24/7 support',
+  'Custom integrations', 'Government compliance package', 'On-premise deployment option',
+];
+
+const WHATSAPP_ENTERPRISE_URL = `https://wa.me/2349028361165?text=${encodeURIComponent("I'm interested in BizlyAI Enterprise plan")}`;
 
 const STATUS_BADGE = {
   active: { label: 'Active', cls: 'success' },
@@ -268,6 +281,37 @@ export default function Billing() {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {!loading && (
+            <div className="enterprise-card">
+              <div className="enterprise-badge"><RiVipCrownLine /> ENTERPRISE</div>
+              <div className="enterprise-body">
+                <div className="enterprise-info">
+                  <div className="enterprise-price">
+                    ₦99,900<span className="plan-period">/mo</span>
+                  </div>
+                  <div className="plan-billed-note">Billed monthly, cancel anytime</div>
+                  <p className="enterprise-note">
+                    For large organizations and government agencies. Custom pricing available for annual contracts.
+                  </p>
+                  {currentPlan === 'enterprise' ? (
+                    <button className="btn enterprise-btn" disabled>
+                      <RiCheckboxCircleLine /> Current Plan
+                    </button>
+                  ) : (
+                    <a className="btn enterprise-btn" href={WHATSAPP_ENTERPRISE_URL} target="_blank" rel="noopener noreferrer">
+                      <RiWhatsappLine /> Contact Sales
+                    </a>
+                  )}
+                </div>
+                <ul className="enterprise-features">
+                  {ENTERPRISE_FEATURES.map((f, i) => (
+                    <li key={i}><RiCheckLine /> {f}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
           )}
 
