@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { storefrontService, couponService, storeCustomerService } from '../../services';
-import { RiArrowLeftLine, RiArrowRightLine, RiSecurePaymentLine, RiCoinLine, RiTruckLine, RiBankCardLine, RiWallet3Line } from 'react-icons/ri';
+import { storefrontService, couponService, storeCustomerService, giftCardService } from '../../services';
+import { RiArrowLeftLine, RiArrowRightLine, RiSecurePaymentLine, RiCoinLine, RiTruckLine, RiBankCardLine, RiWallet3Line, RiGiftLine } from 'react-icons/ri';
 import { readCart, cartTotal, setQty, removeItem, writeCart } from './cart';
 import { getStoreToken } from './storeAuth';
 import { getCartSessionId } from './cartSession';
@@ -42,6 +42,11 @@ export default function Checkout() {
 
   const [loyalty, setLoyalty] = useState(null);
   const [usePoints, setUsePoints] = useState(false);
+
+  const [giftCardInput, setGiftCardInput] = useState('');
+  const [giftCard, setGiftCard] = useState(null); // { code, balance }
+  const [giftCardChecking, setGiftCardChecking] = useState(false);
+  const [giftCardError, setGiftCardError] = useState('');
 
   const [paymentMethod, setPaymentMethod] = useState('paystack');
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -109,7 +114,9 @@ export default function Checkout() {
   const preLoyaltyTotal = Math.max(0, subtotal + deliveryFee - couponDiscount);
   const canRedeem = loyalty?.enabled && loyalty.points >= loyalty.minimumRedemption && loyalty.redeemableValue > 0;
   const loyaltyDiscount = usePoints && canRedeem ? Math.min(loyalty.redeemableValue, preLoyaltyTotal - 1) : 0;
-  const total = Math.max(0, preLoyaltyTotal - loyaltyDiscount);
+  const preGiftCardTotal = Math.max(0, preLoyaltyTotal - loyaltyDiscount);
+  const giftCardDiscount = giftCard ? Math.min(giftCard.balance, preGiftCardTotal - 1) : 0;
+  const total = Math.max(0, preGiftCardTotal - giftCardDiscount);
 
   const ds = store?.deliverySettings;
   const podAvailable = ds?.podEnabled && total <= (ds?.podMaxAmount ?? 50000);
@@ -126,6 +133,22 @@ export default function Checkout() {
       setCouponError(e.response?.data?.message || 'Invalid coupon');
     } finally {
       setCouponChecking(false);
+    }
+  }
+
+  async function applyGiftCard() {
+    if (!giftCardInput.trim()) return;
+    setGiftCardChecking(true);
+    setGiftCardError('');
+    try {
+      const { data } = await giftCardService.validate(slug, giftCardInput.trim().toUpperCase());
+      if (!data.data.valid) { setGiftCard(null); setGiftCardError(data.data.message || 'This gift card is not valid.'); return; }
+      setGiftCard({ code: giftCardInput.trim().toUpperCase(), balance: data.data.balance });
+    } catch (e) {
+      setGiftCard(null);
+      setGiftCardError(e.response?.data?.message || 'Could not validate gift card');
+    } finally {
+      setGiftCardChecking(false);
     }
   }
 
@@ -164,6 +187,7 @@ export default function Checkout() {
         notes: form.notes,
         couponCode: coupon?.code,
         redeemPoints: usePoints && canRedeem ? loyalty.points : 0,
+        giftCardCode: giftCard?.code,
         paymentMethod,
         cartSessionId: getCartSessionId(slug),
       });
@@ -322,6 +346,22 @@ export default function Checkout() {
           <>
             <div className="sf-panel">
               <h2>Payment Method</h2>
+              <div className="co-giftcard-row">
+                <RiGiftLine />
+                {!giftCard ? (
+                  <>
+                    <input className="sf-field-input" placeholder="Have a gift card? Enter code" value={giftCardInput} onChange={(e) => setGiftCardInput(e.target.value)} />
+                    <button className="sf-btn-ghost" disabled={giftCardChecking} onClick={applyGiftCard}>{giftCardChecking ? 'Checking…' : 'Apply'}</button>
+                  </>
+                ) : (
+                  <>
+                    <span className="co-success" style={{ flex: 1 }}>Gift card {giftCard.code} applied — {naira(giftCard.balance)} balance</span>
+                    <button className="sf-btn-ghost" onClick={() => { setGiftCard(null); setGiftCardInput(''); }}>Remove</button>
+                  </>
+                )}
+              </div>
+              {giftCardError && <p className="co-error">{giftCardError}</p>}
+
               <div className="co-pay-grid">
                 <button className={`co-pay-card ${paymentMethod === 'paystack' ? 'active' : ''}`} onClick={() => setPaymentMethod('paystack')}>
                   <RiSecurePaymentLine />
@@ -369,6 +409,7 @@ export default function Checkout() {
               <div className="sf-row"><span>Delivery</span><span>{deliveryFee === 0 ? 'FREE' : naira(deliveryFee)}</span></div>
               {couponDiscount > 0 && <div className="sf-row" style={{ color: '#16a34a' }}><span>Coupon ({coupon.code})</span><span>− {naira(couponDiscount)}</span></div>}
               {loyaltyDiscount > 0 && <div className="sf-row" style={{ color: '#16a34a' }}><span>Points discount</span><span>− {naira(loyaltyDiscount)}</span></div>}
+              {giftCardDiscount > 0 && <div className="sf-row" style={{ color: '#16a34a' }}><span>Gift card ({giftCard.code})</span><span>− {naira(giftCardDiscount)}</span></div>}
               <div className="sf-row total"><span>Total</span><span>{naira(total)}</span></div>
               <div className="sf-row"><span>Payment method</span><span>{{
                 paystack: 'Pay Now (Paystack)', pay_on_delivery: 'Pay on Delivery', bank_transfer: 'Bank Transfer', split_payment: 'Split Payment (50/50)',

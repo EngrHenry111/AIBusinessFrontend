@@ -256,6 +256,7 @@ export default function Store() {
             <input placeholder="Search products…" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <div className="sf-nav-actions">
+            {store.giftCardSettings?.enabled && <Link to={`/store/${slug}/gift-card`} className="sf-nav-link">Gift Cards</Link>}
             <Link to={`/store/${slug}/track`} className="sf-nav-link">Track Order</Link>
             <Link
               to={storeToken ? `/store/${slug}/account?tab=wishlist` : `/store/${slug}/login?redirect=${encodeURIComponent(`/store/${slug}/account?tab=wishlist`)}`}
@@ -291,6 +292,13 @@ export default function Store() {
           <h1>{store.name}</h1>
           {store.settings.description && <p>{store.settings.description}</p>}
         </div>
+
+        {store.giftCardSettings?.enabled && !filtersActive && (
+          <Link to={`/store/${slug}/gift-card`} className="sf-giftcard-banner">
+            <span>🎁 Give the gift of {store.name}! Buy a gift card from {naira(store.giftCardSettings.minAmount)}</span>
+            <span className="sf-giftcard-banner-cta">Buy Gift Card →</span>
+          </Link>
+        )}
 
         {!filtersActive && (
           <>

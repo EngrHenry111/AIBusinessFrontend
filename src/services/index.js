@@ -291,6 +291,16 @@ export const storefrontService = {
   }),
 };
 
+// ─── Gift Cards ──────────────────────────────────────────────────────────────
+export const giftCardService = {
+  // Public (storefront)
+  purchase: (slug, data) => axios.post(`${API_BASE}/store/${slug}/gift-cards/purchase`, data),
+  verify: (slug, reference) => axios.post(`${API_BASE}/store/${slug}/gift-cards/verify`, { reference }),
+  validate: (slug, code) => axios.post(`${API_BASE}/store/${slug}/gift-cards/validate`, { code }),
+  // Protected (inside the app)
+  getAll: (params) => api.get('/gift-cards', { params }),
+};
+
 // ─── Loyalty & Rewards ─────────────────────────────────────────────────────────
 export const loyaltyService = {
   getProgram: () => api.get('/loyalty/program'),

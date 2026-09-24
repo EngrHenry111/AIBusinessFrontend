@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { storeAdminService, paymentSettingsService, couponService } from '../../services';
+import { storeAdminService, paymentSettingsService, couponService, giftCardService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import {
   RiStoreLine, RiFileCopyLine, RiCheckLine, RiExternalLinkLine, RiUploadCloud2Line,
-  RiAddLine, RiDeleteBinLine, RiCoupon3Line, RiTruckLine,
+  RiAddLine, RiDeleteBinLine, RiCoupon3Line, RiTruckLine, RiGiftLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './StoreSettings.css';
@@ -22,6 +22,7 @@ const TABS = [
   { id: 'appearance', label: 'Store Appearance' },
   { id: 'coupons', label: 'Coupons' },
   { id: 'delivery', label: 'Delivery Settings' },
+  { id: 'giftcards', label: 'Gift Cards' },
   { id: 'analytics', label: 'Store Analytics' },
 ];
 
@@ -89,6 +90,7 @@ export default function StoreSettings() {
       {tab === 'appearance' && <AppearanceTab store={store} onSaved={(settings) => setStore((s) => ({ ...s, settings }))} />}
       {tab === 'coupons' && <CouponsTab />}
       {tab === 'delivery' && <DeliveryTab store={store} onSaved={(deliverySettings) => setStore((s) => ({ ...s, deliverySettings }))} />}
+      {tab === 'giftcards' && <GiftCardsTab store={store} onSaved={(giftCardSettings) => setStore((s) => ({ ...s, giftCardSettings }))} />}
       {tab === 'analytics' && <AnalyticsTab />}
     </div>
   );
@@ -600,6 +602,114 @@ function DeliveryTab({ store, onSaved }) {
         {saving ? 'Saving…' : 'Save Delivery Settings'}
       </button>
     </div>
+  );
+}
+
+/* ── Tab: Gift Cards ───────────────────────────────────────────────────── */
+function GiftCardsTab({ store, onSaved }) {
+  const gcs = store.giftCardSettings || {};
+  const [enabled, setEnabled] = useState(gcs.enabled !== false);
+  const [minAmount, setMinAmount] = useState(gcs.minAmount ?? 500);
+  const [maxAmount, setMaxAmount] = useState(gcs.maxAmount ?? 500000);
+  const [expiryDays, setExpiryDays] = useState(gcs.expiryDays ?? 365);
+  const [saving, setSaving] = useState(false);
+
+  const [giftCards, setGiftCards] = useState([]);
+  const [stats, setStats] = useState({ sold: 0, redeemed: 0, outstanding: 0, count: 0 });
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('');
+
+  const load = useCallback(() => {
+    setLoading(true);
+    giftCardService.getAll({ status: statusFilter || undefined, limit: 100 })
+      .then(({ data }) => { setGiftCards(data.data); setStats(data.stats); })
+      .catch(() => toast.error('Failed to load gift cards'))
+      .finally(() => setLoading(false));
+  }, [statusFilter]);
+  useEffect(() => { load(); }, [load]);
+
+  async function save() {
+    setSaving(true);
+    try {
+      const { data } = await storeAdminService.updateSettings({
+        giftCardSettings: { enabled, minAmount: Number(minAmount) || 500, maxAmount: Number(maxAmount) || 500000, expiryDays: Number(expiryDays) || 365 },
+      });
+      toast.success('Gift card settings saved');
+      onSaved(data.data.giftCardSettings);
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <>
+      <div className="card card-pad">
+        <h2 style={{ marginTop: 0 }}><RiGiftLine style={{ verticalAlign: '-3px' }} /> Gift Card Settings</h2>
+
+        <div className="ss-toggle-row">
+          <div>
+            <div className="t-label">Enable gift cards</div>
+            <div className="t-help">Let shoppers buy and redeem gift cards on your store.</div>
+          </div>
+          <Switch checked={enabled} onChange={setEnabled} />
+        </div>
+
+        <div className="form-grid-2">
+          <div className="form-group"><label className="form-label">Minimum amount (₦)</label>
+            <input className="form-input" type="number" min={100} value={minAmount} onChange={(e) => setMinAmount(e.target.value)} /></div>
+          <div className="form-group"><label className="form-label">Maximum amount (₦)</label>
+            <input className="form-input" type="number" min={500} value={maxAmount} onChange={(e) => setMaxAmount(e.target.value)} /></div>
+          <div className="form-group"><label className="form-label">Expiry period (days)</label>
+            <input className="form-input" type="number" min={1} value={expiryDays} onChange={(e) => setExpiryDays(e.target.value)} /></div>
+        </div>
+
+        <button className="btn btn-primary" style={{ marginTop: 16 }} disabled={saving} onClick={save}>
+          {saving ? 'Saving…' : 'Save Gift Card Settings'}
+        </button>
+      </div>
+
+      <div className="ss-stat-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <div className="ss-stat"><div className="s-label">Total Sold</div><div className="s-value">{naira(stats.sold)}</div></div>
+        <div className="ss-stat"><div className="s-label">Total Redeemed</div><div className="s-value">{naira(stats.redeemed)}</div></div>
+        <div className="ss-stat"><div className="s-label">Outstanding Balance</div><div className="s-value">{naira(stats.outstanding)}</div></div>
+        <div className="ss-stat"><div className="s-label">Gift Cards Issued</div><div className="s-value">{stats.count}</div></div>
+      </div>
+
+      <div className="card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+          <h3 style={{ margin: 0, fontSize: 15 }}>Gift Cards</h3>
+          <select className="form-input" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ width: 'auto', padding: '6px 10px' }}>
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="used">Used</option>
+            <option value="expired">Expired</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div className="table-wrapper">
+          <table className="table">
+            <thead><tr><th>Code</th><th>Amount</th><th>Balance</th><th>Recipient</th><th>Status</th><th>Purchased</th><th>Expires</th></tr></thead>
+            <tbody>
+              {loading && <tr><td colSpan={7} className="ss-hint">Loading…</td></tr>}
+              {!loading && giftCards.map((gc) => (
+                <tr key={gc._id}>
+                  <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{gc.code}</td>
+                  <td>{naira(gc.amount)}</td>
+                  <td>{naira(gc.balance)}</td>
+                  <td style={{ fontSize: 13 }}>{gc.sentTo?.name}<br /><span className="ss-hint">{gc.sentTo?.email}</span></td>
+                  <td><span className={`badge badge-${{ active: 'success', used: 'neutral', expired: 'danger', cancelled: 'danger' }[gc.status]}`}>{gc.status}</span></td>
+                  <td className="ss-hint">{new Date(gc.purchasedAt).toLocaleDateString()}</td>
+                  <td className="ss-hint">{new Date(gc.expiresAt).toLocaleDateString()}</td>
+                </tr>
+              ))}
+              {!loading && !giftCards.length && <tr><td colSpan={7} className="ss-hint">No gift cards yet</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
   );
 }
 
