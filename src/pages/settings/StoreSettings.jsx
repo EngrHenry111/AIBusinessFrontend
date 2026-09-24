@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { storeAdminService, paymentSettingsService, couponService, giftCardService } from '../../services';
+import { storeAdminService, paymentSettingsService, couponService, giftCardService, subscriptionPlanService, productService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import {
   RiStoreLine, RiFileCopyLine, RiCheckLine, RiExternalLinkLine, RiUploadCloud2Line,
-  RiAddLine, RiDeleteBinLine, RiCoupon3Line, RiTruckLine, RiGiftLine,
+  RiAddLine, RiDeleteBinLine, RiCoupon3Line, RiTruckLine, RiGiftLine, RiBox3Line, RiCloseLine, RiPencilLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './StoreSettings.css';
@@ -23,6 +23,7 @@ const TABS = [
   { id: 'coupons', label: 'Coupons' },
   { id: 'delivery', label: 'Delivery Settings' },
   { id: 'giftcards', label: 'Gift Cards' },
+  { id: 'subscriptions', label: 'Subscriptions' },
   { id: 'analytics', label: 'Store Analytics' },
 ];
 
@@ -91,6 +92,7 @@ export default function StoreSettings() {
       {tab === 'coupons' && <CouponsTab />}
       {tab === 'delivery' && <DeliveryTab store={store} onSaved={(deliverySettings) => setStore((s) => ({ ...s, deliverySettings }))} />}
       {tab === 'giftcards' && <GiftCardsTab store={store} onSaved={(giftCardSettings) => setStore((s) => ({ ...s, giftCardSettings }))} />}
+      {tab === 'subscriptions' && <SubscriptionsTab />}
       {tab === 'analytics' && <AnalyticsTab />}
     </div>
   );
@@ -705,6 +707,256 @@ function GiftCardsTab({ store, onSaved }) {
                 </tr>
               ))}
               {!loading && !giftCards.length && <tr><td colSpan={7} className="ss-hint">No gift cards yet</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ── Tab: Subscriptions ──────────────────────────────────────────────── */
+const EMPTY_PLAN = { name: '', description: '', interval: 'monthly', price: '', originalPrice: '', deliveryFee: '', trialDays: '', maxSubscribers: '', perks: '', items: [] };
+const SUB_INTERVAL_LABEL = { daily: 'Daily', weekly: 'Weekly', biweekly: 'Every 2 weeks', monthly: 'Monthly', quarterly: 'Quarterly' };
+
+function ProductPicker({ items, onChange }) {
+  const [q, setQ] = useState('');
+  const [results, setResults] = useState([]);
+
+  useEffect(() => {
+    if (!q.trim()) { setResults([]); return; }
+    let alive = true;
+    productService.getAll({ search: q, status: 'active', limit: 10 }).then(({ data }) => { if (alive) setResults(data.data); }).catch(() => {});
+    return () => { alive = false; };
+  }, [q]);
+
+  function addProduct(p) {
+    if (items.some((i) => i.productId === p._id)) return;
+    onChange([...items, { productId: p._id, name: p.name, quantity: 1, unitPrice: p.price }]);
+    setQ(''); setResults([]);
+  }
+  const updateQty = (id, qty) => onChange(items.map((i) => (i.productId === id ? { ...i, quantity: Math.max(1, Number(qty) || 1) } : i)));
+  const remove = (id) => onChange(items.filter((i) => i.productId !== id));
+
+  return (
+    <div className="form-group">
+      <label className="form-label">Products in this box</label>
+      <div style={{ position: 'relative' }}>
+        <input className="form-input" placeholder="Search products to add…" value={q} onChange={(e) => setQ(e.target.value)} />
+        {results.length > 0 && (
+          <div className="card" style={{ position: 'absolute', zIndex: 5, width: '100%', maxHeight: 220, overflowY: 'auto', marginTop: 4 }}>
+            {results.map((p) => (
+              <div key={p._id} style={{ padding: '8px 12px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }} onClick={() => addProduct(p)}>
+                <span>{p.name}</span><span className="ss-hint">{naira(p.price)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      {items.length > 0 && (
+        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {items.map((i) => (
+            <div key={i.productId} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ flex: 1, fontSize: 13 }}>{i.name}</span>
+              <input className="form-input" type="number" min={1} value={i.quantity} onChange={(e) => updateQty(i.productId, e.target.value)} style={{ width: 70 }} />
+              <span className="ss-hint" style={{ width: 90 }}>{naira(i.unitPrice)}</span>
+              <button type="button" className="btn btn-ghost btn-icon btn-sm" onClick={() => remove(i.productId)}><RiCloseLine /></button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SubscriptionsTab() {
+  const [plans, setPlans] = useState(null);
+  const [subscribers, setSubscribers] = useState([]);
+  const [stats, setStats] = useState({});
+  const [statusFilter, setStatusFilter] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState(EMPTY_PLAN);
+  const [saving, setSaving] = useState(false);
+
+  const loadPlans = useCallback(() => {
+    subscriptionPlanService.getPlans().then(({ data }) => setPlans(data.data)).catch(() => toast.error('Could not load subscription plans'));
+  }, []);
+  const loadSubscribers = useCallback(() => {
+    subscriptionPlanService.getSubscribers({ status: statusFilter || undefined, limit: 100 })
+      .then(({ data }) => { setSubscribers(data.data); setStats(data.stats); })
+      .catch(() => toast.error('Could not load subscribers'));
+  }, [statusFilter]);
+  useEffect(() => { loadPlans(); }, [loadPlans]);
+  useEffect(() => { loadSubscribers(); }, [loadSubscribers]);
+
+  function startEdit(p) {
+    setEditingId(p._id);
+    setForm({
+      name: p.name, description: p.description || '', interval: p.interval, price: p.price,
+      originalPrice: p.originalPrice || '', deliveryFee: p.deliveryFee || '', trialDays: p.trialDays || '',
+      maxSubscribers: p.maxSubscribers || '', perks: (p.perks || []).join(', '),
+      items: p.items.map((i) => ({ productId: i.productId, name: i.name, quantity: i.quantity, unitPrice: i.unitPrice })),
+    });
+    setShowForm(true);
+  }
+  function startNew() { setEditingId(null); setForm(EMPTY_PLAN); setShowForm(true); }
+
+  async function submitPlan(e) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.price || form.items.length === 0) {
+      return toast.error('Name, price and at least one product are required.');
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        name: form.name.trim(), description: form.description.trim(), interval: form.interval,
+        price: Number(form.price), originalPrice: form.originalPrice || undefined, deliveryFee: Number(form.deliveryFee) || 0,
+        trialDays: Number(form.trialDays) || 0, maxSubscribers: form.maxSubscribers || null,
+        perks: form.perks.split(',').map((s) => s.trim()).filter(Boolean),
+        items: form.items.map((i) => ({ productId: i.productId, quantity: i.quantity, unitPrice: i.unitPrice })),
+      };
+      if (editingId) await subscriptionPlanService.updatePlan(editingId, payload);
+      else await subscriptionPlanService.createPlan(payload);
+      toast.success(editingId ? 'Plan updated' : 'Plan created');
+      setShowForm(false);
+      loadPlans();
+    } catch (e2) {
+      toast.error(e2.response?.data?.message || 'Failed to save plan');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function toggleActive(p) {
+    try { await subscriptionPlanService.updatePlan(p._id, { isActive: !p.isActive }); loadPlans(); }
+    catch { toast.error('Failed to update'); }
+  }
+  async function deletePlan(p) {
+    if (!window.confirm(`Delete plan "${p.name}"?`)) return;
+    try { await subscriptionPlanService.deletePlan(p._id); toast.success('Plan deleted'); loadPlans(); }
+    catch (e) { toast.error(e.response?.data?.message || 'Failed to delete'); }
+  }
+
+  async function pauseSub(s) {
+    try { await subscriptionPlanService.pauseSubscriber(s._id); loadSubscribers(); toast.success('Subscriber paused'); }
+    catch (e) { toast.error(e.response?.data?.message || 'Failed'); }
+  }
+  async function cancelSub(s) {
+    const reason = window.prompt('Reason for cancelling this subscriber?');
+    if (!reason?.trim()) return;
+    try { await subscriptionPlanService.cancelSubscriber(s._id, reason); loadSubscribers(); toast.success('Subscriber cancelled'); }
+    catch (e) { toast.error(e.response?.data?.message || 'Failed'); }
+  }
+
+  return (
+    <>
+      <div className="ss-stat-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <div className="ss-stat"><div className="s-label">Total Subscribers</div><div className="s-value">{stats.total ?? '—'}</div></div>
+        <div className="ss-stat"><div className="s-label">Active Subscriptions</div><div className="s-value">{stats.active ?? '—'}</div></div>
+        <div className="ss-stat"><div className="s-label">Revenue This Month</div><div className="s-value">{naira(stats.revenueThisMonth)}</div></div>
+        <div className="ss-stat"><div className="s-label">Churn Rate This Month</div><div className="s-value">{stats.churnRate ?? 0}%</div></div>
+      </div>
+
+      <div className="card card-pad">
+        <div className="page-header-row" style={{ marginBottom: 16 }}>
+          <div>
+            <h2 style={{ margin: 0 }}><RiBox3Line style={{ verticalAlign: '-3px' }} /> Subscription Plans</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '4px 0 0' }}>Recurring boxes customers can subscribe to — weekly food boxes, monthly beauty boxes, and more.</p>
+          </div>
+          <button className="btn btn-secondary" onClick={startNew}><RiAddLine /> New Plan</button>
+        </div>
+
+        {showForm && (
+          <form onSubmit={submitPlan} className="ss-coupon-form">
+            <div className="form-grid-2">
+              <div className="form-group"><label className="form-label">Plan name</label>
+                <input className="form-input" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Weekly Food Box" /></div>
+              <div className="form-group"><label className="form-label">Delivery interval</label>
+                <select className="form-input form-select" value={form.interval} onChange={(e) => setForm((f) => ({ ...f, interval: e.target.value }))}>
+                  {Object.entries(SUB_INTERVAL_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select></div>
+              <div className="form-group"><label className="form-label">Price per delivery (₦)</label>
+                <input className="form-input" type="number" value={form.price} onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))} /></div>
+              <div className="form-group"><label className="form-label">Original price (₦, optional — shown struck-through)</label>
+                <input className="form-input" type="number" value={form.originalPrice} onChange={(e) => setForm((f) => ({ ...f, originalPrice: e.target.value }))} /></div>
+              <div className="form-group"><label className="form-label">Delivery fee (₦)</label>
+                <input className="form-input" type="number" value={form.deliveryFee} onChange={(e) => setForm((f) => ({ ...f, deliveryFee: e.target.value }))} /></div>
+              <div className="form-group"><label className="form-label">Trial days (0 = none)</label>
+                <input className="form-input" type="number" min={0} value={form.trialDays} onChange={(e) => setForm((f) => ({ ...f, trialDays: e.target.value }))} /></div>
+              <div className="form-group"><label className="form-label">Max subscribers</label>
+                <input className="form-input" type="number" min={1} placeholder="Unlimited" value={form.maxSubscribers} onChange={(e) => setForm((f) => ({ ...f, maxSubscribers: e.target.value }))} /></div>
+              <div className="form-group"><label className="form-label">Perks (comma-separated)</label>
+                <input className="form-input" placeholder="Free delivery, 10% discount, Priority support" value={form.perks} onChange={(e) => setForm((f) => ({ ...f, perks: e.target.value }))} /></div>
+            </div>
+            <div className="form-group"><label className="form-label">Description</label>
+              <textarea className="form-input" rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} /></div>
+
+            <ProductPicker items={form.items} onChange={(items) => setForm((f) => ({ ...f, items }))} />
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+              <button className="btn btn-primary" disabled={saving}>{saving ? 'Saving…' : editingId ? 'Update Plan' : 'Create Plan'}</button>
+              <button type="button" className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>
+            </div>
+          </form>
+        )}
+
+        <table className="ss-table" style={{ marginTop: 16 }}>
+          <thead><tr><th>Plan</th><th>Interval</th><th>Price</th><th>Subscribers</th><th>Status</th><th /></tr></thead>
+          <tbody>
+            {plans === null && <tr><td colSpan={6}>Loading…</td></tr>}
+            {plans?.length === 0 && <tr><td colSpan={6} style={{ color: 'var(--text-muted)' }}>No subscription plans yet.</td></tr>}
+            {plans?.map((p) => (
+              <tr key={p._id}>
+                <td><strong>{p.name}</strong></td>
+                <td>{SUB_INTERVAL_LABEL[p.interval] || p.interval}</td>
+                <td>{naira(p.price)}</td>
+                <td>{p.subscriberCount}{p.maxSubscribers ? ` / ${p.maxSubscribers}` : ''}</td>
+                <td>
+                  <button className={`badge ${p.isActive ? 'badge-success' : 'badge-neutral'}`} style={{ border: 0, cursor: 'pointer' }} onClick={() => toggleActive(p)}>
+                    {p.isActive ? 'Active' : 'Inactive'}
+                  </button>
+                </td>
+                <td style={{ display: 'flex', gap: 4 }}>
+                  <button className="btn btn-ghost btn-icon btn-sm" onClick={() => startEdit(p)}><RiPencilLine /></button>
+                  <button className="btn btn-ghost btn-icon btn-sm" onClick={() => deletePlan(p)}><RiDeleteBinLine /></button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+          <h3 style={{ margin: 0, fontSize: 15 }}>Subscribers</h3>
+          <select className="form-input" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ width: 'auto', padding: '6px 10px' }}>
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="expired">Expired</option>
+          </select>
+        </div>
+        <div className="table-wrapper">
+          <table className="table">
+            <thead><tr><th>Customer</th><th>Plan</th><th>Start Date</th><th>Next Delivery</th><th>Deliveries</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {subscribers.map((s) => (
+                <tr key={s._id}>
+                  <td style={{ fontSize: 13 }}>{s.customerName}<br /><span className="ss-hint">{s.customerEmail}</span></td>
+                  <td>{s.planId?.name || s.name}</td>
+                  <td className="ss-hint">{new Date(s.startDate).toLocaleDateString()}</td>
+                  <td className="ss-hint">{s.status === 'active' ? new Date(s.nextDeliveryDate).toLocaleDateString() : '—'}</td>
+                  <td>{s.totalDeliveries}</td>
+                  <td><span className={`badge badge-${{ active: 'success', paused: 'warning', cancelled: 'danger', expired: 'neutral' }[s.status] || 'neutral'}`}>{s.status}</span></td>
+                  <td style={{ display: 'flex', gap: 4 }}>
+                    {s.status === 'active' && <button className="btn btn-ghost btn-sm" onClick={() => pauseSub(s)}>Pause</button>}
+                    {s.status !== 'cancelled' && <button className="btn btn-ghost btn-sm" onClick={() => cancelSub(s)}>Cancel</button>}
+                  </td>
+                </tr>
+              ))}
+              {!subscribers.length && <tr><td colSpan={7} className="ss-hint">No subscribers yet</td></tr>}
             </tbody>
           </table>
         </div>

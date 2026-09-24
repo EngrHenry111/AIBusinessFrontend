@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { storefrontService, storeCustomerService } from '../../services';
+import { storefrontService, storeCustomerService, subscriptionPlanService } from '../../services';
 import {
   RiArrowLeftLine, RiUserLine, RiLogoutBoxLine, RiCoinLine, RiHeartLine,
   RiMapPin2Line, RiAddLine, RiDeleteBinLine, RiStore2Line, RiRefreshLine,
-  RiLockPasswordLine, RiAlertLine, RiShoppingCart2Line,
+  RiLockPasswordLine, RiAlertLine, RiShoppingCart2Line, RiBox3Line,
+  RiPauseCircleLine, RiPlayCircleLine, RiCloseCircleLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import { getStoreToken, clearStoreToken } from './storeAuth';
@@ -82,6 +83,7 @@ export default function CustomerAccount() {
 
         <div className="pp-tabs" style={{ marginBottom: 20 }}>
           <button className={tab === 'orders' ? 'active' : ''} onClick={() => setTab('orders')}>My Orders</button>
+          <button className={tab === 'subscriptions' ? 'active' : ''} onClick={() => setTab('subscriptions')}>My Subscriptions</button>
           <button className={tab === 'wishlist' ? 'active' : ''} onClick={() => setTab('wishlist')}>My Wishlist</button>
           <button className={tab === 'points' ? 'active' : ''} onClick={() => setTab('points')}>My Points</button>
           <button className={tab === 'addresses' ? 'active' : ''} onClick={() => setTab('addresses')}>Saved Addresses</button>
@@ -89,6 +91,7 @@ export default function CustomerAccount() {
         </div>
 
         {tab === 'orders' && <OrdersTab slug={slug} token={token} navigate={navigate} />}
+        {tab === 'subscriptions' && <SubscriptionsTab slug={slug} token={token} />}
         {tab === 'wishlist' && <WishlistTab slug={slug} token={token} />}
         {tab === 'points' && <PointsTab slug={slug} token={token} />}
         {tab === 'addresses' && <AddressesTab slug={slug} token={token} customer={customer} onSaved={setCustomer} />}
@@ -195,6 +198,127 @@ function WishlistTab({ slug, token }) {
             <button className="sf-add" onClick={() => addProductToCart(p)}><RiShoppingCart2Line /> Add to Cart</button>
             <button className="sf-line-rm" style={{ marginTop: 6 }} onClick={() => remove(p._id)}><RiDeleteBinLine /> Remove</button>
           </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const SUB_STATUS_COLOR = { active: '#16a34a', paused: '#f59e0b', cancelled: '#94a3b8', expired: '#94a3b8' };
+const SUB_INTERVAL_LABEL = { daily: 'day', weekly: 'week', biweekly: '2 weeks', monthly: 'month', quarterly: 'quarter' };
+
+function SubscriptionsTab({ slug, token }) {
+  const [subs, setSubs] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+  const [expanded, setExpanded] = useState(null);
+
+  const load = useCallback(() => {
+    subscriptionPlanService.getMySubscriptions(slug, token).then(({ data }) => setSubs(data.data)).catch(() => setSubs([]));
+  }, [slug, token]);
+  useEffect(() => { load(); }, [load]);
+
+  async function pause(id) {
+    setBusyId(id);
+    try { await subscriptionPlanService.pause(slug, token, id); toast.success('Subscription paused'); load(); }
+    catch (e) { toast.error(e.response?.data?.message || 'Could not pause'); }
+    finally { setBusyId(null); }
+  }
+  async function resume(id) {
+    setBusyId(id);
+    try { await subscriptionPlanService.resume(slug, token, id); toast.success('Subscription resumed'); load(); }
+    catch (e) { toast.error(e.response?.data?.message || 'Could not resume'); }
+    finally { setBusyId(null); }
+  }
+  async function cancel(id) {
+    const reason = prompt('Why are you cancelling? (required)');
+    if (!reason?.trim()) return;
+    setBusyId(id);
+    try { await subscriptionPlanService.cancel(slug, token, id, reason); toast.success('Subscription cancelled'); load(); }
+    catch (e) { toast.error(e.response?.data?.message || 'Could not cancel'); }
+    finally { setBusyId(null); }
+  }
+
+  if (!subs) return <p style={{ color: 'var(--sf-muted)' }}>Loading subscriptions…</p>;
+
+  if (subs.length === 0) {
+    return (
+      <div className="sf-panel" style={{ textAlign: 'center' }}>
+        <RiBox3Line style={{ fontSize: 32, color: 'var(--sf-muted)', marginBottom: 8 }} />
+        <h3 style={{ margin: '0 0 6px' }}>No subscriptions yet</h3>
+        <p style={{ color: 'var(--sf-muted)', marginBottom: 14 }}>Subscribe to a recurring box to see it here.</p>
+        <Link to={`/store/${slug}/subscriptions`} className="sf-btn" style={{ display: 'inline-flex', width: 'auto', padding: '10px 20px' }}>Browse Plans</Link>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {subs.map((s) => (
+        <div key={s._id} className="sf-panel">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' }}>
+            <div>
+              <h2 style={{ margin: 0 }}>{s.name}</h2>
+              <p style={{ color: 'var(--sf-muted)', fontSize: '0.85rem', margin: '4px 0 0' }}>
+                {naira(s.total)} every {SUB_INTERVAL_LABEL[s.interval] || s.interval}
+              </p>
+            </div>
+            <span style={{ padding: '3px 12px', borderRadius: 999, fontSize: '0.75rem', fontWeight: 700, color: '#fff', background: SUB_STATUS_COLOR[s.status] || '#94a3b8', textTransform: 'capitalize' }}>
+              {s.status}
+            </span>
+          </div>
+
+          {s.status === 'active' && (
+            <p style={{ fontSize: '0.85rem', marginTop: 10 }}>Next delivery: <strong>{fmtDate(s.nextDeliveryDate)}</strong></p>
+          )}
+          {s.status === 'paused' && <p style={{ fontSize: '0.85rem', marginTop: 10, color: 'var(--sf-muted)' }}>Paused — resume anytime to pick up your schedule.</p>}
+          {s.status === 'cancelled' && <p style={{ fontSize: '0.85rem', marginTop: 10, color: 'var(--sf-muted)' }}>Cancelled{s.cancelledAt ? ` on ${fmtDate(s.cancelledAt)}` : ''}.</p>}
+
+          <button
+            style={{ background: 'none', border: 'none', color: 'var(--sf-brand)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', padding: 0, marginTop: 10 }}
+            onClick={() => setExpanded(expanded === s._id ? null : s._id)}
+          >
+            {expanded === s._id ? 'Hide details' : `View items & history (${s.totalDeliveries} deliver${s.totalDeliveries === 1 ? 'y' : 'ies'})`}
+          </button>
+
+          {expanded === s._id && (
+            <div style={{ marginTop: 10, borderTop: '1px solid var(--sf-border)', paddingTop: 10 }}>
+              <ul style={{ listStyle: 'none', margin: '0 0 10px', padding: 0, fontSize: '0.85rem' }}>
+                {s.items.map((it, i) => <li key={i}>{it.quantity}× {it.name}</li>)}
+              </ul>
+              {s.deliveryHistory.length === 0 ? (
+                <p style={{ color: 'var(--sf-muted)', fontSize: '0.82rem' }}>No deliveries yet.</p>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <tbody>
+                    {s.deliveryHistory.map((h, i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid var(--sf-border)' }}>
+                        <td style={{ padding: '6px 0', fontSize: '0.82rem' }}>{fmtDate(h.deliveryDate)}</td>
+                        <td style={{ padding: '6px 0', fontSize: '0.82rem', textAlign: 'right', color: h.status === 'failed' ? '#ef4444' : '#16a34a' }}>{h.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+
+          {(s.status === 'active' || s.status === 'paused') && (
+            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+              {s.status === 'active' && (
+                <button className="sf-btn-ghost" style={{ width: 'auto', padding: '8px 16px' }} disabled={busyId === s._id} onClick={() => pause(s._id)}>
+                  <RiPauseCircleLine /> Pause
+                </button>
+              )}
+              {s.status === 'paused' && (
+                <button className="sf-btn-ghost" style={{ width: 'auto', padding: '8px 16px' }} disabled={busyId === s._id} onClick={() => resume(s._id)}>
+                  <RiPlayCircleLine /> Resume
+                </button>
+              )}
+              <button className="sf-btn-ghost" style={{ width: 'auto', padding: '8px 16px', color: '#ef4444' }} disabled={busyId === s._id} onClick={() => cancel(s._id)}>
+                <RiCloseCircleLine /> Cancel
+              </button>
+            </div>
+          )}
         </div>
       ))}
     </div>

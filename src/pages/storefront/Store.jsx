@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { storefrontService, storeCustomerService } from '../../services';
+import { storefrontService, storeCustomerService, subscriptionPlanService } from '../../services';
 import {
   RiShoppingCart2Line, RiSearchLine, RiStore2Line, RiCloseLine, RiAddLine, RiSubtractLine,
   RiHeartLine, RiHeartFill, RiStarFill, RiFlashlightLine, RiMapPin2Line, RiUserLine,
@@ -126,6 +126,7 @@ export default function Store() {
   const [cart, setCart] = useState(() => readCart(slug));
   const [wishlist, setWishlist] = useState(() => readWishlist(slug));
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [subscriptionPlans, setSubscriptionPlans] = useState([]);
 
   useEffect(() => {
     let alive = true;
@@ -134,6 +135,9 @@ export default function Store() {
       .then(({ data: r }) => { if (alive) setData(r.data); })
       .catch((e) => { if (alive) setError(e.response?.data?.message || 'Store not found'); })
       .finally(() => { if (alive) setLoading(false); });
+    subscriptionPlanService.getPublic(slug)
+      .then(({ data: r }) => { if (alive) setSubscriptionPlans(r.data || []); })
+      .catch(() => {});
     return () => { alive = false; };
   }, [slug]);
 
@@ -257,6 +261,7 @@ export default function Store() {
           </div>
           <div className="sf-nav-actions">
             {store.giftCardSettings?.enabled && <Link to={`/store/${slug}/gift-card`} className="sf-nav-link">Gift Cards</Link>}
+            {subscriptionPlans.length > 0 && <Link to={`/store/${slug}/subscriptions`} className="sf-nav-link">Subscriptions</Link>}
             <Link to={`/store/${slug}/track`} className="sf-nav-link">Track Order</Link>
             <Link
               to={storeToken ? `/store/${slug}/account?tab=wishlist` : `/store/${slug}/login?redirect=${encodeURIComponent(`/store/${slug}/account?tab=wishlist`)}`}
@@ -292,6 +297,13 @@ export default function Store() {
           <h1>{store.name}</h1>
           {store.settings.description && <p>{store.settings.description}</p>}
         </div>
+
+        {subscriptionPlans.length > 0 && !filtersActive && (
+          <Link to={`/store/${slug}/subscriptions`} className="sf-giftcard-banner">
+            <span>📦 Subscribe &amp; Save — Get automatic deliveries and save up to 15%</span>
+            <span className="sf-giftcard-banner-cta">See Plans →</span>
+          </Link>
+        )}
 
         {store.giftCardSettings?.enabled && !filtersActive && (
           <Link to={`/store/${slug}/gift-card`} className="sf-giftcard-banner">

@@ -301,6 +301,26 @@ export const giftCardService = {
   getAll: (params) => api.get('/gift-cards', { params }),
 };
 
+// ─── Store subscriptions ────────────────────────────────────────────────────────
+export const subscriptionPlanService = {
+  // Public / store-customer auth (storefront)
+  getPublic: (slug) => axios.get(`${API_BASE}/store/${slug}/subscription-plans`),
+  subscribe: (slug, token, data) => axios.post(`${API_BASE}/store/${slug}/subscribe`, data, authHeaders(token)),
+  verify: (slug, token, reference) => axios.get(`${API_BASE}/store/${slug}/subscribe/verify/${reference}`, authHeaders(token)),
+  getMySubscriptions: (slug, token) => axios.get(`${API_BASE}/store/${slug}/my-subscriptions`, authHeaders(token)),
+  pause: (slug, token, id) => axios.patch(`${API_BASE}/store/${slug}/subscriptions/${id}/pause`, null, authHeaders(token)),
+  resume: (slug, token, id) => axios.patch(`${API_BASE}/store/${slug}/subscriptions/${id}/resume`, null, authHeaders(token)),
+  cancel: (slug, token, id, reason) => axios.patch(`${API_BASE}/store/${slug}/subscriptions/${id}/cancel`, { reason }, authHeaders(token)),
+  // Protected (store owner, inside the app)
+  getPlans: () => api.get('/subscription-plans'),
+  createPlan: (data) => api.post('/subscription-plans', data),
+  updatePlan: (id, data) => api.put(`/subscription-plans/${id}`, data),
+  deletePlan: (id) => api.delete(`/subscription-plans/${id}`),
+  getSubscribers: (params) => api.get('/subscription-plans/subscribers', { params }),
+  pauseSubscriber: (id) => api.patch(`/store-subscriptions/${id}/pause`),
+  cancelSubscriber: (id, reason) => api.patch(`/store-subscriptions/${id}/cancel`, { reason }),
+};
+
 // ─── Loyalty & Rewards ─────────────────────────────────────────────────────────
 export const loyaltyService = {
   getProgram: () => api.get('/loyalty/program'),

@@ -1,0 +1,34 @@
+.sub-page .muted { color: var(--sf-muted); }
+.sub-loading { text-align: center; color: var(--sf-muted); padding: 60px 0; }
+
+.sub-layout { max-width: 560px; }
+
+.sub-steps { display: flex; justify-content: space-between; margin-bottom: 24px; }
+.sub-step { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; text-align: center; position: relative; }
+.sub-step-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--sf-border); color: var(--sf-muted); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+.sub-step.active .sub-step-dot { background: var(--sf-brand); color: #fff; }
+.sub-step.done .sub-step-dot { background: #16a34a; color: #fff; }
+.sub-step-label { font-size: 11px; color: var(--sf-muted); }
+.sub-step.active .sub-step-label { color: var(--sf-text); font-weight: 600; }
+
+.sub-items { list-style: none; margin: 10px 0; padding: 0; font-size: 0.88rem; display: flex; flex-direction: column; gap: 4px; }
+.sub-price-row { font-size: 1.3rem; font-weight: 800; color: var(--sf-brand); margin: 10px 0; }
+.sub-price { font-size: 1.3rem; }
+.sub-trial-note { font-size: 12px; color: #92400e; background: #fef3c7; border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; }
+
+.sub-step-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; }
+.sub-step-actions .sf-btn, .sub-step-actions .sf-btn-ghost { flex: 1; text-align: center; }
+
+.sub-pay-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.sub-pay-opt { display: flex; align-items: center; gap: 10px; padding: 14px; border: 1.5px solid var(--sf-border); border-radius: 10px; background: var(--sf-card); cursor: pointer; font-size: 0.9rem; font-weight: 600; text-align: left; }
+.sub-pay-opt.active { border-color: var(--sf-brand); background: color-mix(in srgb, var(--sf-brand) 8%, transparent); }
+.sub-pay-note { font-size: 12.5px; margin-top: -4px; }
+
+.sub-review-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--sf-border); font-size: 0.9rem; }
+.sub-review-row span { color: var(--sf-muted); }
+.sub-review-total { border-bottom: none; font-size: 1.05rem; padding-top: 12px; }
+
+.sub-success { text-align: center; }
+.sub-success-icon { font-size: 48px; margin-bottom: 8px; }
+.sub-success-name { font-weight: 700; font-size: 1.1rem; }
+.sub-success-actions { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
