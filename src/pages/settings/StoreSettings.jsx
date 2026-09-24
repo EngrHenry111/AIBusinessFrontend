@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { storeAdminService, paymentSettingsService, couponService, giftCardService, subscriptionPlanService, productService } from '../../services';
+import { storeAdminService, paymentSettingsService, couponService, giftCardService, subscriptionPlanService, productService, deliveryService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import {
   RiStoreLine, RiFileCopyLine, RiCheckLine, RiExternalLinkLine, RiUploadCloud2Line,
   RiAddLine, RiDeleteBinLine, RiCoupon3Line, RiTruckLine, RiGiftLine, RiBox3Line, RiCloseLine, RiPencilLine,
+  RiPlugLine, RiCheckboxCircleLine, RiCloseCircleLine, RiSpeedLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './StoreSettings.css';
@@ -530,7 +531,14 @@ function DeliveryTab({ store, onSaved }) {
   const [estimatedDeliveryDays, setEstimatedDeliveryDays] = useState(ds.estimatedDeliveryDays ?? 3);
   const [podEnabled, setPodEnabled] = useState(Boolean(ds.podEnabled));
   const [podMaxAmount, setPodMaxAmount] = useState(ds.podMaxAmount ?? 50000);
+  const [defaultProvider, setDefaultProvider] = useState(ds.defaultProvider || 'manual');
   const [saving, setSaving] = useState(false);
+  const [providers, setProviders] = useState(null);
+
+  const loadProviders = useCallback(() => {
+    deliveryService.getProviders().then(({ data }) => setProviders(data.data)).catch(() => setProviders({ providers: [] }));
+  }, []);
+  useEffect(() => { loadProviders(); }, [loadProviders]);
 
   function setStateFee(state, value) {
     setFeesByState((f) => {
@@ -549,7 +557,7 @@ function DeliveryTab({ store, onSaved }) {
           feesByState, defaultFee: Number(defaultFee) || 0,
           freeDeliveryMinimum: freeDeliveryMinimum === '' ? null : Number(freeDeliveryMinimum),
           estimatedDeliveryDays: Number(estimatedDeliveryDays) || 3,
-          podEnabled, podMaxAmount: Number(podMaxAmount) || 0,
+          podEnabled, podMaxAmount: Number(podMaxAmount) || 0, defaultProvider,
         },
       });
       toast.success('Delivery settings saved');
@@ -562,6 +570,7 @@ function DeliveryTab({ store, onSaved }) {
   }
 
   return (
+    <>
     <div className="card card-pad">
       <h2 style={{ marginTop: 0 }}><RiTruckLine style={{ verticalAlign: '-3px' }} /> Delivery Settings</h2>
 
@@ -600,9 +609,115 @@ function DeliveryTab({ store, onSaved }) {
         ))}
       </div>
 
+      {providers && (
+        <div className="form-group" style={{ maxWidth: 320, marginTop: 20 }}>
+          <label className="form-label">Default provider for new shipments</label>
+          <select className="form-input form-select" value={defaultProvider} onChange={(e) => setDefaultProvider(e.target.value)}>
+            {providers.providers.map((p) => <option key={p.key} value={p.key} disabled={!p.configured}>{p.name}{p.configured ? '' : ' (not connected)'}</option>)}
+          </select>
+        </div>
+      )}
+
       <button className="btn btn-primary" style={{ marginTop: 16 }} disabled={saving} onClick={save}>
         {saving ? 'Saving…' : 'Save Delivery Settings'}
       </button>
+    </div>
+
+    <div className="card card-pad" style={{ marginTop: 20 }}>
+      <h2 style={{ marginTop: 0 }}><RiPlugLine style={{ verticalAlign: '-3px' }} /> Delivery Providers</h2>
+      <p className="ss-hint" style={{ marginBottom: 16 }}>
+        Manual tracking always works with no setup. Connect a courier's own API for automatic tracking numbers and live status updates.
+      </p>
+      {!providers ? <p className="ss-hint">Loading…</p> : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {providers.providers.filter((p) => p.key !== 'manual').map((p) => (
+            <ProviderCard key={p.key} provider={p} onChanged={loadProviders} />
+          ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+            <RiCheckboxCircleLine style={{ color: 'var(--color-success)', fontSize: 20 }} />
+            <div>
+              <strong>Manual Tracking</strong>
+              <p className="ss-hint" style={{ margin: 0 }}>Always available — enter tracking numbers by hand and update status yourself.</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+    </>
+  );
+}
+
+function ProviderCard({ provider, onChanged }) {
+  const [showForm, setShowForm] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [secretKey, setSecretKey] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+
+  async function connect(e) {
+    e.preventDefault();
+    if (!apiKey.trim()) return toast.error('An API key is required.');
+    setSaving(true);
+    try {
+      await deliveryService.connectProvider(provider.key, { apiKey: apiKey.trim(), secretKey: secretKey.trim() || undefined });
+      toast.success(`${provider.name} connected`);
+      setShowForm(false); setApiKey(''); setSecretKey('');
+      onChanged();
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to connect'); }
+    finally { setSaving(false); }
+  }
+
+  async function disconnect() {
+    if (!confirm(`Disconnect ${provider.name}?`)) return;
+    try { await deliveryService.disconnectProvider(provider.key); toast.success('Disconnected'); onChanged(); }
+    catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
+  }
+
+  async function test() {
+    setTesting(true);
+    try { await deliveryService.testConnection(provider.key); toast.success('Connection successful'); }
+    catch (err) { toast.error(err.response?.data?.message || 'Connection test failed'); }
+    finally { setTesting(false); }
+  }
+
+  return (
+    <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '14px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <strong>{provider.name}</strong>
+          {!provider.verified && <span className="badge badge-warning" style={{ marginLeft: 8, fontSize: 10 }}>Beta integration</span>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+            {provider.configured
+              ? <><RiCheckboxCircleLine style={{ color: 'var(--color-success)' }} /> <span className="ss-hint">Connected</span></>
+              : <><RiCloseCircleLine style={{ color: 'var(--text-muted)' }} /> <span className="ss-hint">Not connected</span></>}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {provider.configured ? (
+            <>
+              <button className="btn btn-ghost btn-sm" disabled={testing} onClick={test}><RiSpeedLine /> {testing ? 'Testing…' : 'Test'}</button>
+              <button className="btn btn-ghost btn-sm" onClick={disconnect}>Disconnect</button>
+            </>
+          ) : (
+            <button className="btn btn-secondary btn-sm" onClick={() => setShowForm((v) => !v)}><RiPlugLine /> Connect</button>
+          )}
+        </div>
+      </div>
+
+      {showForm && !provider.configured && (
+        <form onSubmit={connect} className="form-grid-2" style={{ marginTop: 12 }}>
+          <div className="form-group"><label className="form-label">API Key</label>
+            <input className="form-input" value={apiKey} onChange={(e) => setApiKey(e.target.value)} /></div>
+          {provider.key === 'kwik' && (
+            <div className="form-group"><label className="form-label">Secret Key</label>
+              <input className="form-input" value={secretKey} onChange={(e) => setSecretKey(e.target.value)} /></div>
+          )}
+          <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8 }}>
+            <button className="btn btn-primary btn-sm" disabled={saving}>{saving ? 'Connecting…' : 'Save & Connect'}</button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>Cancel</button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

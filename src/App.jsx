@@ -52,6 +52,7 @@ const GiftCard = lazy(() => import('./pages/storefront/GiftCard'));
 const SubscriptionPlans = lazy(() => import('./pages/storefront/SubscriptionPlans'));
 const Subscribe = lazy(() => import('./pages/storefront/Subscribe'));
 const GroupBuy = lazy(() => import('./pages/storefront/GroupBuy'));
+const TrackOrder = lazy(() => import('./pages/storefront/TrackOrder'));
 const StoreAccount = lazy(() => import('./pages/storefront/CustomerAccount'));
 const Marketplace = lazy(() => import('./pages/marketplace/Marketplace'));
 const StoreSettings = lazy(() => import('./pages/settings/StoreSettings'));
@@ -148,6 +149,10 @@ function AppRoutes() {
       {/* Customer portal — magic-link auth, no user account */}
       <Route path="/portal/login" element={<PortalLogin />} />
       <Route path="/portal" element={<Portal />} />
+
+      {/* Public global shipment tracking — bislyai.com/track/TRK123, no slug needed */}
+      <Route path="/track" element={<Suspense fallback={<PageLoader />}><TrackOrder /></Suspense>} />
+      <Route path="/track/:trackingNumber" element={<Suspense fallback={<PageLoader />}><TrackOrder /></Suspense>} />
 
       {/* Public customer storefront — no auth */}
       <Route path="/store/:slug" element={<Suspense fallback={<PageLoader />}><Store /></Suspense>} />

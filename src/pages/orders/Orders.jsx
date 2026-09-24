@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { orderService, productService } from '../../services';
+import { orderService, productService, deliveryService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import { SOCKET_ORIGIN } from '../../services/api';
 import { io } from 'socket.io-client';
@@ -386,6 +386,10 @@ export default function Orders() {
                         <RiTruckLine /> {order.trackingNumber ? 'Update Tracking' : 'Add Tracking'}
                       </button>
                     )}
+
+                    {['confirmed','processing','shipped'].includes(order.status) && (
+                      <ShipmentSection order={order} onUpdated={(patch) => setOrders(prev => prev.map(o => o._id===order._id ? {...o, ...patch} : o))} />
+                    )}
                   </div>
 
                   {/* Timeline */}
@@ -469,6 +473,116 @@ function ProductPicker({ onClose, onSelect }) {
               ))}
         </div>
         <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
+}
+
+function ShipmentSection({ order, onUpdated }) {
+  const [shipment, setShipment] = useState(undefined); // undefined = loading, null = none yet
+  const [showCreate, setShowCreate] = useState(false);
+
+  useEffect(() => {
+    if (!order.shipmentId) { setShipment(null); return; }
+    deliveryService.getShipments({ orderId: order._id })
+      .then(({ data }) => setShipment(data.data[0] || null))
+      .catch(() => setShipment(null));
+  }, [order._id, order.shipmentId]);
+
+  async function updateStatus(status) {
+    try {
+      await deliveryService.updateStatus(shipment._id, { status });
+      setShipment((s) => ({ ...s, status }));
+      toast.success('Shipment status updated');
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to update status'); }
+  }
+
+  if (shipment === undefined) return null;
+
+  if (!shipment) {
+    return showCreate ? (
+      <ShipmentForm
+        order={order}
+        onCreated={(s) => {
+          setShipment(s); setShowCreate(false);
+          onUpdated({ shipmentId: s._id, trackingNumber: s.trackingNumber, trackingUrl: s.trackingUrl, deliveryProvider: s.provider });
+        }}
+        onCancel={() => setShowCreate(false)}
+      />
+    ) : (
+      <button className="btn btn-secondary btn-sm" onClick={() => setShowCreate(true)}>
+        <RiTruckLine /> Create Shipment
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+      <span className="badge badge-info">{shipment.providerName}</span>
+      <span style={{ fontFamily: 'monospace', fontSize: 13 }}>{shipment.trackingNumber}</span>
+      <select className="form-input" style={{ width: 'auto' }} value={shipment.status} onChange={(e) => updateStatus(e.target.value)}>
+        {['pending', 'picked_up', 'in_transit', 'out_for_delivery', 'delivered', 'failed', 'returned'].map((s) => (
+          <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
+        ))}
+      </select>
+      <a href={`/track/${shipment.trackingNumber}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
+        Track Package
+      </a>
+    </div>
+  );
+}
+
+function ShipmentForm({ order, onCreated, onCancel }) {
+  const [providers, setProviders] = useState(null);
+  const [provider, setProvider] = useState('manual');
+  const [weight, setWeight] = useState(1);
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [quote, setQuote] = useState(null);
+  const [quoting, setQuoting] = useState(false);
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    deliveryService.getProviders().then(({ data }) => setProviders(data.data.providers)).catch(() => setProviders([]));
+  }, []);
+
+  async function getQuote() {
+    setQuoting(true);
+    try {
+      const { data } = await deliveryService.getQuote({ provider, weight: Number(weight) || 1, from: {}, to: order.shippingAddress || {} });
+      setQuote(data.data);
+    } catch (err) { toast.error(err.response?.data?.message || 'Could not get a quote'); }
+    finally { setQuoting(false); }
+  }
+
+  async function create() {
+    if (provider === 'manual' && !trackingNumber.trim()) return toast.error('Enter a tracking number.');
+    setCreating(true);
+    try {
+      const { data } = await deliveryService.createShipment({ orderId: order._id, provider, weight: Number(weight) || 1, trackingNumber: trackingNumber.trim() || undefined });
+      toast.success('Shipment created');
+      onCreated(data.data);
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to create shipment'); }
+    finally { setCreating(false); }
+  }
+
+  return (
+    <div className="tracking-form">
+      <select className="form-input" value={provider} onChange={(e) => { setProvider(e.target.value); setQuote(null); }}>
+        {(providers || []).map((p) => <option key={p.key} value={p.key} disabled={!p.configured}>{p.name}{p.configured ? '' : ' (not connected)'}</option>)}
+      </select>
+      {provider === 'manual' && (
+        <input className="form-input" placeholder="Tracking number" value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} />
+      )}
+      <input className="form-input" type="number" min={0.1} step={0.1} placeholder="Weight (kg)" value={weight} onChange={(e) => setWeight(e.target.value)} />
+      {provider !== 'manual' && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button type="button" className="btn btn-ghost btn-sm" disabled={quoting} onClick={getQuote}>{quoting ? 'Getting quote…' : 'Get Quote'}</button>
+          {quote && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>₦{Number(quote.fee || 0).toLocaleString()} · {quote.estimatedDays || '?'} day(s)</span>}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button className="btn btn-primary btn-sm" disabled={creating} onClick={create}>{creating ? 'Creating…' : 'Create Shipment'}</button>
+        <button className="btn btn-secondary btn-sm" onClick={onCancel}>Cancel</button>
       </div>
     </div>
   );

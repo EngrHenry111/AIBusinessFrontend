@@ -321,6 +321,20 @@ export const subscriptionPlanService = {
   cancelSubscriber: (id, reason) => api.patch(`/store-subscriptions/${id}/cancel`, { reason }),
 };
 
+// ─── Delivery / Shipment tracking ────────────────────────────────────────────────
+export const deliveryService = {
+  getProviders: () => api.get('/delivery/providers'),
+  connectProvider: (provider, data) => api.post(`/delivery/providers/${provider}/connect`, data),
+  disconnectProvider: (provider) => api.delete(`/delivery/providers/${provider}/connect`),
+  testConnection: (provider) => api.post(`/delivery/providers/${provider}/test`),
+  getQuote: (data) => api.post('/delivery/quote', data),
+  createShipment: (data) => api.post('/delivery/shipments', data),
+  getShipments: (params) => api.get('/delivery/shipments', { params }),
+  updateStatus: (id, data) => api.patch(`/delivery/shipments/${id}/status`, data),
+  // Public — no slug, tracking numbers are looked up globally
+  track: (trackingNumber) => axios.get(`${API_BASE}/delivery/track/${trackingNumber}`),
+};
+
 // ─── Group Buying ───────────────────────────────────────────────────────────────
 export const groupBuyService = {
   // Protected (store owner, inside the app)

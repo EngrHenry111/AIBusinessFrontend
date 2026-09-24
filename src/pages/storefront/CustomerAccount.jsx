@@ -139,7 +139,10 @@ function OrdersTab({ slug, token, navigate }) {
             </div>
             <div style={{ textAlign: 'right' }}>
               <strong>{naira(o.total)}</strong>
-              <p style={{ margin: '2px 0 0' }}><span className={`badge badge-${o.status === 'delivered' ? 'success' : o.status === 'cancelled' ? 'neutral' : 'info'}`}>{o.status}</span></p>
+              <p style={{ margin: '2px 0 0', display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                <span className={`badge badge-${o.status === 'delivered' ? 'success' : o.status === 'cancelled' ? 'neutral' : 'info'}`}>{o.status}</span>
+                {o.trackingNumber && <span className="badge badge-neutral">Tracking available</span>}
+              </p>
             </div>
           </div>
           {expanded === o._id && (
@@ -150,8 +153,12 @@ function OrdersTab({ slug, token, navigate }) {
                   <span>{naira(i.price * i.quantity)}</span>
                 </div>
               ))}
-              <div style={{ display: 'flex', gap: 10, marginTop: 12 }} onClick={(e) => e.stopPropagation()}>
-                <Link to={`/store/${slug}/track/${o.orderNumber}`} className="sf-btn-ghost" style={{ width: 'auto', padding: '8px 16px', fontSize: '0.82rem' }}>Track Order</Link>
+              <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
+                {o.trackingNumber ? (
+                  <Link to={`/track/${o.trackingNumber}`} className="sf-btn-ghost" style={{ width: 'auto', padding: '8px 16px', fontSize: '0.82rem' }}>Track Package</Link>
+                ) : (
+                  <Link to={`/store/${slug}/track/${o.orderNumber}`} className="sf-btn-ghost" style={{ width: 'auto', padding: '8px 16px', fontSize: '0.82rem' }}>Track Order</Link>
+                )}
                 <button className="sf-btn-ghost" style={{ width: 'auto', padding: '8px 16px', fontSize: '0.82rem' }} onClick={(e) => reorder(o, e)}><RiRefreshLine /> Reorder</button>
               </div>
             </div>

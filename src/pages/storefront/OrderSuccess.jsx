@@ -173,13 +173,34 @@ export default function OrderSuccess() {
               </div>
             )}
 
+            {order.trackingNumber && (
+              <div className="sf-panel" style={{ textAlign: 'center' }}>
+                <p style={{ margin: 0, fontWeight: 600 }}>📦 Track your shipment</p>
+                <p style={{ margin: '6px 0 10px', fontSize: '0.9rem' }}>
+                  Track at: <strong>bislyai.com/track/{order.trackingNumber}</strong>
+                </p>
+                <button
+                  className="sf-btn-ghost" style={{ width: 'auto', padding: '8px 18px' }}
+                  onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/track/${order.trackingNumber}`); toast.success('Tracking link copied!'); }}
+                >
+                  Copy Tracking Link
+                </button>
+              </div>
+            )}
+
             <div style={{ textAlign: 'center', marginTop: 24, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link to={`/store/${slug}`} className="sf-btn sf-btn-ghost" style={{ width: 'auto', padding: '12px 22px' }}>
                 Continue Shopping
               </Link>
-              <Link to={`/store/${slug}/track/${order.orderNumber}?email=${encodeURIComponent(order.customer?.email || directEmail || '')}`} className="sf-btn sf-btn-ghost" style={{ width: 'auto', padding: '12px 22px' }}>
-                Track Order
-              </Link>
+              {order.trackingNumber ? (
+                <Link to={`/track/${order.trackingNumber}`} className="sf-btn sf-btn-ghost" style={{ width: 'auto', padding: '12px 22px' }}>
+                  Track Order
+                </Link>
+              ) : (
+                <Link to={`/store/${slug}/track/${order.orderNumber}?email=${encodeURIComponent(order.customer?.email || directEmail || '')}`} className="sf-btn sf-btn-ghost" style={{ width: 'auto', padding: '12px 22px' }}>
+                  Track Order
+                </Link>
+              )}
               <a className="sf-wa" href={`https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(`Hi, about my order ${order.orderNumber}`)}`} target="_blank" rel="noreferrer">
                 <RiWhatsappLine /> Chat with us
               </a>
