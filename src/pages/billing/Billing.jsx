@@ -237,7 +237,13 @@ export default function Billing() {
             <div className="billing-loading"><RiLoader4Line className="spin" /> Loading plans...</div>
           ) : (
             <div className="plans-grid">
-              {plans.map((plan) => {
+              {/* Enterprise has its own dedicated "Contact Sales" card below —
+                  it's excluded here so it never renders with a self-serve
+                  Paystack "Subscribe" button (see paymentController.js: it's
+                  listed in PLANS for MRR/admin consistency, but there's no
+                  real Paystack plan code behind it, so a normal subscribe
+                  attempt would just fail at checkout). */}
+              {plans.filter((plan) => plan.id !== 'enterprise').map((plan) => {
                 const isCurrent = currentPlan === plan.id;
                 const price = billingCycle === 'annual' ? plan.annualDisplay : plan.monthlyDisplay;
                 const color = PLAN_COLORS[plan.id] || '#6366f1';

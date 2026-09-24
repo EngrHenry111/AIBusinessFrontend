@@ -72,7 +72,7 @@ export default function Dashboard() {
           <div className={`usage-fill ${color}`} style={{ '--pct': `${meter.percent}%` }} />
         </div>
         <div className="usage-bottom">
-          <span>{meter.used.toLocaleString()} of {meter.limit.toLocaleString()} {unit}</span>
+          <span>{meter.used.toLocaleString()} of {meter.limit < 0 ? 'unlimited' : meter.limit.toLocaleString()} {unit}</span>
           {cta}
         </div>
       </div>
@@ -255,7 +255,7 @@ export default function Dashboard() {
             />
             <UsageCard
               title="Team Members" unit="members" meter={usage.teamMembers}
-              cta={usage.teamMembers.used < usage.teamMembers.limit
+              cta={usage.teamMembers.limit < 0 || usage.teamMembers.used < usage.teamMembers.limit
                 ? <button className="usage-cta" onClick={() => navigate('/team')}>Invite member</button>
                 : <button className="usage-cta" onClick={() => navigate('/billing')}>Upgrade plan</button>}
             />
