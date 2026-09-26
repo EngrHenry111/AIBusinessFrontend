@@ -216,6 +216,25 @@ html { scroll-behavior: smooth; }
 .lp-plan li svg { color: var(--lp-brand); font-size: 1.1em; flex-shrink: 0; margin-top: 2px; }
 .lp-plan .lp-btn { width: 100%; }
 
+/* Enterprise — deliberately distinct (dark/gold) from the self-serve plans,
+   matching the "Contact Sales" card on the in-app Billing page. */
+.lp-plan.enterprise {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  border: 1px solid #ffd70055;
+  box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.08), 0 20px 40px -18px rgba(0, 0, 0, 0.5);
+}
+.lp-plan.enterprise h3, .lp-plan.enterprise .lp-plan-custom { color: #fff; }
+.lp-plan.enterprise li { color: #d4d4d4; }
+.lp-plan.enterprise li svg { color: #ffd700; }
+.lp-plan-tag.enterprise-tag {
+  position: static; transform: none; display: inline-flex; align-items: center; gap: 6px;
+  background: #ffd700; color: #1a1a1a; margin-bottom: 10px;
+}
+.lp-plan-custom { font-size: 1.6rem; font-weight: 800; }
+.lp-plan-note { font-size: 0.85rem; color: #a3a3a3; margin: 2px 0 4px; }
+.lp-btn-enterprise { background: #ffd700; color: #1a1a1a; }
+.lp-btn-enterprise:hover { background: #ffe033; transform: translateY(-2px); }
+
 /* ── Testimonials ──────────────────────────────────────────────────────── */
 .lp-quote { display: flex; flex-direction: column; gap: 14px; }
 .lp-stars { display: flex; gap: 3px; color: #f59e0b; font-size: 15px; }

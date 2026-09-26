@@ -8,7 +8,8 @@ import {
   RiInstagramLine, RiFacebookBoxLine, RiMenuLine, RiCloseLine, RiCheckLine,
   RiStarFill, RiArrowRightLine, RiPlayCircleLine, RiSparklingLine, RiShieldCheckLine,
   RiArrowDownSLine, RiMailLine, RiLockLine, RiFileList3Line, RiCloudLine, RiBankCardLine,
-  RiGlobalLine, RiTimeLine, RiFileCopyLine,
+  RiGlobalLine, RiTimeLine, RiFileCopyLine, RiGroupLine, RiGiftLine, RiRepeatLine,
+  RiAwardLine, RiTruckLine, RiTeamLine, RiVipCrownLine,
 } from 'react-icons/ri';
 import './Landing.css';
 
@@ -66,6 +67,17 @@ const FEATURES = [
   { icon: RiLineChartLine, emoji: '📈', title: 'Business Reports & AI Insights', text: 'One-click profit & loss, expense tracking and AI recommendations for your business.' },
 ];
 
+const COMMERCE_FEATURES = [
+  { icon: RiStore2Line, emoji: '🛍️', title: 'Your Own Online Store', text: 'A branded storefront with Paystack checkout, pay-on-delivery, coupons and flash sales — live in minutes.' },
+  { icon: RiTruckLine, emoji: '📦', title: 'Real Delivery Tracking', text: 'Real tracking numbers via GIG Logistics, Kwik Delivery or Sendbox — or track manually, no API required.' },
+  { icon: RiGroupLine, emoji: '🔥', title: 'Group Buying Deals', text: '"Get 5 friends to order together and everyone saves" — automatic group discounts with live progress and instant payouts.' },
+  { icon: RiRepeatLine, emoji: '🔁', title: 'Subscriptions & Recurring Orders', text: 'Weekly food boxes, monthly beauty boxes — automatic recurring billing and delivery, on autopilot.' },
+  { icon: RiGiftLine, emoji: '🎁', title: 'Digital Gift Cards', text: 'Sell gift cards customers can redeem at checkout — a new revenue channel with zero extra inventory.' },
+  { icon: RiAwardLine, emoji: '⭐', title: 'Loyalty & Rewards', text: 'Points, tiers and automatic discounts that turn one-time buyers into repeat customers.' },
+  { icon: RiGovernmentLine, emoji: '🏛️', title: 'e-Procurement for Enterprise & Government', text: 'Vendor management, requisitions, multi-level approvals and budgets — built for larger organizations.' },
+  { icon: RiTeamLine, emoji: '👥', title: 'Team & Departments', text: 'Invite your team, tag them by department — Finance, Sales, Auditors — and control exactly who can do what.' },
+];
+
 const STEPS = [
   { n: 1, title: 'Create Your Workspace', text: 'Register and set up your company in minutes — no card required.' },
   { n: 2, title: 'Upload Your Documents', text: 'Add your business knowledge so the AI can answer like your best staff.' },
@@ -87,6 +99,15 @@ const PLANS = [
   },
 ];
 
+const ENTERPRISE_PLAN = {
+  name: 'Enterprise',
+  features: [
+    'Unlimited team members & documents', 'Unlimited AI questions', 'e-Procurement module',
+    'White-label options', 'Dedicated account manager', 'SLA guarantee (99.9% uptime)',
+    'Government compliance package', 'Custom integrations & API access',
+  ],
+};
+
 const USE_CASES = [
   { icon: RiStore2Line, title: 'Small Businesses', text: 'Handle customer chats, invoices and bookings without hiring a bigger team.' },
   { icon: RiBriefcase4Line, title: 'Consultants', text: 'Turn your reports and playbooks into an AI assistant that never sleeps.' },
@@ -106,6 +127,7 @@ const FAQS = [
   { q: 'Can I use it on my phone?', a: 'Yes. BizlyAI works on any device — phone, tablet, or computer. No app download needed.' },
   { q: 'What happens to my data?', a: 'Your data is stored securely and is completely private. Other businesses on BizlyAI cannot see your data. We use bank-grade encryption.' },
   { q: 'Does the WhatsApp bot work with my existing WhatsApp number?', a: 'Yes. You connect your existing WhatsApp Business number — no new number needed. Your customers keep chatting on the same number they already know.' },
+  { q: 'Can I sell online and track deliveries?', a: 'Yes. Every plan includes a branded online store with Paystack checkout, pay-on-delivery, coupons, gift cards, subscriptions and group-buy deals. For delivery, connect GIG Logistics, Kwik Delivery or Sendbox for real tracking numbers, or track manually with no API required — your customers can follow their order on a public tracking page either way.' },
   { q: 'Can I cancel anytime?', a: 'Yes. No long-term contracts. Cancel anytime from your billing settings. Your data is available for 30 days after cancellation.' },
   { q: 'Do you offer support?', a: 'Yes. All plans include email support. Professional and Business plans include priority support. You can also reach us directly on WhatsApp.' },
   { q: 'Is pricing in Naira?', a: 'Yes. All prices are in Nigerian Naira (₦). We accept cards and bank transfer via Paystack. No international card needed.' },
@@ -346,7 +368,7 @@ export default function Landing() {
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         url: 'https://bislyai.com',
-        description: 'AI-powered business management platform for Nigerian businesses',
+        description: 'AI-powered business management platform for Nigerian businesses, with a built-in online store, delivery tracking, and e-procurement for enterprise.',
         offers: {
           '@type': 'AggregateOffer',
           lowPrice: '4900',
@@ -459,7 +481,8 @@ export default function Landing() {
             <h1>Run Your Entire Business With AI</h1>
             <p>
               BizlyAI replaces 6 business tools with one AI-powered platform. Manage leads,
-              invoices, appointments, orders and more — all in one place.
+              invoices, appointments and orders, run your own online store, and track real
+              deliveries — all in one place.
             </p>
             <div className="lp-hero-actions">
               <Link to="/register" className="lp-btn lp-btn-primary lp-btn-lg">
@@ -552,6 +575,28 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── Commerce & Team ────────────────────────────────────── */}
+      <section id="commerce" className="lp-section">
+        <div className="lp-container">
+          <div className="lp-head" data-reveal>
+            <h2>Sell Online, Get Paid, Get Delivered</h2>
+            <p>A built-in store, real delivery tracking and the team tools to run it all — no extra plugins.</p>
+          </div>
+          <div className="lp-grid lp-grid-4">
+            {COMMERCE_FEATURES.map((f, i) => {
+              const Icon = f.icon;
+              return (
+                <article key={f.title} className="lp-card lp-feature" data-reveal style={{ transitionDelay: `${(i % 4) * 60}ms` }}>
+                  <span className="lp-feature-icon"><Icon /></span>
+                  <h3>{f.emoji} {f.title}</h3>
+                  <p>{f.text}</p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* ── How it works ───────────────────────────────────────── */}
       <section id="how" className="lp-section lp-section-alt">
         <div className="lp-container">
@@ -578,7 +623,7 @@ export default function Landing() {
             <h2>Simple, Transparent Pricing</h2>
             <p>Save 20% with annual billing. Cancel anytime.</p>
           </div>
-          <div className="lp-grid lp-grid-3 lp-pricing">
+          <div className="lp-grid lp-grid-4 lp-pricing">
             {PLANS.map((p) => (
               <article key={p.name} className={`lp-card lp-plan ${p.popular ? 'popular' : ''}`} data-reveal>
                 {p.popular && <span className="lp-plan-tag">Most Popular</span>}
@@ -597,6 +642,21 @@ export default function Landing() {
                 </Link>
               </article>
             ))}
+
+            <article className="lp-card lp-plan enterprise" data-reveal>
+              <span className="lp-plan-tag enterprise-tag"><RiVipCrownLine /> Enterprise</span>
+              <h3>Enterprise</h3>
+              <div className="lp-plan-price"><span className="lp-plan-custom">Custom Pricing</span></div>
+              <p className="lp-plan-note">For large organizations and government agencies.</p>
+              <ul>
+                {ENTERPRISE_PLAN.features.map((f) => (
+                  <li key={f}><RiCheckLine /> {f}</li>
+                ))}
+              </ul>
+              <a href={waLink("I'm interested in BizlyAI Enterprise plan")} target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn-lg lp-btn-enterprise">
+                Contact Sales
+              </a>
+            </article>
           </div>
         </div>
       </section>
