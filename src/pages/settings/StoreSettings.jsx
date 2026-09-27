@@ -653,15 +653,17 @@ function ProviderCard({ provider, onChanged }) {
   const [secretKey, setSecretKey] = useState('');
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [webhookUrl, setWebhookUrl] = useState(null);
 
   async function connect(e) {
     e.preventDefault();
     if (!apiKey.trim()) return toast.error('An API key is required.');
     setSaving(true);
     try {
-      await deliveryService.connectProvider(provider.key, { apiKey: apiKey.trim(), secretKey: secretKey.trim() || undefined });
+      const { data } = await deliveryService.connectProvider(provider.key, { apiKey: apiKey.trim(), secretKey: secretKey.trim() || undefined });
       toast.success(`${provider.name} connected`);
       setShowForm(false); setApiKey(''); setSecretKey('');
+      setWebhookUrl(data.data?.webhookUrl || null);
       onChanged();
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to connect'); }
     finally { setSaving(false); }
@@ -717,6 +719,17 @@ function ProviderCard({ provider, onChanged }) {
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>Cancel</button>
           </div>
         </form>
+      )}
+
+      {webhookUrl && (
+        <div style={{ marginTop: 12, padding: '12px 14px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
+          <strong style={{ fontSize: 13 }}>Paste this webhook URL into your {provider.name} dashboard:</strong>
+          <p className="ss-hint" style={{ margin: '4px 0 8px' }}>This is what makes live status updates arrive automatically. It's secret — anyone with it could fake delivery events on your orders, so only paste it into {provider.name}'s own settings.</p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input className="form-input" readOnly value={webhookUrl} style={{ fontFamily: 'monospace', fontSize: 12 }} onFocus={(e) => e.target.select()} />
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => { navigator.clipboard.writeText(webhookUrl); toast.success('Copied'); }}>Copy</button>
+          </div>
+        </div>
       )}
     </div>
   );
