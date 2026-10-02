@@ -6,6 +6,7 @@ import {
   RiShirtLine, RiRestaurantLine, RiTvLine, RiHeartsLine, RiHomeGearLine,
   RiCustomerService2Line, RiPlantLine, RiMoreLine,
 } from 'react-icons/ri';
+import useSeo from '../../hooks/useSeo';
 import './Marketplace.css';
 
 const naira = (n) => `₦${Number(n || 0).toLocaleString()}`;
@@ -68,7 +69,11 @@ export default function Marketplace() {
   const [stats, setStats] = useState(null);
   const [trending, setTrending] = useState([]);
 
-  useEffect(() => { document.title = 'BizlyAI Marketplace — Shop Nigerian Businesses'; }, []);
+  useSeo({
+    title: 'BizlyAI Marketplace — Shop Nigerian Businesses',
+    description: 'Discover and shop from verified Nigerian businesses — fashion, food, electronics, beauty and more, with secure payment and delivery.',
+    path: '/market',
+  });
 
   useEffect(() => {
     marketplaceService.getFeatured().then(({ data }) => setFeatured(data.data)).catch(() => setFeatured([]));

@@ -286,9 +286,6 @@ export const storefrontService = {
   recoverCart: (slug, sessionId) => axios.get(`${API_BASE}/store/${slug}/cart/recover/${sessionId}`),
   getRecommendations: (slug, productId) => axios.get(`${API_BASE}/store/${slug}/products/${productId}/recommendations`),
   track: (slug, orderNumber, email) => axios.get(`${API_BASE}/store/${slug}/track/${orderNumber}`, { params: { email } }),
-  uploadBankProof: (slug, orderNumber, formData) => axios.post(`${API_BASE}/store/${slug}/orders/${orderNumber}/bank-proof`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
 };
 
 // ─── Gift Cards ──────────────────────────────────────────────────────────────

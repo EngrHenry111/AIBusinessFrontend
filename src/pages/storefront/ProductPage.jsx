@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { readCart, writeCart, addToCart } from './cart';
 import { isWishlisted, toggleWishlist } from './wishlist';
 import { getStoreToken } from './storeAuth';
+import useSeo, { SITE_URL } from '../../hooks/useSeo';
 import './Store.css';
 import './ProductPage.css';
 
@@ -70,9 +71,34 @@ export default function ProductPage() {
     return () => { alive = false; };
   }, [slug, productId]);
 
-  useEffect(() => {
-    if (product?.name) document.title = `${product.name} — Store`;
-  }, [product]);
+  const productUrl = `${SITE_URL}/store/${slug}/product/${productId}`;
+  useSeo({
+    enabled: Boolean(product),
+    title: product ? `${product.name} — Buy Online | BizlyAI` : '',
+    description: product?.description || (product ? `Buy ${product.name} online. Secure payment and delivery across Nigeria.` : ''),
+    path: `/store/${slug}/product/${productId}`,
+    image: product?.images?.[0],
+    jsonLd: product && {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      ...(product.description && { description: product.description }),
+      ...(product.images?.length && { image: product.images }),
+      ...(product.sku && { sku: product.sku }),
+      ...(product.category && { category: product.category }),
+      offers: {
+        '@type': 'Offer',
+        url: productUrl,
+        priceCurrency: product.currency || 'NGN',
+        price: product.effectivePrice ?? product.price,
+        availability: !product.stock?.trackStock || product.stock.quantity > 0 || product.stock.allowOutOfStock
+          ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      },
+      ...(product.ratings?.count > 0 && {
+        aggregateRating: { '@type': 'AggregateRating', ratingValue: product.ratings.average, reviewCount: product.ratings.count },
+      }),
+    },
+  });
 
   const selectedVariant = useMemo(() => {
     if (!product?.variants?.length) return null;

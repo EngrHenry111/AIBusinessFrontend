@@ -7,7 +7,7 @@ import {
   RiAddLine, RiShoppingBagLine, RiDeleteBinLine, RiSearchLine,
   RiArrowDownSLine, RiArrowUpSLine, RiTruckLine, RiCheckLine,
   RiTimeLine, RiMapPinLine, RiLoader4Line, RiRobot2Line, RiStore2Line,
-  RiGlobalLine, RiBankCardLine, RiCheckboxCircleLine,
+  RiGlobalLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './Orders.css';
@@ -120,14 +120,6 @@ export default function Orders() {
     } catch { toast.error('Failed to update'); }
   }
 
-  async function handleApproveBankProof(id) {
-    try {
-      const { data } = await orderService.update(id, { paymentStatus: 'paid', status: 'confirmed' });
-      setOrders(prev => prev.map(o => o._id === id ? data.data : o));
-      toast.success('Payment approved');
-    } catch { toast.error('Failed to approve'); }
-  }
-
   async function handleAddTracking(id, trackingNumber, carrier) {
     try {
       const { data } = await orderService.update(id, { trackingNumber, carrier });
@@ -178,7 +170,6 @@ export default function Orders() {
           <option value="">All payment methods</option>
           <option value="paystack">Paystack</option>
           <option value="pay_on_delivery">Pay on Delivery</option>
-          <option value="bank_transfer">Bank Transfer</option>
           <option value="split_payment">Split Payment</option>
         </select>
       </div>
@@ -291,7 +282,6 @@ export default function Orders() {
                       </span>
                     )}
                     {order.paymentMethod === 'pay_on_delivery' && <span className="badge badge-warning order-source-badge">Pay on Delivery</span>}
-                    {order.paymentMethod === 'bank_transfer' && order.paymentStatus !== 'paid' && <span className="badge badge-warning order-source-badge"><RiBankCardLine /> Awaiting Bank Proof</span>}
                     {order.paymentMethod === 'split_payment' && <span className="badge badge-info order-source-badge">Split Payment</span>}
                   </span>
                   <span className="order-customer">{order.customer?.name}</span>
@@ -330,26 +320,6 @@ export default function Orders() {
 
               {expanded===order._id && (
                 <div className="order-expanded">
-                  {/* Bank transfer proof review */}
-                  {order.paymentMethod === 'bank_transfer' && order.bankTransferProof && (
-                    <div className="order-shipping" style={{ marginBottom: 16 }}>
-                      <h4><RiBankCardLine /> Bank Transfer Proof</h4>
-                      <a href={order.bankTransferProof} target="_blank" rel="noreferrer">
-                        <img src={order.bankTransferProof} alt="Payment proof" style={{ maxWidth: 220, borderRadius: 8, border: '1px solid var(--border)', display: 'block', marginBottom: 8 }} />
-                      </a>
-                      {order.paymentStatus !== 'paid' ? (
-                        <button className="btn btn-primary btn-sm" onClick={() => handleApproveBankProof(order._id)}>
-                          <RiCheckboxCircleLine /> Approve Payment
-                        </button>
-                      ) : (
-                        <span className="badge badge-success">Payment approved</span>
-                      )}
-                    </div>
-                  )}
-                  {order.paymentMethod === 'bank_transfer' && !order.bankTransferProof && order.paymentStatus !== 'paid' && (
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>Waiting for the customer to upload their transfer proof.</p>
-                  )}
-
                   {/* Items */}
                   {order.items?.length>0 && (
                     <div className="order-items-detail">

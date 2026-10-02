@@ -11,6 +11,7 @@ import {
   RiGlobalLine, RiTimeLine, RiFileCopyLine, RiGroupLine, RiGiftLine, RiRepeatLine,
   RiAwardLine, RiTruckLine, RiTeamLine, RiVipCrownLine,
 } from 'react-icons/ri';
+import useSeo from '../../hooks/useSeo';
 import './Landing.css';
 
 const SUPPORT_EMAIL = 'support@bislyai.com';
@@ -326,6 +327,8 @@ export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
+
+  useSeo({ path: '/' }); // canonical + og:url only — title is managed below
 
   const scrollTo = useCallback((id) => {
     setMenuOpen(false);

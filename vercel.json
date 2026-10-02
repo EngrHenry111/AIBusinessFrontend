@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "https://businessai-backend-6g8l.onrender.com/api/v1/seo/sitemap.xml"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "https://businessai-backend-6g8l.onrender.com/api/$1"
     },

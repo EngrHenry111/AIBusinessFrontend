@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { storefrontService, couponService, storeCustomerService, giftCardService } from '../../services';
-import { RiArrowLeftLine, RiArrowRightLine, RiSecurePaymentLine, RiCoinLine, RiTruckLine, RiBankCardLine, RiWallet3Line, RiGiftLine } from 'react-icons/ri';
+import { RiArrowLeftLine, RiArrowRightLine, RiSecurePaymentLine, RiCoinLine, RiTruckLine, RiWallet3Line, RiGiftLine } from 'react-icons/ri';
 import { readCart, cartTotal, setQty, removeItem, writeCart } from './cart';
 import { getStoreToken } from './storeAuth';
 import { getCartSessionId } from './cartSession';
@@ -27,6 +27,10 @@ function computeDeliveryFee(ds, subtotal, state) {
 export default function Checkout() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  // Back from Paystack after cancelling / a failed attempt — the cart is
+  // untouched, so the shopper can simply try again.
+  const paymentInterrupted = ['cancelled', 'failed'].includes(params.get('payment'));
 
   const [step, setStep] = useState(0);
   const [store, setStore] = useState(null);
@@ -193,10 +197,11 @@ export default function Checkout() {
       });
 
       if (data.data.directOrder) {
-        navigate(`/store/${slug}/success?order=${data.data.order.orderNumber}&email=${encodeURIComponent(form.email)}&method=${paymentMethod}`, {
-          state: { bankDetails: data.data.bankDetails },
-        });
+        navigate(`/store/${slug}/success?order=${data.data.order.orderNumber}&email=${encodeURIComponent(form.email)}&method=${paymentMethod}`);
       } else {
+        // Paystack's hosted page — it redirects back to /success (paid) or
+        // to this page with ?payment=cancelled (cancelled). No order exists
+        // until Paystack confirms the charge.
         window.location.href = data.data.authorizationUrl;
       }
     } catch (e) {
@@ -219,6 +224,12 @@ export default function Checkout() {
 
       <div className="sf-page">
         <h1>Checkout</h1>
+
+        {paymentInterrupted && (
+          <p className="co-error">
+            Your payment was not completed and you have not been charged. Your cart is saved — you can try again below.
+          </p>
+        )}
 
         <div className="setup-steps co-steps">
           {STEPS.map((s, i) => (
@@ -373,11 +384,6 @@ export default function Checkout() {
                   <strong>Pay on Delivery</strong>
                   <span>{ds?.podEnabled ? `Pay cash when your order arrives. Available for orders up to ${naira(ds?.podMaxAmount ?? 50000)}.` : 'Not available for this store.'}</span>
                 </button>
-                <button className={`co-pay-card ${paymentMethod === 'bank_transfer' ? 'active' : ''}`} onClick={() => setPaymentMethod('bank_transfer')}>
-                  <RiBankCardLine />
-                  <strong>Bank Transfer</strong>
-                  <span>Transfer to our account and upload your receipt.</span>
-                </button>
                 <button className={`co-pay-card ${paymentMethod === 'split_payment' ? 'active' : ''}`} onClick={() => setPaymentMethod('split_payment')}>
                   <RiWallet3Line />
                   <strong>Split Payment</strong>
@@ -412,7 +418,7 @@ export default function Checkout() {
               {giftCardDiscount > 0 && <div className="sf-row" style={{ color: '#16a34a' }}><span>Gift card ({giftCard.code})</span><span>− {naira(giftCardDiscount)}</span></div>}
               <div className="sf-row total"><span>Total</span><span>{naira(total)}</span></div>
               <div className="sf-row"><span>Payment method</span><span>{{
-                paystack: 'Pay Now (Paystack)', pay_on_delivery: 'Pay on Delivery', bank_transfer: 'Bank Transfer', split_payment: 'Split Payment (50/50)',
+                paystack: 'Pay Now (Paystack)', pay_on_delivery: 'Pay on Delivery', split_payment: 'Split Payment (50/50)',
               }[paymentMethod]}</span></div>
               {paymentMethod === 'split_payment' && <p className="co-hint">You'll pay {naira(Math.round(total / 2))} now and {naira(total - Math.round(total / 2))} on delivery.</p>}
             </div>

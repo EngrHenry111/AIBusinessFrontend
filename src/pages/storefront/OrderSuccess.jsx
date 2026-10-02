@@ -1,37 +1,38 @@
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams, useLocation, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { storefrontService } from '../../services';
-import { RiWhatsappLine, RiUploadCloud2Line, RiCheckboxCircleFill } from 'react-icons/ri';
+import { RiWhatsappLine } from 'react-icons/ri';
 import { clearCart } from './cart';
 import toast from 'react-hot-toast';
 import './Store.css';
 
 const naira = (n) => `₦${Number(n || 0).toLocaleString()}`;
 
+// Paystack bank transfers / USSD can sit in "pending" for a while before the
+// bank settles — keep checking for up to ~3 minutes before giving up.
+const PENDING_POLL_MS = 4000;
+const PENDING_MAX_TRIES = 45;
+
 export default function OrderSuccess() {
   const { slug } = useParams();
-  const location = useLocation();
   const [params] = useSearchParams();
   const reference = params.get('reference') || params.get('trxref');
   const directOrderNumber = params.get('order');
   const directEmail = params.get('email');
   const directMethod = params.get('method');
-  const bankDetails = location.state?.bankDetails;
 
-  const [state, setState] = useState('verifying'); // verifying | ok | failed
+  // verifying | pending (bank still settling) | ok | unpaid (Paystack says no money received) | failed (couldn't confirm)
+  const [state, setState] = useState('verifying');
   const [order, setOrder] = useState(null);
   const [store, setStore] = useState(null);
   const [message, setMessage] = useState('');
-  const [proofFile, setProofFile] = useState(null);
-  const [uploadingProof, setUploadingProof] = useState(false);
-  const [proofUploaded, setProofUploaded] = useState(false);
 
   useEffect(() => {
     storefrontService.getStore(slug).then(({ data }) => setStore(data.data.store)).catch(() => {});
   }, [slug]);
 
-  // Direct orders (pay on delivery / bank transfer) — no Paystack round trip,
-  // just look the order up the same way the tracking page does.
+  // Direct orders (pay on delivery) — no Paystack round trip, just look the
+  // order up the same way the tracking page does.
   useEffect(() => {
     if (!directOrderNumber || !directEmail) return;
     storefrontService.track(slug, directOrderNumber, directEmail)
@@ -39,12 +40,15 @@ export default function OrderSuccess() {
       .catch((e) => { setState('failed'); setMessage(e.response?.data?.message || 'Could not find your order.'); });
   }, [slug, directOrderNumber, directEmail, directMethod]);
 
-  // Paystack orders — verify the reference (existing flow, unchanged).
+  // Paystack orders — the server asks Paystack directly whether this
+  // reference was paid. The order (and the "confirmed" screen) only exists
+  // once Paystack reports a successful charge; the cart is kept until then.
   useEffect(() => {
     if (directOrderNumber) return; // handled above
     if (!reference) { setState('failed'); setMessage('No payment reference found.'); return; }
     let tries = 0;
     let stop = false;
+    let timer;
 
     const check = () => {
       storefrontService.verifyPayment(slug, reference)
@@ -57,34 +61,27 @@ export default function OrderSuccess() {
         .catch((e) => {
           if (stop) return;
           tries += 1;
-          if (tries < 4) {
-            setTimeout(check, 2500); // webhook may still be catching up
+          const paymentStatus = e.response?.data?.paymentStatus;
+          const msg = e.response?.data?.message;
+
+          if (paymentStatus === 'pending' && tries < PENDING_MAX_TRIES) {
+            setState('pending');
+            timer = setTimeout(check, PENDING_POLL_MS);
+          } else if (paymentStatus === 'failed' && tries >= 2) {
+            // Checked twice — Paystack definitely has no successful charge.
+            setState('unpaid');
+            setMessage(msg || 'Payment was not completed. You have not been charged.');
+          } else if (tries < 4 || paymentStatus === 'failed') {
+            timer = setTimeout(check, 2500); // network blip / Paystack catching up
           } else {
             setState('failed');
-            setMessage(e.response?.data?.message || 'We could not confirm your payment yet.');
+            setMessage(msg || 'We could not confirm your payment yet.');
           }
         });
     };
     check();
-    return () => { stop = true; };
+    return () => { stop = true; clearTimeout(timer); };
   }, [slug, reference, directOrderNumber]);
-
-  async function uploadProof() {
-    if (!proofFile) return toast.error('Choose a screenshot of your transfer first.');
-    setUploadingProof(true);
-    try {
-      const form = new FormData();
-      form.append('email', order.customer?.email || directEmail);
-      form.append('proof', proofFile);
-      await storefrontService.uploadBankProof(slug, order.orderNumber, form);
-      setProofUploaded(true);
-      toast.success('Proof uploaded — the seller will confirm your payment shortly.');
-    } catch (e) {
-      toast.error(e.response?.data?.message || 'Could not upload proof. Please try again.');
-    } finally {
-      setUploadingProof(false);
-    }
-  }
 
   const brand = store?.settings?.primaryColor || '#6366f1';
   const waNumber = store?.contact?.phone?.replace(/\D/g, '') || '2349028361165';
@@ -95,8 +92,36 @@ export default function OrderSuccess() {
         {state === 'verifying' && (
           <>
             <div className="sf-success-icon">⏳</div>
-            <h1>Confirming your order…</h1>
-            <p>This only takes a moment.</p>
+            <h1>Confirming your payment…</h1>
+            <p>We&apos;re checking with Paystack. This only takes a moment.</p>
+          </>
+        )}
+
+        {state === 'pending' && (
+          <>
+            <div className="sf-success-icon">⏳</div>
+            <h1>Waiting for your bank…</h1>
+            <p>
+              Paystack is still waiting for your bank to confirm this payment. Please keep this page open —
+              your order will be confirmed automatically as soon as the money arrives.
+            </p>
+          </>
+        )}
+
+        {state === 'unpaid' && (
+          <>
+            <div className="sf-success-icon">❌</div>
+            <h1>Payment not completed</h1>
+            <p>{message}</p>
+            <p style={{ fontSize: '0.85rem' }}>Your cart has been saved — you can go back and try again.</p>
+            <div style={{ textAlign: 'center', marginTop: 20, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link to={`/store/${slug}/checkout?payment=failed`} className="sf-btn" style={{ width: 'auto', padding: '12px 22px', display: 'inline-block' }}>
+                Try payment again
+              </Link>
+              <Link to={`/store/${slug}`} className="sf-btn sf-btn-ghost" style={{ width: 'auto', padding: '12px 22px', display: 'inline-block' }}>
+                Back to store
+              </Link>
+            </div>
           </>
         )}
 
@@ -134,44 +159,12 @@ export default function OrderSuccess() {
               </div>
             )}
 
-            {order.paymentMethod === 'bank_transfer' && (
-              <div className="sf-panel">
-                <h2>🏦 Bank Transfer Details</h2>
-                {bankDetails ? (
-                  <>
-                    <div className="sf-row"><span>Bank</span><span>{bankDetails.bankName || '—'}</span></div>
-                    <div className="sf-row"><span>Account Name</span><span>{bankDetails.accountName || '—'}</span></div>
-                    <div className="sf-row"><span>Account Number</span><span>{bankDetails.accountNumber || '—'}</span></div>
-                    <div className="sf-row total"><span>Amount</span><span>{naira(order.total)}</span></div>
-                  </>
-                ) : (
-                  <p className="co-hint">Check your confirmation email for the bank details.</p>
-                )}
-
-                {proofUploaded ? (
-                  <p className="co-success" style={{ marginTop: 12 }}><RiCheckboxCircleFill /> Proof uploaded — awaiting confirmation.</p>
-                ) : (
-                  <div style={{ marginTop: 14 }}>
-                    <label className="sf-field-input" style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', justifyContent: 'center' }}>
-                      <RiUploadCloud2Line /> {proofFile ? proofFile.name : 'Choose payment screenshot'}
-                      <input type="file" accept="image/*,.pdf" hidden onChange={(e) => setProofFile(e.target.files?.[0] || null)} />
-                    </label>
-                    <button className="sf-btn" style={{ marginTop: 10 }} disabled={uploadingProof} onClick={uploadProof}>
-                      {uploadingProof ? 'Uploading…' : 'Upload Payment Proof'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {order.paymentMethod !== 'bank_transfer' && (
-              <div className="sf-panel" style={{ textAlign: 'center' }}>
-                <p style={{ margin: 0, fontWeight: 600 }}>📦 Your order is being processed</p>
-                <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--sf-muted, #64748b)' }}>
-                  {store?.name || 'The seller'} will be in touch shortly about delivery.
-                </p>
-              </div>
-            )}
+            <div className="sf-panel" style={{ textAlign: 'center' }}>
+              <p style={{ margin: 0, fontWeight: 600 }}>📦 Your order is being processed</p>
+              <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--sf-muted, #64748b)' }}>
+                {store?.name || 'The seller'} will be in touch shortly about delivery.
+              </p>
+            </div>
 
             {order.trackingNumber && (
               <div className="sf-panel" style={{ textAlign: 'center' }}>

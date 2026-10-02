@@ -11,6 +11,7 @@ import {
 } from './cart';
 import { readWishlist, toggleWishlist } from './wishlist';
 import { getStoreToken } from './storeAuth';
+import useSeo, { SITE_URL } from '../../hooks/useSeo';
 import './Store.css';
 
 const naira = (n) => `₦${Number(n || 0).toLocaleString()}`;
@@ -147,9 +148,30 @@ export default function Store() {
 
   const store = data?.store;
 
-  useEffect(() => {
-    if (store?.name) document.title = `${store.name} — Online Store`;
-  }, [store]);
+  // Each store is its own indexable page — LocalBusiness/Store JSON-LD lets
+  // Google show it as a business (name, address, phone) in search results.
+  const storeDescription = store?.settings?.description
+    || (store ? `Shop ${store.name} online on BizlyAI — browse products, order and pay securely with delivery across Nigeria.` : '');
+  useSeo({
+    enabled: Boolean(store),
+    title: store ? `${store.name} — Online Store | BizlyAI` : '',
+    description: storeDescription,
+    path: `/store/${slug}`,
+    image: store?.settings?.banner || store?.logo || undefined,
+    jsonLd: store && {
+      '@context': 'https://schema.org',
+      '@type': 'Store',
+      '@id': `${SITE_URL}/store/${slug}`,
+      name: store.name,
+      url: `${SITE_URL}/store/${slug}`,
+      description: storeDescription,
+      ...(store.logo && { logo: store.logo, image: store.logo }),
+      ...(store.contact?.phone && { telephone: store.contact.phone }),
+      ...(store.contact?.email && { email: store.contact.email }),
+      ...(store.contact?.address && { address: { '@type': 'PostalAddress', streetAddress: store.contact.address, addressCountry: 'NG' } }),
+      currenciesAccepted: 'NGN',
+    },
+  });
 
   // "?recover=<sessionId>" — arrives from an abandoned-cart reminder email.
   // Restore the saved cart, let the shopper know, and open the drawer.

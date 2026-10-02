@@ -1,9 +1,16 @@
 User-agent: *
 Allow: /
-Allow: /register
-Allow: /login
-Allow: /privacy
-Allow: /terms
+Allow: /market
+Allow: /store/
+
+# Per-shopper store pages carry no indexable content
+Disallow: /store/*/checkout
+Disallow: /store/*/success
+Disallow: /store/*/login
+Disallow: /store/*/register
+Disallow: /store/*/reset-password/
+Disallow: /store/*/account
+Disallow: /store/*/track
 
 Disallow: /dashboard
 Disallow: /admin
