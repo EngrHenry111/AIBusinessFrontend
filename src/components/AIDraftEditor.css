@@ -1,0 +1,34 @@
+.ai-draft {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--bg-card);
+  padding: 14px 16px;
+  margin-top: 12px;
+}
+
+.ai-draft-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.ai-draft-title { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; color: var(--color-brand, #6366f1); }
+.ai-draft-dirty { font-size: 12px; color: #b45309; }
+.ai-draft-tools { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+
+.ai-draft-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin: 8px 0 4px; }
+.ai-draft-label span { font-weight: 400; color: var(--text-muted); margin-left: 6px; }
+.ai-draft-subject { width: 100%; }
+.ai-draft-body { width: 100%; min-height: 160px; resize: vertical; font-family: inherit; font-size: 14px; line-height: 1.6; }
+
+.ai-draft-send { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 8px; }
+.ai-draft-row { display: grid; grid-template-columns: 40px 1fr; align-items: center; gap: 8px; }
+.ai-draft-row label { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.ai-draft-files { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ai-draft-pdf { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-primary); cursor: pointer; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; }
+.ai-draft-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 4px 6px 4px 10px; border-radius: 999px; background: var(--bg-tertiary); color: var(--text-primary); max-width: 100%; }
+.ai-draft-chip small { color: var(--text-muted); }
+.ai-draft-chip button { display: inline-flex; border: 0; background: none; color: var(--text-muted); cursor: pointer; padding: 2px; border-radius: 50%; }
+.ai-draft-chip button:hover { color: var(--text-primary); background: var(--border); }
+.ai-draft-hint { font-size: 12px; color: var(--text-muted); margin: 0; }
+.ai-draft-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+@media (max-width: 600px) {
+  .ai-draft-tools { margin-left: 0; width: 100%; }
+  .ai-draft-row { grid-template-columns: 1fr; gap: 2px; }
+}

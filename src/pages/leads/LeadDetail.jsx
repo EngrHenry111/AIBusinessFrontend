@@ -8,6 +8,7 @@ import {
   RiFileList3Line, RiCalendarCheckLine, RiExchangeLine, RiFlashlightLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
+import AIDraftEditor from '../../components/AIDraftEditor';
 import './LeadDetail.css';
 
 const STATUS_OPTIONS = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost', 'converted'];
@@ -230,7 +231,18 @@ export default function LeadDetail() {
                 <p>{lead.ai.summary}</p>
                 {lead.ai.recommendedAction && <p><strong>Recommended action:</strong> {lead.ai.recommendedAction}</p>}
                 {lead.ai.priority && <span className={`badge badge-${lead.ai.priority === 'high' ? 'danger' : lead.ai.priority === 'medium' ? 'warning' : 'neutral'}`}>{lead.ai.priority} priority</span>}
-                {lead.ai.followUpDraft && <pre>{lead.ai.followUpDraft}</pre>}
+                {lead.ai.followUpDraft && (
+                  <AIDraftEditor
+                    type="lead"
+                    id={lead._id}
+                    title="AI follow-up email"
+                    text={lead.ai.followUpDraft}
+                    recipient={lead.email || ''}
+                    defaultSubject={`Following up${lead.company ? ` with ${lead.company}` : ''}`}
+                    onSaved={(t) => setData((d) => ({ ...d, lead: { ...d.lead, ai: { ...d.lead.ai, followUpDraft: t } } }))}
+                    onSent={(t) => setData((d) => ({ ...d, lead: { ...d.lead, lastContactedAt: new Date().toISOString(), ai: { ...d.lead.ai, followUpDraft: t } } }))}
+                  />
+                )}
               </>
             ) : (
               <p>This lead hasn't been analysed yet. Run AI analysis from the Leads list to get a score, a recommended next action and a follow-up email draft.</p>

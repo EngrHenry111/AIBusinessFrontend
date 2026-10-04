@@ -8,6 +8,7 @@ import {
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import VideoCall from '../../components/VideoCall/VideoCall';
+import AIDraftEditor from '../../components/AIDraftEditor';
 import './Appointment.css';
 
 const CALL_WINDOW_MS = 15 * 60 * 1000; // show the call button 15 min before start
@@ -339,13 +340,16 @@ export default function Appointments() {
                   {appt.description && <p className="appt-notes">{appt.description}</p>}
 
                   {appt.ai?.confirmationDraft && (
-                    <div className="ai-confirmation">
-                      <div className="ai-conf-header">
-                        <RiRobot2Line /><span>AI Confirmation Email Draft</span>
-                        <span style={{marginLeft:'auto',fontSize:11,color:'var(--text-muted)'}}>Copy and send to customer</span>
-                      </div>
-                      <pre className="conf-text">{appt.ai.confirmationDraft}</pre>
-                    </div>
+                    <AIDraftEditor
+                      type="appointment"
+                      id={appt._id}
+                      title="AI confirmation email"
+                      text={appt.ai.confirmationDraft}
+                      recipient={appt.customer?.email || ''}
+                      defaultSubject={`Appointment confirmed: ${appt.title}`}
+                      onSaved={(t) => setAppointments(prev => prev.map(a => a._id === appt._id ? { ...a, ai: { ...a.ai, confirmationDraft: t } } : a))}
+                      onSent={(t) => setAppointments(prev => prev.map(a => a._id === appt._id ? { ...a, ai: { ...a.ai, confirmationDraft: t } } : a))}
+                    />
                   )}
                 </div>
               )}

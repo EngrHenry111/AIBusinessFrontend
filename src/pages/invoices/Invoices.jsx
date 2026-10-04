@@ -12,6 +12,7 @@ import {
 import toast from 'react-hot-toast';
 import { SkeletonTable } from '../../components/ui/Skeleton';
 import CustomerPicker from '../customers/CustomerPicker';
+import AIDraftEditor from '../../components/AIDraftEditor';
 import './Invoices.css';
 
 const STATUS_COLORS = {
@@ -542,13 +543,22 @@ export default function Invoices() {
 
                     {/* AI Reminder */}
                     {inv.ai?.reminderDraft && (
-                      <div className="ai-reminder">
-                        <div className="ai-reminder-header">
-                          <RiRobot2Line /><span>AI Payment Reminder Draft</span>
-                          <span className="reminder-hint">Copy and send via email</span>
-                        </div>
-                        <pre className="reminder-text">{inv.ai.reminderDraft}</pre>
-                      </div>
+                      <AIDraftEditor
+                        type="invoice"
+                        id={inv._id}
+                        title="AI payment reminder"
+                        text={inv.ai.reminderDraft}
+                        recipient={inv.customer?.email || ''}
+                        defaultSubject={`Payment reminder: Invoice ${inv.invoiceNumber}`}
+                        canAttachInvoicePdf
+                        onRegenerate={() => handleDraftReminder(inv)}
+                        regenerating={draftingReminder === inv._id}
+                        onSaved={(t) => setInvoices(prev => prev.map(i => i._id === inv._id ? { ...i, ai: { ...i.ai, reminderDraft: t } } : i))}
+                        onSent={(t) => setInvoices(prev => prev.map(i => i._id === inv._id ? {
+                          ...i, ai: { ...i.ai, reminderDraft: t },
+                          sentAt: i.sentAt || new Date().toISOString(), status: i.status === 'draft' ? 'sent' : i.status,
+                        } : i))}
+                      />
                     )}
 
                     {!inv.ai?.reminderDraft && (

@@ -132,6 +132,13 @@ export const invoiceService = {
   generateNow: (id) => api.post(`/invoices/${id}/recurring/generate-now`),
 };
 
+// ─── AI drafts (edit, save, send with attachments) ───────────────────────────
+export const draftService = {
+  save: (type, id, text) => api.put(`/drafts/${type}/${id}`, { text }),
+  // FormData: to, cc, subject, body, attachInvoicePdf, files[]
+  send: (type, id, formData) => api.post(`/drafts/${type}/${id}/send`, formData, { timeout: 120000 }),
+};
+
 // ─── Legal practice (matters) ─────────────────────────────────────────────────
 export const matterService = {
   getAll: (params) => api.get('/matters', { params }),
