@@ -78,6 +78,9 @@ const CurrencySettings = lazy(() => import('./pages/settings/CurrencySettings'))
 const Contracts = lazy(() => import('./pages/contracts/Contracts'));
 const ContractGenerator = lazy(() => import('./pages/contracts/ContractGenerator'));
 const ContractView = lazy(() => import('./pages/contracts/ContractView'));
+const Matters = lazy(() => import('./pages/matters/Matters'));
+const MatterDetail = lazy(() => import('./pages/matters/MatterDetail'));
+const MatterCalendar = lazy(() => import('./pages/matters/MatterCalendar'));
 const Procurement = lazy(() => import('./pages/procurement/Procurement'));
 const RequisitionForm = lazy(() => import('./pages/procurement/RequisitionForm'));
 const RequisitionDetail = lazy(() => import('./pages/procurement/RequisitionDetail'));
@@ -211,6 +214,9 @@ function AppRoutes() {
                 <Route path="contracts" element={<Contracts />} />
                 <Route path="contracts/new" element={<ContractGenerator />} />
                 <Route path="contracts/:id" element={<ContractView />} />
+                <Route path="matters" element={<Matters />} />
+                <Route path="matters/calendar" element={<MatterCalendar />} />
+                <Route path="matters/:id" element={<MatterDetail />} />
                 <Route path="procurement" element={<Procurement />} />
                 <Route path="procurement/new" element={<RequisitionForm />} />
                 <Route path="procurement/:id" element={<RequisitionDetail />} />

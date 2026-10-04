@@ -370,6 +370,7 @@ export default function Settings() {
                     <option value="retail">Retail</option>
                     <option value="manufacturing">Manufacturing</option>
                     <option value="consulting">Consulting</option>
+                    <option value="legal">Legal Services / Law Firm</option>
                     <option value="education">Education</option>
                     <option value="other">Other</option>
                   </select>

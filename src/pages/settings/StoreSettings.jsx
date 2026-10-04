@@ -331,6 +331,7 @@ function AppearanceTab({ store, onSaved }) {
   const [primaryColor, setPrimaryColor] = useState(store.settings.primaryColor || '#6366f1');
   const [showOutOfStock, setShowOutOfStock] = useState(store.settings.showOutOfStock !== false);
   const [allowBackorders, setAllowBackorders] = useState(Boolean(store.settings.allowBackorders));
+  const [autoInvoiceOrders, setAutoInvoiceOrders] = useState(store.settings.autoInvoiceOrders !== false);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -354,7 +355,7 @@ function AppearanceTab({ store, onSaved }) {
     setSaving(true);
     try {
       const { data } = await storeAdminService.updateSettings({
-        banner, primaryColor, showOutOfStock, allowBackorders,
+        banner, primaryColor, showOutOfStock, allowBackorders, autoInvoiceOrders,
       });
       toast.success('Appearance saved');
       onSaved(data.data.settings);
@@ -402,6 +403,13 @@ function AppearanceTab({ store, onSaved }) {
           <div className="t-help">Let customers buy even when a product is out of stock.</div>
         </div>
         <Switch checked={allowBackorders} onChange={setAllowBackorders} />
+      </div>
+      <div className="ss-toggle-row">
+        <div>
+          <div className="t-label">Invoice every order automatically</div>
+          <div className="t-help">Each store order gets a matching invoice in Invoices. Paid orders arrive marked paid.</div>
+        </div>
+        <Switch checked={autoInvoiceOrders} onChange={setAutoInvoiceOrders} />
       </div>
 
       <button className="btn btn-primary" style={{ marginTop: 16 }} disabled={saving} onClick={save}>

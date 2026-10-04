@@ -132,6 +132,28 @@ export const invoiceService = {
   generateNow: (id) => api.post(`/invoices/${id}/recurring/generate-now`),
 };
 
+// ─── Legal practice (matters) ─────────────────────────────────────────────────
+export const matterService = {
+  getAll: (params) => api.get('/matters', { params }),
+  create: (data) => api.post('/matters', data),
+  getOne: (id) => api.get(`/matters/${id}`),
+  update: (id, data) => api.put(`/matters/${id}`, data),
+  delete: (id) => api.delete(`/matters/${id}`),
+  conflictCheck: (data) => api.post('/matters/conflict-check', data),
+  calendar: (days) => api.get('/matters/calendar', { params: { days } }),
+  utilization: (days) => api.get('/matters/reports/utilization', { params: { days } }),
+  getEntries: (id, params) => api.get(`/matters/${id}/entries`, { params }),
+  addEntry: (id, data) => api.post(`/matters/${id}/entries`, data),
+  updateEntry: (entryId, data) => api.put(`/matters/entries/${entryId}`, data),
+  deleteEntry: (entryId) => api.delete(`/matters/entries/${entryId}`),
+  addKeyDate: (id, data) => api.post(`/matters/${id}/key-dates`, data),
+  updateKeyDate: (id, dateId, data) => api.put(`/matters/${id}/key-dates/${dateId}`, data),
+  deleteKeyDate: (id, dateId) => api.delete(`/matters/${id}/key-dates/${dateId}`),
+  getTrust: (id) => api.get(`/matters/${id}/trust`),
+  addTrust: (id, data) => api.post(`/matters/${id}/trust`, data),
+  invoice: (id, data) => api.post(`/matters/${id}/invoice`, data),
+};
+
 // ─── Orders ───────────────────────────────────────────────────────────────────
 export const orderService = {
   getAll: (params) => api.get('/orders', { params }),
@@ -140,6 +162,7 @@ export const orderService = {
   update: (id, data) => api.put(`/orders/${id}`, data),
   delete: (id) => api.delete(`/orders/${id}`),
   track: (orderNumber) => api.get(`/orders/track/${orderNumber}`),
+  createInvoice: (id, data) => api.post(`/orders/${id}/invoice`, data),
 };
 
 // ─── Products & Inventory ─────────────────────────────────────────────────────

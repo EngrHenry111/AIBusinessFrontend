@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { invoiceService, portalService, currencyService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -7,7 +7,7 @@ import {
   RiCalendarLine, RiLoader4Line, RiArrowDownSLine, RiArrowUpSLine,
   RiMailLine, RiAlertLine, RiCheckLine, RiTimeLine, RiDownloadLine,
   RiShareForwardLine, RiMailSendLine, RiCheckboxCircleLine, RiRepeatLine,
-  RiPlayLine, RiPauseLine, RiFlashlightLine, RiFileTextLine,
+  RiPlayLine, RiPauseLine, RiFlashlightLine, RiFileTextLine, RiShoppingBagLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import { SkeletonTable } from '../../components/ui/Skeleton';
@@ -82,8 +82,25 @@ export default function Invoices() {
   const [sendingId, setSendingId] = useState(null);
   const [receiptId, setReceiptId] = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => { loadInvoices(); }, [statusFilter]);
+
+  // ?open=<invoiceId> — arriving from an order's "View invoice" link. The
+  // invoice may be outside the first page, so fetch it and pin it on top.
+  const openId = searchParams.get('open');
+  useEffect(() => {
+    if (!openId || loading) return;
+    setExpanded(openId);
+    if (!invoices.some((i) => i._id === openId)) {
+      invoiceService.getOne(openId)
+        .then(({ data }) => setInvoices((prev) => [data.data, ...prev.filter((i) => i._id !== openId)]))
+        .catch(() => toast.error('Invoice not found'));
+    }
+    searchParams.delete('open');
+    setSearchParams(searchParams, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openId, loading]);
   useEffect(() => {
     currencyService.getRates().then(({ data }) => setRates(data.data.rates)).catch(() => {});
   }, []);
@@ -435,6 +452,12 @@ export default function Invoices() {
                     )}
                     {inv.recurringParentId && (
                       <span className="inv-generated-badge"><RiRepeatLine /> Generated from recurring</span>
+                    )}
+                    {inv.orderNumber && (
+                      <Link to={`/orders?search=${encodeURIComponent(inv.orderNumber)}`} className="inv-generated-badge"
+                        onClick={(e) => e.stopPropagation()} title="Open the order this invoice was generated from">
+                        <RiShoppingBagLine /> Order {inv.orderNumber}
+                      </Link>
                     )}
                   </div>
                   <div className="invoice-dates">

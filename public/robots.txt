@@ -26,6 +26,7 @@ Disallow: /leads
 Disallow: /customers
 Disallow: /products
 Disallow: /orders
+Disallow: /matters
 Disallow: /invoices
 Disallow: /expenses
 Disallow: /appointments

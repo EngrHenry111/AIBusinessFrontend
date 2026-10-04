@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { orderService, productService, deliveryService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import { SOCKET_ORIGIN } from '../../services/api';
@@ -7,7 +8,7 @@ import {
   RiAddLine, RiShoppingBagLine, RiDeleteBinLine, RiSearchLine,
   RiArrowDownSLine, RiArrowUpSLine, RiTruckLine, RiCheckLine,
   RiTimeLine, RiMapPinLine, RiLoader4Line, RiRobot2Line, RiStore2Line,
-  RiGlobalLine,
+  RiGlobalLine, RiFileList3Line,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './Orders.css';
@@ -37,7 +38,10 @@ export default function Orders() {
   const [expanded, setExpanded] = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
-  const [search, setSearch] = useState('');
+  const [searchParams] = useSearchParams();
+  // ?search=ORD-… — arriving from an invoice's "Order" badge.
+  const [search, setSearch] = useState(() => searchParams.get('search') || '');
+  const [invoicingId, setInvoicingId] = useState(null);
   const [trackingId, setTrackingId] = useState(null);
   const [pickerIdx, setPickerIdx] = useState(null);
 
@@ -127,6 +131,17 @@ export default function Orders() {
       setTrackingId(null);
       toast.success('Tracking updated');
     } catch { toast.error('Failed'); }
+  }
+
+  async function handleCreateInvoice(order) {
+    setInvoicingId(order._id);
+    try {
+      const { data } = await orderService.createInvoice(order._id);
+      setOrders(prev => prev.map(o => o._id === order._id
+        ? { ...o, invoiceId: data.data._id, invoiceNumber: data.data.invoiceNumber } : o));
+      toast.success(data.created ? `Invoice ${data.data.invoiceNumber} created` : `Already invoiced as ${data.data.invoiceNumber}`);
+    } catch (err) { toast.error(err.response?.data?.message || 'Could not create invoice'); }
+    finally { setInvoicingId(null); }
   }
 
   async function handleDelete(id) {
@@ -339,6 +354,25 @@ export default function Orders() {
                       </table>
                     </div>
                   )}
+
+                  {/* Invoice */}
+                  <div className="order-invoice">
+                    <h4><RiFileList3Line /> Invoice</h4>
+                    {order.invoiceId ? (
+                      <p>
+                        <Link to={`/invoices?open=${order.invoiceId}`} className="btn btn-secondary btn-sm">
+                          View {order.invoiceNumber || 'invoice'}
+                        </Link>
+                        <span className="order-invoice-hint">Payment status stays in sync with this order.</span>
+                      </p>
+                    ) : ['cancelled', 'refunded'].includes(order.status) ? (
+                      <p className="order-invoice-hint">Cancelled and refunded orders can't be invoiced.</p>
+                    ) : (
+                      <button className="btn btn-primary btn-sm" disabled={invoicingId === order._id} onClick={() => handleCreateInvoice(order)}>
+                        {invoicingId === order._id ? <RiLoader4Line className="spin" /> : <RiFileList3Line />} Create invoice
+                      </button>
+                    )}
+                  </div>
 
                   {/* Shipping + Tracking */}
                   <div className="order-shipping">

@@ -88,6 +88,7 @@ export default function Register() {
                 <option value="retail">Retail & E-commerce</option>
                 <option value="manufacturing">Manufacturing</option>
                 <option value="consulting">Consulting</option>
+                <option value="legal">Legal Services / Law Firm</option>
                 <option value="education">Education</option>
                 <option value="government">Government</option>
                 <option value="logistics">Logistics</option>

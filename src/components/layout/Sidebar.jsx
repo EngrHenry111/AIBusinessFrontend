@@ -10,7 +10,7 @@ import {
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
   RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine, RiStoreLine,
   RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine, RiGovernmentLine, RiBankCardLine,
-  RiGroupLine,
+  RiGroupLine, RiScales3Line, RiCalendarEventLine,
 } from 'react-icons/ri';
 import './Sidebar.css';
 
@@ -19,6 +19,10 @@ const NAV_ITEMS = [
   { label: 'AI Assistant', icon: RiRobot2Line, path: '/chat' },
   { label: 'Knowledge', icon: RiBookOpenLine, path: '/knowledge' },
   { label: 'AI Agents', icon: RiRobot2Line, path: '/agents' },
+  // Legal practice — shown to companies whose industry is "legal".
+  { type: 'divider', label: 'Legal Practice', legalOnly: true },
+  { label: 'Matters', icon: RiScales3Line, path: '/matters', legalOnly: true },
+  { label: 'Court Calendar', icon: RiCalendarEventLine, path: '/matters/calendar', legalOnly: true },
   { type: 'divider', label: 'Business' },
   { label: 'Leads', icon: RiUserLine, path: '/leads' },
   { label: 'Customers', icon: RiUserStarLine, path: '/customers' },
@@ -193,6 +197,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
           if (item.adminOnly && user?.role !== 'super_admin') return null;
           if (item.roles && !item.roles.includes(user?.role)) return null;
           if (item.businessPlanOnly && !isBusinessPlan && user?.role !== 'super_admin') return null;
+          if (item.legalOnly && company?.industry !== 'legal') return null;
           if (item.type === 'divider') {
             return (
               <div key={idx} className="nav-divider">
@@ -204,6 +209,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
           return (
             <NavLink
               key={item.path}
+              end={item.path === '/matters'}
               to={item.path}
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={() => onClose && onClose()}
