@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import AppLayout from './components/layout/AppLayout';
 import ErrorBoundary from './components/ErrorBoundary';
+import InstallPrompt from './components/InstallPrompt';
 import './styles/globals.css';
 
 // Auth pages (not lazy — needed immediately)
@@ -253,6 +254,7 @@ export default function App() {
         <BrowserRouter>
           <ErrorBoundary>
             <AppRoutes />
+            <InstallPrompt />
           </ErrorBoundary>
           <Toaster
             position="top-right"

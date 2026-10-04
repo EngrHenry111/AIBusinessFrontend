@@ -50,6 +50,9 @@ export default function useSeo({ title, description, path, image, jsonLd, enable
 
     let ld;
     if (jsonLdText) {
+      // middleware.js already put this page's JSON-LD in the served HTML for
+      // non-JS crawlers; replace it rather than declare the entity twice.
+      document.head.querySelectorAll('script[data-seo="ssr"]').forEach((el) => el.remove());
       ld = document.createElement('script');
       ld.type = 'application/ld+json';
       ld.dataset.seo = 'page';

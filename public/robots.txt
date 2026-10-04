@@ -14,6 +14,11 @@ Disallow: /store/*/track
 
 Disallow: /dashboard
 Disallow: /admin
+# Google renders store pages by calling these public APIs — blocking them
+# leaves the rendered page empty. Longer (more specific) Allow rules win.
+Allow: /api/v1/store/
+Allow: /api/v1/marketplace
+Allow: /api/v1/seo/
 Disallow: /api
 Disallow: /settings
 Disallow: /portal
