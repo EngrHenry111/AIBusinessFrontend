@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { RiCalendarCheckLine, RiLoader4Line, RiCheckDoubleLine, RiSaveLine } from 'react-icons/ri';
 import { schoolService } from '../../services';
@@ -10,7 +10,8 @@ import './School.css';
 
 export default function Attendance() {
   const [classes] = useClasses();
-  const [classId, setClassId] = useState('');
+  const [params] = useSearchParams();
+  const [classId, setClassId] = useState(params.get('classId') || '');
   const [date, setDate] = useState(todayInput());
   const [view, setView] = useState('register');
 

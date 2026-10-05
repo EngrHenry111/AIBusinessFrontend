@@ -89,12 +89,15 @@ function ClassModal({ cls, team, nextLevel, onClose, onSaved }) {
     classTeacher: cls?.classTeacher?._id || '', capacity: cls?.capacity ?? '', active: cls?.active ?? true,
     subjects: (cls?.subjects || []).join('\n'),
   });
+  // subject -> teacher id
+  const [subjectTeachers, setSubjectTeachers] = useState(() => Object.fromEntries((cls?.subjectTeachers || []).map((st) => [st.subject, st.teacher?._id || st.teacher])));
+  const subjectList = [...new Set(form.subjects.split(/[\n,]/).map((x) => x.trim()).filter(Boolean))];
   const [busy, setBusy] = useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
-    const payload = { ...form, level: Number(form.level) || 0, capacity: form.capacity === '' ? undefined : Number(form.capacity), subjects: form.subjects.split(/[\n,]/) };
+    const payload = { ...form, level: Number(form.level) || 0, capacity: form.capacity === '' ? undefined : Number(form.capacity), subjects: form.subjects.split(/[\n,]/), subjectTeachers: subjectList.filter((sub) => subjectTeachers[sub]).map((sub) => ({ subject: sub, teacher: subjectTeachers[sub] })) };
     try {
       if (cls) await schoolService.updateClass(cls._id, payload); else await schoolService.createClass(payload);
       toast.success('Class saved'); onSaved();
@@ -117,6 +120,22 @@ function ClassModal({ cls, team, nextLevel, onClose, onSaved }) {
           </select>
         </Field>
         <Field label="Subjects" hint="(one per line)"><textarea className="form-input form-textarea" rows={6} value={form.subjects} onChange={(e) => set('subjects', e.target.value)} /></Field>
+        {subjectList.length > 0 && (
+          <div>
+            <label className="form-label">Subject teachers <span className="form-hint">(teachers can only enter scores for their subjects; the class teacher can enter all)</span></label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, alignItems: 'center' }}>
+              {subjectList.map((sub) => (
+                <div key={sub} style={{ display: 'contents' }}>
+                  <span className="truncate" style={{ fontSize: 14 }}>{sub}</span>
+                  <select className="form-input form-select" value={subjectTeachers[sub] || ''} onChange={(e) => setSubjectTeachers((m) => ({ ...m, [sub]: e.target.value }))} aria-label={`Teacher for ${sub}`}>
+                    <option value="">—</option>
+                    {team.map((u) => <option key={u._id || u.id} value={u._id || u.id}>{u.name}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <label className="sc-check"><input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} /> Active</label>
       </div>
     </Modal>

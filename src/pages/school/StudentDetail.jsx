@@ -8,6 +8,7 @@ import {
 import { schoolService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import useSchoolLive from './useSchoolLive';
+import useSchoolMe, { can } from './useSchoolMe';
 import { StudentFormModal, RecordPaymentModal, ReminderModal, Modal, Field, useClasses } from './SchoolForms';
 import {
   TERMS, STUDENT_STATUS, BILL_STATUS, PAYMENT_METHODS, money, fmtDate, fmtDateTime, fullName, errMsg,
@@ -20,9 +21,10 @@ export default function StudentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const me = useSchoolMe();
   const [classes] = useClasses();
   const [data, setData] = useState(null);
-  const [tab, setTab] = useState('fees');
+  const [tab, setTab] = useState(null);
   const [modal, setModal] = useState(null); // 'edit' | 'pay' | {pay: bill} | {discount: bill} | 'charge'
 
   const load = useCallback(() => schoolService.getStudent(id).then(({ data: res }) => setData(res.data))
@@ -36,7 +38,8 @@ export default function StudentDetail() {
   }, ['payment', 'fees', 'students', 'attendance']);
 
   if (!data) return <div className="sc-loading"><RiLoader4Line className="spin" /> Loading…</div>;
-  const { student, bills, payments, attendance, outstanding, settings, application } = data;
+  const { student, bills, payments, attendance, outstanding, settings, application, feesHidden } = data;
+  const activeTab = tab || (feesHidden ? 'profile' : 'fees');
   const attTotal = Object.values(attendance).reduce((s, n) => s + n, 0);
   const attended = (attendance.present || 0) + (attendance.late || 0);
   const paidTotal = payments.filter((p) => !p.voided).reduce((s, p) => s + p.amount, 0);
@@ -59,26 +62,28 @@ export default function StudentDetail() {
         </div>
         <div className="sc-actions">
           <Link to={`/school/report-card/${student._id}`} className="btn btn-secondary"><RiFileList3Line /> Report card</Link>
-          {outstanding > 0 && <button className="btn btn-secondary" onClick={() => setModal('remind')}><RiNotification3Line /> Remind parent</button>}
-          <button className="btn btn-secondary" onClick={() => setModal('edit')}><RiEditLine /> Edit</button>
-          <button className="btn btn-primary" onClick={() => setModal('pay')} disabled={outstanding <= 0}><RiMoneyDollarCircleLine /> Record payment</button>
+          {!feesHidden && outstanding > 0 && <button className="btn btn-secondary" onClick={() => setModal('remind')}><RiNotification3Line /> Remind parent</button>}
+          {can.finance(me) && <button className="btn btn-secondary" onClick={() => setModal('edit')}><RiEditLine /> Edit</button>}
+          {!feesHidden && <button className="btn btn-primary" onClick={() => setModal('pay')} disabled={outstanding <= 0}><RiMoneyDollarCircleLine /> Record payment</button>}
         </div>
       </div>
 
       <div className="sc-stats">
+        {!feesHidden && <>
         <div className="stat-card"><div className="stat-label">Fees owed</div><div className={`stat-value ${outstanding > 0 ? 'sc-owing' : ''}`}>{money(outstanding)}</div></div>
         <div className="stat-card"><div className="stat-label">Paid (all time)</div><div className="stat-value">{money(paidTotal)}</div><div className="cell-sub">{payments.filter((p) => !p.voided).length} payment(s)</div></div>
+        </>}
         <div className="stat-card"><div className="stat-label">Attendance this term</div><div className="stat-value">{attTotal ? `${Math.round((attended / attTotal) * 100)}%` : '—'}</div><div className="cell-sub">{attTotal ? `${attended} of ${attTotal} days · ${attendance.absent || 0} absent` : 'No registers yet'}</div></div>
         <div className="stat-card"><div className="stat-label">Parent / guardian</div><div className="stat-value" style={{ fontSize: 16 }}>{g.name || '—'}</div><div className="cell-sub">{g.phone}{g.phone && g.email && ' · '}{g.email}</div></div>
       </div>
 
       <div className="sc-tabs" role="tablist">
-        {[['fees', 'Fees & payments'], ['profile', 'Profile']].map(([k, l]) => (
-          <button key={k} role="tab" aria-selected={tab === k} className={`sc-tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>{l}</button>
+        {[...(feesHidden ? [] : [['fees', 'Fees & payments']]), ['profile', 'Profile']].map(([k, l]) => (
+          <button key={k} role="tab" aria-selected={activeTab === k} className={`sc-tab ${activeTab === k ? 'active' : ''}`} onClick={() => setTab(k)}>{l}</button>
         ))}
       </div>
 
-      {tab === 'fees' && (
+      {activeTab === 'fees' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="card">
             <div className="sc-filters" style={{ justifyContent: 'space-between' }}>
@@ -149,7 +154,7 @@ export default function StudentDetail() {
         </div>
       )}
 
-      {tab === 'profile' && (
+      {activeTab === 'profile' && (
         <div className="sc-grid-2">
           <div className="card card-pad">
             <div className="sc-card-title">Student</div>

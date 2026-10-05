@@ -130,7 +130,7 @@ function Portal({ slug, school, session, setSession, onSignOut, onError, notice 
             <h2 style={{ margin: 0 }}>{detail.student.name}</h2>
             <span className="cell-sub">{detail.student.admissionNumber}{detail.student.className && ` · ${detail.student.className}`}</span>
             <div className="sc-tabs" role="tablist" style={{ marginTop: 16, marginBottom: 0 }}>
-              {[['fees', `Fees${detail.outstanding > 0 ? ` (${money(detail.outstanding)})` : ''}`], ['results', 'Results'], ['attendance', 'Attendance']].map(([k, l]) => (
+              {[['fees', `Fees${detail.outstanding > 0 ? ` (${money(detail.outstanding)})` : ''}`], ['results', 'Results'], ['attendance', 'Attendance'], ['timetable', 'Timetable & exams']].map(([k, l]) => (
                 <button key={k} role="tab" aria-selected={tab === k} className={`sc-tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>{l}</button>
               ))}
             </div>
@@ -138,6 +138,7 @@ function Portal({ slug, school, session, setSession, onSignOut, onError, notice 
           {tab === 'fees' && <FeesTab slug={slug} school={school} session={session} detail={detail} onError={onError} />}
           {tab === 'results' && <ResultsTab slug={slug} session={session} detail={detail} onError={onError} />}
           {tab === 'attendance' && <AttendanceTab detail={detail} />}
+          {tab === 'timetable' && <ScheduleTab slug={slug} session={session} detail={detail} onError={onError} />}
         </>
       )}
     </>
@@ -259,6 +260,55 @@ function ResultsTab({ slug, session, detail, onError }) {
         </ul>
       )}
     </div>
+  );
+}
+
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+
+function ScheduleTab({ slug, session, detail, onError }) {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    schoolService.portalSchedule(slug, session.token, detail.student._id).then(({ data: r }) => setData(r.data)).catch((e) => { onError(e); setData({ periods: [], slots: [], exams: [] }); });
+  }, [detail.student._id]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!data) return <div className="card"><div className="sc-loading"><RiLoader4Line className="spin" /></div></div>;
+  const at = Object.fromEntries(data.slots.map((x) => [`${x.day}:${x.period}`, x]));
+  return (
+    <>
+      <div className="card card-pad" style={{ marginBottom: 16 }}>
+        <div className="sc-card-title">Upcoming exams</div>
+        {data.exams.length === 0 ? <p className="cell-sub" style={{ margin: 0 }}>No exams scheduled yet.</p> : (
+          <ul className="sc-list">
+            {data.exams.map((x) => (
+              <li key={x._id}>
+                <span><span className="sc-strong">{x.subject}</span><span className="cell-sub">{x.venue || ''}</span></span>
+                <span style={{ textAlign: 'right' }}>{fmtDate(`${x.date}T12:00:00`)}<span className="cell-sub">{x.start}–{x.end}</span></span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="card card-pad">
+        <div className="sc-card-title">Class timetable</div>
+        {data.slots.length === 0 ? <p className="cell-sub" style={{ margin: 0 }}>The timetable hasn't been published yet.</p> : (
+          <div className="table-wrapper" style={{ border: 0 }}>
+            <table className="sc-tt">
+              <thead><tr><th>Time</th>{WEEKDAYS.map((d) => <th key={d}>{d}</th>)}</tr></thead>
+              <tbody>
+                {data.periods.map((p, i) => (
+                  <tr key={i} className={p.isBreak ? 'brk' : ''}>
+                    <th>{p.start}<span className="cell-sub" style={{ marginTop: 0 }}>{p.end}</span></th>
+                    {p.isBreak ? <td colSpan={5} className="brk-cell">{p.label}</td> : WEEKDAYS.map((_, d) => {
+                      const x = at[`${d + 1}:${i}`];
+                      return <td key={d}>{x && <><div className="sc-strong">{x.subject}</div>{x.teacherName && <span className="cell-sub">{x.teacherName}</span>}</>}</td>;
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 

@@ -92,6 +92,9 @@ const SchoolResults = lazy(() => import('./pages/school/Results'));
 const SchoolReceipt = lazy(() => import('./pages/school/Receipt'));
 const SchoolReportCard = lazy(() => import('./pages/school/ReportCard'));
 const SchoolSettingsPage = lazy(() => import('./pages/school/SchoolSettings'));
+const SchoolTimetable = lazy(() => import('./pages/school/Timetable'));
+const SchoolStaffPage = lazy(() => import('./pages/school/SchoolStaff'));
+const SchoolTermReport = lazy(() => import('./pages/school/TermReport'));
 const SchoolPublicApply = lazy(() => import('./pages/school/PublicApply'));
 const SchoolPublicPay = lazy(() => import('./pages/school/PublicPay'));
 const Procurement = lazy(() => import('./pages/procurement/Procurement'));
@@ -245,6 +248,9 @@ function AppRoutes() {
                 <Route path="school/receipts/:id" element={<SchoolReceipt />} />
                 <Route path="school/report-card/:studentId" element={<SchoolReportCard />} />
                 <Route path="school/settings" element={<SchoolSettingsPage />} />
+                <Route path="school/timetable" element={<SchoolTimetable />} />
+                <Route path="school/staff" element={<SchoolStaffPage />} />
+                <Route path="school/report" element={<SchoolTermReport />} />
                 <Route path="matters/:id" element={<MatterDetail />} />
                 <Route path="procurement" element={<Procurement />} />
                 <Route path="procurement/new" element={<RequisitionForm />} />

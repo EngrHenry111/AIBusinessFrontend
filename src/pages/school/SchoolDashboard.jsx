@@ -8,12 +8,21 @@ import {
 } from 'react-icons/ri';
 import { schoolService } from '../../services';
 import useSchoolLive from './useSchoolLive';
+import useSchoolMe from './useSchoolMe';
+import TeacherHome from './TeacherHome';
 import { TERMS, APPLICATION_STATUS, money, fmtDateTime, fullName, errMsg } from './schoolConstants';
 import './School.css';
 
 const shortMoney = (n) => (n >= 1e6 ? `₦${(n / 1e6).toFixed(1)}m` : n >= 1e3 ? `₦${Math.round(n / 1e3)}k` : `₦${n}`);
 
-export default function SchoolDashboard() {
+// Teachers get their own home; everyone else the school dashboard.
+export default function SchoolHome() {
+  const me = useSchoolMe();
+  if (!me) return <div className="sc-loading"><RiLoader4Line className="spin" /> Loading…</div>;
+  return me.role === 'teacher' ? <TeacherHome me={me} /> : <SchoolDashboard />;
+}
+
+function SchoolDashboard() {
   const [data, setData] = useState(null);
   const [flashId, setFlashId] = useState(null);
 

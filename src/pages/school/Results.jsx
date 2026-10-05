@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import useSchoolMe from './useSchoolMe';
 import toast from 'react-hot-toast';
 import { RiFileList3Line, RiLoader4Line, RiSaveLine, RiDownload2Line, RiEyeLine, RiEyeOffLine } from 'react-icons/ri';
 import Papa from 'papaparse';
@@ -13,7 +14,8 @@ import './School.css';
 export default function Results() {
   const [classes] = useClasses();
   const [settings, setSettings] = useState(null);
-  const [classId, setClassId] = useState('');
+  const [params] = useSearchParams();
+  const [classId, setClassId] = useState(params.get('classId') || '');
   const [period, setPeriod] = useState(null);
   const [view, setView] = useState('entry');
 
@@ -52,13 +54,18 @@ export default function Results() {
 }
 
 function ScoreEntry({ cls, period, settings }) {
-  const [subject, setSubject] = useState(cls.subjects?.[0] || '');
+  const me = useSchoolMe();
+  const [params] = useSearchParams();
+  // A subject teacher sees only their subjects; the class teacher all of them.
+  const mine = me?.role === 'teacher' ? me.teaching.find((t) => t._id === cls._id) : null;
+  const subjects = mine && !mine.classTeacher ? (cls.subjects || []).filter((s) => mine.subjects.includes(s)) : (cls.subjects || []);
+  const [subject, setSubject] = useState(params.get('subject') && subjects.includes(params.get('subject')) ? params.get('subject') : subjects[0] || '');
   const [sheet, setSheet] = useState(null);
   const [rows, setRows] = useState({});
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { setSubject(cls.subjects?.[0] || ''); }, [cls._id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!subjects.includes(subject)) setSubject(subjects[0] || ''); }, [cls._id, subjects.join('|')]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = useCallback(() => {
     if (!subject) { setSheet(null); return; }
@@ -92,7 +99,7 @@ function ScoreEntry({ cls, period, settings }) {
     <div className="card">
       <div className="sc-filters" style={{ justifyContent: 'space-between' }}>
         <select className="form-input form-select" value={subject} onChange={(e) => { if (!dirty || window.confirm('Discard unsaved scores?')) setSubject(e.target.value); }} aria-label="Subject">
-          {cls.subjects.map((s) => <option key={s} value={s}>{s}</option>)}
+          {subjects.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
         <span className="cell-sub" style={{ margin: 0 }}>CA out of {caMax} · Exam out of {examMax}. Clear both boxes to remove a score.</span>
         <button className="btn btn-primary btn-sm" disabled={!dirty || saving || anyBad} onClick={save}><RiSaveLine /> {saving ? 'Saving…' : 'Save scores'}</button>

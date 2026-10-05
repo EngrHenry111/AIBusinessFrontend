@@ -8,6 +8,7 @@ import {
 } from 'react-icons/ri';
 import { schoolService } from '../../services';
 import useSchoolLive from './useSchoolLive';
+import useSchoolMe, { can } from './useSchoolMe';
 import { StudentFormModal, Modal, Field, useClasses } from './SchoolForms';
 import { STUDENT_STATUS, money, errMsg } from './schoolConstants';
 import './School.css';
@@ -15,6 +16,8 @@ import './School.css';
 export default function Students() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
+  const me = useSchoolMe();
+  const showFees = can.finance(me);
   const [classes, reloadClasses] = useClasses();
   const [students, setStudents] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
@@ -63,10 +66,10 @@ export default function Students() {
           <p>{pagination.total.toLocaleString()} {STUDENT_STATUS[status]?.label.toLowerCase() || ''} student{pagination.total === 1 ? '' : 's'}{classId && classes.length ? ` in ${classes.find((c) => c._id === classId)?.name || 'this class'}` : ''}.</p>
         </div>
         <div className="sc-actions">
-          <button className="btn btn-secondary" onClick={() => setModal('promote')}><RiArrowUpLine /> Promote</button>
-          <button className="btn btn-secondary" onClick={exportCsv}><RiDownload2Line /> Export</button>
-          <button className="btn btn-secondary" onClick={() => setModal('import')}><RiUpload2Line /> Import</button>
-          <button className="btn btn-primary" onClick={() => setModal('new')}><RiAddLine /> Add student</button>
+          {me?.manager && <button className="btn btn-secondary" onClick={() => setModal('promote')}><RiArrowUpLine /> Promote</button>}
+          {showFees && <button className="btn btn-secondary" onClick={exportCsv}><RiDownload2Line /> Export</button>}
+          {can.admin(me) && <button className="btn btn-secondary" onClick={() => setModal('import')}><RiUpload2Line /> Import</button>}
+          {can.admin(me) && <button className="btn btn-primary" onClick={() => setModal('new')}><RiAddLine /> Add student</button>}
         </div>
       </div>
 
@@ -93,14 +96,14 @@ export default function Students() {
           <>
             <div className="table-wrapper">
               <table className="table">
-                <thead><tr><th>Student</th><th>Class</th><th>Parent / guardian</th><th className="num">Fees owed</th><th>Status</th></tr></thead>
+                <thead><tr><th>Student</th><th>Class</th><th>Parent / guardian</th>{showFees && <th className="num">Fees owed</th>}<th>Status</th></tr></thead>
                 <tbody>
                   {students.map((s) => (
                     <tr key={s._id} className="sc-row" onClick={() => navigate(`/school/students/${s._id}`)}>
                       <td><div className="sc-strong">{s.fullName}</div><span className="cell-sub">{s.admissionNumber}{s.gender && ` · ${s.gender === 'male' ? 'M' : 'F'}`}</span></td>
                       <td>{s.classId?.name || <span className="cell-sub">—</span>}</td>
                       <td>{s.guardian?.name || '—'}<span className="cell-sub">{s.guardian?.phone}</span></td>
-                      <td className="num">{s.balance > 0 ? <span className="sc-owing">{money(s.balance)}</span> : <span className="cell-sub">—</span>}</td>
+                      {showFees && <td className="num">{s.balance > 0 ? <span className="sc-owing">{money(s.balance)}</span> : <span className="cell-sub">—</span>}</td>}
                       <td><span className={`badge badge-${STUDENT_STATUS[s.status]?.badge}`}>{STUDENT_STATUS[s.status]?.label}</span></td>
                     </tr>
                   ))}

@@ -11,8 +11,9 @@ import {
   RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine, RiStoreLine,
   RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine, RiGovernmentLine, RiBankCardLine,
   RiGroupLine, RiScales3Line, RiCalendarEventLine, RiGraduationCapLine, RiUserAddLine,
-  RiCalendarCheckLine, RiFileList3Line, RiBook2Line,
+  RiCalendarCheckLine, RiFileList3Line, RiBook2Line, RiTimeLine, RiUserSettingsLine, RiPieChartLine,
 } from 'react-icons/ri';
+import useSchoolMe from '../../pages/school/useSchoolMe';
 import './Sidebar.css';
 
 const NAV_ITEMS = [
@@ -26,13 +27,17 @@ const NAV_ITEMS = [
   { label: 'Court Calendar', icon: RiCalendarEventLine, path: '/matters/calendar', legalOnly: true },
   // School management — shown to companies whose industry is "education".
   { type: 'divider', label: 'School', schoolOnly: true },
+  // schoolRoles: which school roles see the item (admin/bursar/teacher).
   { label: 'School Overview', icon: RiGraduationCapLine, path: '/school', schoolOnly: true },
-  { label: 'Admissions', icon: RiUserAddLine, path: '/school/admissions', schoolOnly: true },
+  { label: 'Admissions', icon: RiUserAddLine, path: '/school/admissions', schoolOnly: true, schoolRoles: ['admin'] },
   { label: 'Students', icon: RiTeamLine, path: '/school/students', schoolOnly: true },
-  { label: 'Classes', icon: RiBook2Line, path: '/school/classes', schoolOnly: true },
-  { label: 'School Fees', icon: RiMoneyDollarCircleLine, path: '/school/fees', schoolOnly: true },
-  { label: 'Attendance', icon: RiCalendarCheckLine, path: '/school/attendance', schoolOnly: true },
-  { label: 'Results', icon: RiFileList3Line, path: '/school/results', schoolOnly: true },
+  { label: 'Classes', icon: RiBook2Line, path: '/school/classes', schoolOnly: true, schoolRoles: ['admin'] },
+  { label: 'School Fees', icon: RiMoneyDollarCircleLine, path: '/school/fees', schoolOnly: true, schoolRoles: ['admin', 'bursar'] },
+  { label: 'Attendance', icon: RiCalendarCheckLine, path: '/school/attendance', schoolOnly: true, schoolRoles: ['admin', 'teacher'] },
+  { label: 'Results', icon: RiFileList3Line, path: '/school/results', schoolOnly: true, schoolRoles: ['admin', 'teacher'] },
+  { label: 'Timetable', icon: RiTimeLine, path: '/school/timetable', schoolOnly: true },
+  { label: 'School Staff', icon: RiUserSettingsLine, path: '/school/staff', schoolOnly: true, schoolRoles: ['admin'] },
+  { label: 'Term Report', icon: RiPieChartLine, path: '/school/report', schoolOnly: true, schoolManagerOnly: true },
   { type: 'divider', label: 'Business' },
   { label: 'Leads', icon: RiUserLine, path: '/leads' },
   { label: 'Customers', icon: RiUserStarLine, path: '/customers' },
@@ -66,6 +71,7 @@ const NAV_ITEMS = [
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const { user, company, logout } = useAuth();
+  const schoolMe = useSchoolMe(company?.industry === 'education');
   const location = useLocation();
   const [waNeedsHuman, setWaNeedsHuman] = useState(0);
   const [widgetNeedsHuman, setWidgetNeedsHuman] = useState(0);
@@ -209,6 +215,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
           if (item.businessPlanOnly && !isBusinessPlan && user?.role !== 'super_admin') return null;
           if (item.legalOnly && company?.industry !== 'legal') return null;
           if (item.schoolOnly && company?.industry !== 'education') return null;
+          if (item.schoolRoles && schoolMe && !item.schoolRoles.includes(schoolMe.role)) return null;
+          if (item.schoolManagerOnly && schoolMe && !schoolMe.manager) return null;
           if (item.type === 'divider') {
             return (
               <div key={idx} className="nav-divider">
