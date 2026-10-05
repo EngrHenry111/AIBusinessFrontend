@@ -10,6 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import useSchoolLive from './useSchoolLive';
 import useSchoolMe, { can } from './useSchoolMe';
 import { StudentFormModal, RecordPaymentModal, ReminderModal, Modal, Field, useClasses } from './SchoolForms';
+import { RiBankLine } from 'react-icons/ri';
 import {
   TERMS, STUDENT_STATUS, BILL_STATUS, PAYMENT_METHODS, money, fmtDate, fmtDateTime, fullName, errMsg,
 } from './schoolConstants';
@@ -85,6 +86,30 @@ export default function StudentDetail() {
 
       {activeTab === 'fees' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {data.bankAccountsEnabled && (
+            <div className="card card-pad" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <RiBankLine style={{ fontSize: 26, color: 'var(--color-brand)' }} aria-hidden="true" />
+              {data.bankAccount ? (
+                <div style={{ flex: 1 }}>
+                  <div className="cell-sub" style={{ marginTop: 0 }}>Own bank account — transfers are matched automatically</div>
+                  <div className="sc-strong" style={{ fontSize: 18, letterSpacing: '0.04em' }}>{data.bankAccount.accountNumber}</div>
+                  <span className="cell-sub">{data.bankAccount.bankName} · {data.bankAccount.accountName}</span>
+                </div>
+              ) : (
+                <>
+                  <div style={{ flex: 1 }}><b>No bank account yet</b><span className="cell-sub">Give {student.firstName} an account number the parent can transfer to — payments are credited automatically.</span></div>
+                  <button className="btn btn-primary btn-sm" onClick={async () => {
+                    try { await schoolService.createBankAccount(student._id); toast.success('Account created'); load(); } catch (e) { toast.error(errMsg(e)); }
+                  }}>Create account</button>
+                </>
+              )}
+              {data.transferCredit?.length > 0 && (
+                <div style={{ flexBasis: '100%' }} className="sc-note">
+                  <b>{money(data.transferCredit.reduce((s, t) => s + t.creditRemaining, 0))}</b> received by transfer is held as credit — it's applied automatically when a new bill is created, or from Fees → Bank transfers.
+                </div>
+              )}
+            </div>
+          )}
           <div className="card">
             <div className="sc-filters" style={{ justifyContent: 'space-between' }}>
               <span className="sc-card-title" style={{ margin: 0 }}>Bills</span>

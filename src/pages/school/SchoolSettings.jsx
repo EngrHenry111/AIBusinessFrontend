@@ -5,6 +5,7 @@ import { RiSettings3Line, RiLoader4Line, RiFileCopyLine, RiExternalLinkLine, RiA
 import { schoolService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import { Field } from './SchoolForms';
+import useSchoolLive from './useSchoolLive';
 import { TERMS, toInputDate, errMsg, publicLink } from './schoolConstants';
 import './School.css';
 
@@ -102,6 +103,8 @@ export default function SchoolSettings() {
           </div>
         </div>
 
+        <BankAccountsCard form={form} set={set} paymentsReady={paymentsReady} />
+
         <div className="card card-pad">
           <div className="sc-card-title">Fee reminders</div>
           <label className="sc-check"><input type="checkbox" checked={Boolean(rem.autoEnabled)} onChange={(e) => setRem('autoEnabled', e.target.checked)} /> Remind parents automatically (every morning at 9am)</label>
@@ -137,5 +140,49 @@ export default function SchoolSettings() {
         </div>
       </div>
     </form>
+  );
+}
+
+// Every student their own account number; transfers matched automatically.
+function BankAccountsCard({ form, set, paymentsReady }) {
+  const ba = form.bankAccounts || {};
+  const setBa = (k, v) => set('bankAccounts', { ...ba, [k]: v });
+  const [summary, setSummary] = useState(null);
+  const [progress, setProgress] = useState(null);
+  const loadSummary = () => schoolService.bankSummary().then(({ data }) => setSummary(data.data)).catch(() => {});
+  useEffect(() => { loadSummary(); }, []);
+  useSchoolLive((evt) => { setProgress(evt); if (evt.finished) { loadSummary(); if (evt.failed) toast.error(`${evt.failed} account(s) could not be created: ${evt.lastError || ''}`, { duration: 9000 }); else toast.success(`${evt.done} account(s) created`); } }, ['bank-accounts']);
+
+  async function createAll() {
+    try {
+      const { data } = await schoolService.bulkBankAccounts();
+      if (!data.data.queued) toast.success('Every active student already has an account');
+      else { setProgress({ done: 0, failed: 0, total: data.data.queued }); toast(`Creating ${data.data.queued} account(s)…`); }
+    } catch (e) { toast.error(errMsg(e)); }
+  }
+  const saved = summary?.enabled;
+  return (
+    <div className="card card-pad">
+      <div className="sc-card-title">Bank transfer accounts</div>
+      <p className="cell-sub" style={{ marginTop: 0 }}>Each student gets their own account number. When a parent transfers to it, the money is applied to that child's bills automatically, with a receipt — nobody has to check bank statements.</p>
+      {!paymentsReady && <div className="sc-note warn" style={{ marginBottom: 10 }}>First connect the school's bank account under <Link to="/settings/store">Store settings → Payments</Link> — transfers settle there.</div>}
+      <label className="sc-check"><input type="checkbox" checked={Boolean(ba.enabled)} onChange={(e) => setBa('enabled', e.target.checked)} /> Give students their own bank account numbers</label>
+      <label className="sc-check"><input type="checkbox" disabled={!ba.enabled} checked={ba.autoCreate !== false} onChange={(e) => setBa('autoCreate', e.target.checked)} /> Create one automatically for every new student</label>
+      <Field label="Bank">
+        <select className="form-input form-select" disabled={!ba.enabled} value={ba.preferredBank || 'wema-bank'} onChange={(e) => setBa('preferredBank', e.target.value)}>
+          <option value="wema-bank">Wema Bank</option>
+          <option value="titan-paystack">Titan Trust Bank</option>
+          <option value="test-bank">Test bank (Paystack test mode only)</option>
+        </select>
+      </Field>
+      {saved && summary && (
+        <div style={{ marginTop: 12 }}>
+          <div className="cell-sub" style={{ marginTop: 0 }}>{summary.withAccount} of {summary.activeStudents} active students have an account.</div>
+          {progress && !progress.finished && <div className="sc-progress"><div style={{ width: `${progress.total ? ((progress.done + progress.failed) / progress.total) * 100 : 0}%` }} /></div>}
+          {summary.withAccount < summary.activeStudents && <button type="button" className="btn btn-secondary btn-sm" style={{ marginTop: 8 }} disabled={progress && !progress.finished} onClick={createAll}>{progress && !progress.finished ? `Creating… ${progress.done + progress.failed}/${progress.total}` : 'Create accounts for all students'}</button>}
+        </div>
+      )}
+      {ba.enabled && !saved && <p className="cell-sub">Save settings, then create accounts for your current students.</p>}
+    </div>
   );
 }

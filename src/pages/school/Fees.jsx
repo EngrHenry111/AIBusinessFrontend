@@ -14,7 +14,7 @@ import {
 } from './schoolConstants';
 import './School.css';
 
-const TABS = [['overview', 'Overview'], ['structures', 'Fee structures'], ['bills', 'Bills'], ['payments', 'Payments'], ['debtors', 'Debtors']];
+const TABS = [['overview', 'Overview'], ['structures', 'Fee structures'], ['bills', 'Bills'], ['payments', 'Payments'], ['transfers', 'Bank transfers'], ['debtors', 'Debtors']];
 
 function downloadCsv(rows, name) {
   const a = document.createElement('a');
@@ -42,7 +42,7 @@ export default function Fees() {
     // Online payments are announced app-wide by the top bar.
     if (evt.kind === 'payment' && evt.message && !evt.voided && !/online/.test(evt.message)) toast.success(evt.message, { icon: '💰' });
     setTick((t) => t + 1);
-  }, ['payment', 'fees', 'students']);
+  }, ['payment', 'fees', 'students', 'transfers']);
 
   const setTab = (t) => { const p = new URLSearchParams(params); p.set('tab', t); p.delete('record'); setParams(p); };
 
@@ -76,6 +76,7 @@ export default function Fees() {
       {tab === 'structures' && <Structures period={period} classes={classes} tick={tick} />}
       {tab === 'bills' && <Bills period={period} classes={classes} tick={tick} />}
       {tab === 'payments' && <Payments tick={tick} />}
+      {tab === 'transfers' && <Transfers tick={tick} />}
       {tab === 'debtors' && <Debtors period={period} classes={classes} tick={tick} />}
 
       {recording && <RecordPaymentModal onClose={() => setRecording(false)} onSaved={() => setRecording(false)} />}
@@ -441,6 +442,83 @@ function Debtors({ period, classes, tick }) {
           onClose={() => setRemind(null)}
         />
       )}
+    </div>
+  );
+}
+
+const TRANSFER_STATUS = {
+  applied: { label: 'Applied', badge: 'success' },
+  partially_applied: { label: 'Part held as credit', badge: 'warning' },
+  credit: { label: 'Held as credit', badge: 'warning' },
+  processing: { label: 'Processing', badge: 'neutral' },
+};
+
+// Every transfer received into students' own accounts and where it went.
+function Transfers({ tick }) {
+  const [rows, setRows] = useState(null);
+  const [totals, setTotals] = useState({ amount: 0, credit: 0 });
+  const [summary, setSummary] = useState(null);
+  const [filter, setFilter] = useState('');
+  const [search, setSearch] = useState('');
+  const [busy, setBusy] = useState(null);
+  const load = useCallback(() => {
+    schoolService.getTransfers({ status: filter || undefined, search: search || undefined })
+      .then(({ data }) => { setRows(data.data); setTotals(data.totals); }).catch((e) => toast.error(errMsg(e)));
+    schoolService.bankSummary().then(({ data }) => setSummary(data.data)).catch(() => {});
+  }, [filter, search]);
+  useEffect(() => { const t = setTimeout(load, search ? 300 : 0); return () => clearTimeout(t); }, [load, tick, search]);
+
+  async function apply(t) {
+    setBusy(t._id);
+    try { const { data } = await schoolService.applyTransferCredit(t._id); toast.success(`Applied to ${data.data.applied} bill(s)`); load(); }
+    catch (e) { toast.error(errMsg(e)); } finally { setBusy(null); }
+  }
+
+  if (summary && !summary.enabled) {
+    return (
+      <div className="card card-pad">
+        <div className="sc-card-title">Automatic bank transfers</div>
+        <p style={{ marginTop: 0 }}>Give every student their own bank account number. When a parent transfers to it, the money is matched to that child's bills automatically — no more checking bank statements and recording transfers by hand.</p>
+        <Link to="/school/settings" className="btn btn-primary">Turn it on in School settings</Link>
+      </div>
+    );
+  }
+  return (
+    <div className="card">
+      <div className="sc-filters">
+        <div className="sc-search"><RiSearchLine /><input placeholder="Student, sender or reference…" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+        <select className="form-input form-select" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Status">
+          <option value="">All transfers</option>
+          <option value="credit">With unapplied credit</option>
+          <option value="applied">Fully applied</option>
+        </select>
+        {summary && <span className="cell-sub" style={{ margin: 0 }}>{summary.withAccount} of {summary.activeStudents} students have an account</span>}
+      </div>
+      {!rows ? <div className="sc-loading"><RiLoader4Line className="spin" /></div> : rows.length === 0 ? (
+        <p className="cell-sub" style={{ padding: 16 }}>No transfers yet. They appear here the moment a parent pays into a student's account.</p>
+      ) : (
+        <div className="table-wrapper">
+          <table className="table">
+            <thead><tr><th>Received</th><th>Student</th><th>From</th><th className="num">Amount</th><th className="num">Credit left</th><th>Status</th><th /></tr></thead>
+            <tbody>
+              {rows.map((t) => (
+                <tr key={t._id}>
+                  <td>{fmtDateTime(t.paidAt)}<span className="cell-sub">{t.reference}</span></td>
+                  <td>{t.student ? <Link to={`/school/students/${t.ownerId}`}>{fullName(t.student)}</Link> : '—'}<span className="cell-sub">{t.student?.admissionNumber} · {t.accountNumber}</span></td>
+                  <td>{t.senderName || '—'}<span className="cell-sub">{[t.senderBank, t.senderAccount].filter(Boolean).join(' ')}</span></td>
+                  <td className="num sc-strong">{money(t.amount)}</td>
+                  <td className="num">{t.creditRemaining > 0.001 ? <span className="sc-credit">{money(t.creditRemaining)}</span> : '—'}</td>
+                  <td><span className={`badge badge-${TRANSFER_STATUS[t.status]?.badge || 'neutral'}`}>{TRANSFER_STATUS[t.status]?.label || t.status}</span>
+                    {t.allocations?.length > 0 && <span className="cell-sub">{t.allocations.map((a) => `${a.billNumber} ${money(a.amount)}`).join(', ')}</span>}
+                  </td>
+                  <td className="num">{t.creditRemaining > 0.001 && <button className="btn btn-secondary btn-sm" disabled={busy === t._id} onClick={() => apply(t)}>Apply credit</button>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <div className="sc-table-foot"><span>{money(totals.amount)} received{totals.credit > 0.001 ? ` · ${money(totals.credit)} held as credit (applied automatically to the student's next bill)` : ''}</span></div>
     </div>
   );
 }

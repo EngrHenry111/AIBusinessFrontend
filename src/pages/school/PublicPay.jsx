@@ -7,6 +7,7 @@ import { schoolService } from '../../services';
 import { TERMS, PAYMENT_METHODS, BILL_STATUS, money, fmtDate, fmtDateTime, errMsg } from './schoolConstants';
 import { PublicHeader } from './PublicApply';
 import ReportCardDoc from './ReportCardDoc';
+import BankAccountBox from './BankAccountBox';
 import './School.css';
 
 // Bank transfers / USSD can sit in "pending" for a while — keep checking.
@@ -166,6 +167,7 @@ function FeesTab({ slug, school, session, detail, onError }) {
 
   return (
     <div className="card card-pad">
+      {open.length > 0 && <BankAccountBox account={detail.bankAccount} studentName={detail.student.name} />}
       {open.length === 0 ? <div className="sc-note ok">No outstanding fees for {detail.student.name.split(' ')[1] || 'this child'}. Thank you!</div> : (
         <form onSubmit={pay}>
           <div className="sc-section" style={{ marginTop: 0 }}>Outstanding — {money(detail.outstanding)}</div>

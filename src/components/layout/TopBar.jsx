@@ -72,6 +72,10 @@ export default function TopBar({ onMenuToggle, mobileOpen = false }) {
     socket.on('school:update', (evt) => {
       if (evt?.kind === 'payment' && evt.message && !evt.voided && /online/.test(evt.message)) toast.success(evt.message, { icon: '💰' });
       else if (evt?.kind === 'admissions' && evt.message) toast(evt.message, { icon: '📝' });
+      else if (evt?.kind === 'bank-accounts' && evt.finished && !window.location.pathname.startsWith('/school/settings')) {
+        if (evt.failed) toast.error(`${evt.failed} student bank account(s) could not be created${evt.lastError ? `: ${evt.lastError}` : ''}`, { duration: 9000 });
+        else toast.success(`${evt.done} student bank account(s) created`);
+      }
       else if (evt?.kind === 'reminders' && evt.result) {
         const r = evt.result;
         const parts = [r.email && `${r.email} email`, r.sms && `${r.sms} SMS`, r.whatsapp && `${r.whatsapp} WhatsApp`].filter(Boolean);

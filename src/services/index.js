@@ -215,6 +215,11 @@ export const schoolService = {
   broadsheet: (params) => api.get('/school/results/broadsheet', { params }),
   reportCard: (studentId, params) => api.get(`/school/results/report-card/${studentId}`, { params }),
 
+  createBankAccount: (studentId) => api.post(`/school/students/${studentId}/bank-account`),
+  bulkBankAccounts: (data) => api.post('/school/bank-accounts/bulk', data || {}),
+  bankSummary: () => api.get('/school/bank-accounts/summary'),
+  getTransfers: (params) => api.get('/school/transfers', { params }),
+  applyTransferCredit: (id) => api.post(`/school/transfers/${id}/apply`),
   me: () => api.get('/school/me'),
   getStaff: () => api.get('/school/staff'),
   setStaffRole: (userId, role) => api.put(`/school/staff/${userId}`, { role }),
