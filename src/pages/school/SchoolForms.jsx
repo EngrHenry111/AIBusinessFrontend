@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { RiCloseLine, RiSearchLine, RiLoader4Line } from 'react-icons/ri';
@@ -15,10 +16,13 @@ export function useClasses() {
   return [classes, load];
 }
 
+// Rendered into <body>: the school pages fade in with a CSS transform, which
+// would otherwise make the fixed overlay position itself relative to the page
+// content (shifted, or off-screen on a scrolled page) instead of the screen.
 export function Modal({ title, onClose, children, footer, size = '', onSubmit }) {
   const Tag = onSubmit ? 'form' : 'div';
-  return (
-    <div className="modal-overlay" onClick={onClose}>
+  return createPortal(
+    <div className="school-page modal-overlay" onClick={onClose}>
       <Tag className={`modal ${size || 'sc-modal'}`} onClick={(e) => e.stopPropagation()} onSubmit={onSubmit}>
         <div className="modal-header">
           <h3>{title}</h3>
@@ -27,7 +31,8 @@ export function Modal({ title, onClose, children, footer, size = '', onSubmit })
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-footer">{footer}</div>}
       </Tag>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

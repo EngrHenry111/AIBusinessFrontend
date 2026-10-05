@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import {
   RiGraduationCapLine, RiMoneyDollarCircleLine, RiUserAddLine, RiCalendarCheckLine,
-  RiLoader4Line, RiSettings3Line, RiAddLine,
+  RiLoader4Line, RiSettings3Line, RiAddLine, RiCheckboxCircleFill, RiCheckboxBlankCircleLine, RiArrowRightSLine,
 } from 'react-icons/ri';
 import { schoolService } from '../../services';
 import useSchoolLive from './useSchoolLive';
@@ -41,7 +41,7 @@ function SchoolDashboard() {
 
   if (!data) return <div className="sc-loading"><RiLoader4Line className="spin" /> Loading…</div>;
 
-  const { students, admissions, fees, attendance, settings } = data;
+  const { students, admissions, fees, attendance, settings, setup } = data;
   const pct = fees.expected ? Math.round((fees.collected / fees.expected) * 100) : 0;
   const pending = (admissions.byStatus.submitted || 0) + (admissions.byStatus.under_review || 0) + (admissions.byStatus.interview || 0);
   const attRate = attendance.total ? Math.round((attendance.present / attendance.total) * 100) : null;
@@ -60,11 +60,7 @@ function SchoolDashboard() {
         </div>
       </div>
 
-      {students.byClass.length === 0 && (
-        <div className="sc-note warn" style={{ marginBottom: 16 }}>
-          Start by <Link to="/school/classes">creating your classes</Link>, then add students or <Link to="/school/students?import=1">import them from a spreadsheet</Link>, and set up <Link to="/school/fees">this term's fees</Link>.
-        </div>
-      )}
+      {setup && setup.done < setup.total && <SetupChecklist setup={setup} />}
 
       <div className="sc-stats">
         <div className="stat-card">
@@ -165,6 +161,33 @@ function SchoolDashboard() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// Getting started — every step links to the page where it's done, and ticks
+// itself off as the school completes it. Hidden once everything is done.
+function SetupChecklist({ setup }) {
+  const next = setup.steps.find((st) => !st.done);
+  return (
+    <div className="card card-pad" style={{ marginBottom: 16 }}>
+      <div className="sc-card-title">
+        <span>Set up your school — {setup.done} of {setup.total} done</span>
+        {next && <Link to={next.to} className="btn btn-primary btn-sm" style={{ textTransform: 'none', letterSpacing: 0 }}>Next: {next.label} <RiArrowRightSLine /></Link>}
+      </div>
+      <div className="sc-progress" style={{ marginTop: 0, marginBottom: 12 }}><div style={{ width: `${(setup.done / setup.total) * 100}%` }} /></div>
+      <ol className="sc-setup">
+        {setup.steps.map((st, i) => (
+          <li key={st.key} className={st.done ? 'done' : ''}>
+            {st.done ? <RiCheckboxCircleFill className="ok" aria-label="Done" /> : <RiCheckboxBlankCircleLine aria-label="To do" />}
+            <div>
+              <Link to={st.to} className="sc-strong">{i + 1}. {st.label}</Link>
+              <span className="cell-sub">{st.detail}</span>
+            </div>
+            <Link to={st.to} className="btn btn-ghost btn-sm">{st.done ? 'Review' : 'Go'} <RiArrowRightSLine /></Link>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

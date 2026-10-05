@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { RiTimeLine, RiLoader4Line, RiSaveLine, RiPrinterLine, RiAddLine, RiDeleteBinLine, RiCloseLine } from 'react-icons/ri';
 import { schoolService } from '../../services';
@@ -14,7 +14,8 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 export default function Timetable() {
   const me = useSchoolMe();
   const isAdmin = can.admin(me);
-  const [tab, setTab] = useState('class');
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState(['class', 'teacher', 'exams', 'bells'].includes(params.get('tab')) ? params.get('tab') : 'class');
   const tabs = [['class', 'Class timetable'], ['teacher', isAdmin ? 'Teacher timetables' : 'My timetable'], ['exams', 'Exam timetable'], ...(isAdmin ? [['bells', 'Bell times']] : [])];
   return (
     <div className="school-page fade-in">
@@ -284,7 +285,7 @@ function BellTimes() {
     <div className="card card-pad" style={{ maxWidth: 640 }}>
       <div className="sc-card-title"><span>School day</span><button className="btn btn-primary btn-sm" disabled={saving} onClick={save}><RiSaveLine /> Save</button></div>
       {periods.map((p, i) => (
-        <div key={i} className="sc-item-row" style={{ gridTemplateColumns: '1fr 110px 110px auto auto', alignItems: 'center' }}>
+        <div key={i} className="sc-item-row" style={{ gridTemplateColumns: 'minmax(80px, 1fr) 140px 140px auto auto', alignItems: 'center' }}>
           <input className="form-input" value={p.label} aria-label="Label" onChange={(e) => set(i, 'label', e.target.value)} />
           <input className="form-input" type="time" value={p.start} aria-label="Start" onChange={(e) => set(i, 'start', e.target.value)} />
           <input className="form-input" type="time" value={p.end} aria-label="End" onChange={(e) => set(i, 'end', e.target.value)} />

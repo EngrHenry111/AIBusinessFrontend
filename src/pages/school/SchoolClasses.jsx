@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { RiBookOpenLine, RiAddLine, RiEditLine, RiDeleteBinLine, RiLoader4Line, RiMagicLine } from 'react-icons/ri';
+import { RiBookOpenLine, RiAddLine, RiEditLine, RiDeleteBinLine, RiLoader4Line, RiMagicLine, RiUserSettingsLine } from 'react-icons/ri';
 import { schoolService, userService } from '../../services';
 import useSchoolLive from './useSchoolLive';
 import { Modal, Field } from './SchoolForms';
@@ -20,10 +20,11 @@ export default function SchoolClasses() {
   const [classes, setClasses] = useState(null);
   const [team, setTeam] = useState([]);
   const [editing, setEditing] = useState(null);
+  const [assigning, setAssigning] = useState(null);
   const [presetOpen, setPresetOpen] = useState(false);
 
   const load = () => schoolService.getClasses().then(({ data }) => setClasses(data.data)).catch((e) => toast.error(errMsg(e)));
-  useEffect(() => { load(); userService.getTeam().then(({ data }) => setTeam(data.data || [])).catch(() => {}); }, []);
+  useEffect(() => { load(); userService.getTeam().then(({ data }) => setTeam((data.data || []).filter((u) => u.role !== 'customer' && u.status !== 'deleted'))).catch(() => {}); }, []);
   useSchoolLive(load, ['classes', 'students']);
 
   if (!classes) return <div className="sc-loading"><RiLoader4Line className="spin" /> Loading…</div>;
@@ -52,17 +53,25 @@ export default function SchoolClasses() {
         ) : (
           <div className="table-wrapper">
             <table className="table">
-              <thead><tr><th>Class</th><th>Class teacher</th><th>Subjects</th><th className="num">Students</th><th /></tr></thead>
+              <thead><tr><th>Class</th><th>Teachers</th><th>Subjects</th><th className="num">Students</th><th /></tr></thead>
               <tbody>
                 {classes.map((c) => (
                   <tr key={c._id}>
                     <td><Link to={`/school/students?classId=${c._id}`} className="sc-strong">{c.name}</Link><span className="cell-sub">{[c.section, `Level ${c.level}`].filter(Boolean).join(' · ')}{!c.active && ' · inactive'}</span></td>
-                    <td>{c.classTeacher?.name || <span className="cell-sub">—</span>}</td>
+                    <td>
+                      {c.classTeacher?.name ? <span>{c.classTeacher.name} <span className="badge badge-neutral">class teacher</span></span> : <span className="cell-sub" style={{ marginTop: 0 }}>No class teacher</span>}
+                      {c.subjects?.length > 0 && (
+                        <span className={`cell-sub ${(c.subjectTeachers?.length || 0) < c.subjects.length ? 'sc-owing' : ''}`}>
+                          {c.subjectTeachers?.length || 0} of {c.subjects.length} subjects have a teacher
+                        </span>
+                      )}
+                    </td>
                     <td><span className="cell-sub" style={{ marginTop: 0 }}>{c.subjects?.length ? `${c.subjects.length}: ${c.subjects.slice(0, 4).join(', ')}${c.subjects.length > 4 ? '…' : ''}` : 'None yet'}</span></td>
                     <td className="num">{c.studentCount}{c.capacity ? ` / ${c.capacity}` : ''}</td>
                     <td className="num">
                       <div className="sc-actions" style={{ justifyContent: 'flex-end' }}>
-                        <button className="btn btn-ghost btn-sm" onClick={() => setEditing(c)} aria-label="Edit"><RiEditLine /></button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => setAssigning(c)}><RiUserSettingsLine /> Assign teachers</button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => setEditing(c)} aria-label="Edit" title="Edit class & subjects"><RiEditLine /></button>
                         <button className="btn btn-ghost btn-sm" aria-label="Delete" onClick={async () => {
                           if (!window.confirm(`Delete ${c.name}?`)) return;
                           try { await schoolService.deleteClass(c._id); toast.success('Class deleted'); load(); } catch (e) { toast.error(errMsg(e)); }
@@ -78,6 +87,7 @@ export default function SchoolClasses() {
       </div>
 
       {editing && <ClassModal cls={editing === 'new' ? null : editing} team={team} nextLevel={Math.max(0, ...classes.map((c) => c.level || 0)) + 1} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load(); }} />}
+      {assigning && <AssignTeachersModal cls={assigning} team={team} onClose={() => setAssigning(null)} onSaved={() => { setAssigning(null); load(); }} />}
       {presetOpen && <PresetModal existing={classes} onClose={() => setPresetOpen(false)} onDone={() => { setPresetOpen(false); load(); }} />}
     </div>
   );
@@ -185,6 +195,63 @@ function PresetModal({ existing, onClose, onDone }) {
         ))}
       </div>
       <Field label="Arms" hint="(optional, comma-separated — e.g. A, B makes JSS 1A and JSS 1B)"><input className="form-input" placeholder="A, B" value={arms} onChange={(e) => setArms(e.target.value)} /></Field>
+    </Modal>
+  );
+}
+
+// Who teaches this class: the class teacher, and a teacher for each subject.
+function AssignTeachersModal({ cls, team, onClose, onSaved }) {
+  const [classTeacher, setClassTeacher] = useState(cls.classTeacher?._id || '');
+  const [map, setMap] = useState(() => Object.fromEntries((cls.subjectTeachers || []).map((st) => [st.subject, st.teacher?._id || st.teacher])));
+  const [busy, setBusy] = useState(false);
+  const onlyOwners = !team.some((u) => u.role === 'employee' || u.role === 'manager');
+  const subjects = cls.subjects || [];
+
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await schoolService.updateClass(cls._id, {
+        classTeacher: classTeacher || null,
+        subjectTeachers: subjects.filter((sub) => map[sub]).map((sub) => ({ subject: sub, teacher: map[sub] })),
+      });
+      toast.success(`Teachers saved for ${cls.name}`);
+      onSaved();
+    } catch (err) { toast.error(errMsg(err)); } finally { setBusy(false); }
+  }
+  const options = team.map((u) => <option key={u._id || u.id} value={u._id || u.id}>{u.name}</option>);
+
+  return (
+    <Modal title={`Teachers for ${cls.name}`} size="sc-modal-sm" onClose={onClose} onSubmit={submit}
+      footer={<><button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button><button className="btn btn-primary" disabled={busy}>{busy ? 'Saving…' : 'Save teachers'}</button></>}>
+      {onlyOwners && (
+        <div className="sc-note warn" style={{ marginBottom: 12 }}>
+          Your teachers aren't on the team yet, so only you appear in these lists. <Link to="/team">Invite them on the Team page</Link> — they'll show up here once they've accepted.
+        </div>
+      )}
+      <Field label="Class teacher" hint="(takes the register, can enter every subject, writes report comments)">
+        <select className="form-input form-select" value={classTeacher} onChange={(e) => setClassTeacher(e.target.value)}>
+          <option value="">— None —</option>
+          {options}
+        </select>
+      </Field>
+      <div className="sc-section">Subject teachers</div>
+      {subjects.length === 0 ? (
+        <p className="cell-sub">This class has no subjects yet — add them with the edit (pencil) button first.</p>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, alignItems: 'center' }}>
+          {subjects.map((sub) => (
+            <div key={sub} style={{ display: 'contents' }}>
+              <span style={{ fontSize: 14 }}>{sub}</span>
+              <select className="form-input form-select" value={map[sub] || ''} onChange={(e) => setMap((m) => ({ ...m, [sub]: e.target.value }))} aria-label={`Teacher for ${sub}`}>
+                <option value="">— Not assigned —</option>
+                {options}
+              </select>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="cell-sub" style={{ marginTop: 12 }}>Then give these people the <b>Teacher</b> role on the <Link to="/school/staff">School Staff</Link> page so they only see their own classes.</p>
     </Modal>
   );
 }

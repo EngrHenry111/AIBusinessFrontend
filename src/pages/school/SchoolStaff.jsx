@@ -47,6 +47,11 @@ export default function SchoolStaff() {
         <div className="card card-pad" style={{ padding: 14 }}><b>Owner / manager</b><div className="cell-sub">Always full access, plus voids, waivers, promotion, publishing results and the term report.</div></div>
       </div>
 
+      {staff.every((u) => u.schoolRole === 'owner') && (
+        <div className="sc-note warn" style={{ marginBottom: 16 }}>
+          <b>No staff on your team yet.</b> Only owners/managers are listed. Invite your teachers and bursar on the <Link to="/team">Team</Link> page (they get an email to set a password) — they'll then appear here for you to give a role, and in the teacher lists on the Classes page.
+        </div>
+      )}
       <div className="card">
         <div className="table-wrapper">
           <table className="table">
