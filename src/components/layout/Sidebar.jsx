@@ -10,7 +10,8 @@ import {
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
   RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine, RiStoreLine,
   RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine, RiGovernmentLine, RiBankCardLine,
-  RiGroupLine, RiScales3Line, RiCalendarEventLine,
+  RiGroupLine, RiScales3Line, RiCalendarEventLine, RiGraduationCapLine, RiUserAddLine,
+  RiCalendarCheckLine, RiFileList3Line, RiBook2Line,
 } from 'react-icons/ri';
 import './Sidebar.css';
 
@@ -23,6 +24,15 @@ const NAV_ITEMS = [
   { type: 'divider', label: 'Legal Practice', legalOnly: true },
   { label: 'Matters', icon: RiScales3Line, path: '/matters', legalOnly: true },
   { label: 'Court Calendar', icon: RiCalendarEventLine, path: '/matters/calendar', legalOnly: true },
+  // School management — shown to companies whose industry is "education".
+  { type: 'divider', label: 'School', schoolOnly: true },
+  { label: 'School Overview', icon: RiGraduationCapLine, path: '/school', schoolOnly: true },
+  { label: 'Admissions', icon: RiUserAddLine, path: '/school/admissions', schoolOnly: true },
+  { label: 'Students', icon: RiTeamLine, path: '/school/students', schoolOnly: true },
+  { label: 'Classes', icon: RiBook2Line, path: '/school/classes', schoolOnly: true },
+  { label: 'School Fees', icon: RiMoneyDollarCircleLine, path: '/school/fees', schoolOnly: true },
+  { label: 'Attendance', icon: RiCalendarCheckLine, path: '/school/attendance', schoolOnly: true },
+  { label: 'Results', icon: RiFileList3Line, path: '/school/results', schoolOnly: true },
   { type: 'divider', label: 'Business' },
   { label: 'Leads', icon: RiUserLine, path: '/leads' },
   { label: 'Customers', icon: RiUserStarLine, path: '/customers' },
@@ -198,6 +208,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
           if (item.roles && !item.roles.includes(user?.role)) return null;
           if (item.businessPlanOnly && !isBusinessPlan && user?.role !== 'super_admin') return null;
           if (item.legalOnly && company?.industry !== 'legal') return null;
+          if (item.schoolOnly && company?.industry !== 'education') return null;
           if (item.type === 'divider') {
             return (
               <div key={idx} className="nav-divider">
@@ -209,7 +220,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
           return (
             <NavLink
               key={item.path}
-              end={item.path === '/matters'}
+              end={item.path === '/matters' || item.path === '/school'}
               to={item.path}
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={() => onClose && onClose()}

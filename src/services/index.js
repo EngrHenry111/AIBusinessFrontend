@@ -161,6 +161,68 @@ export const matterService = {
   invoice: (id, data) => api.post(`/matters/${id}/invoice`, data),
 };
 
+// ─── School management ────────────────────────────────────────────────────────
+export const schoolService = {
+  getSettings: () => api.get('/school/settings'),
+  updateSettings: (data) => api.put('/school/settings', data),
+  dashboard: () => api.get('/school/dashboard'),
+
+  getClasses: () => api.get('/school/classes'),
+  createClass: (data) => api.post('/school/classes', data),
+  updateClass: (id, data) => api.put(`/school/classes/${id}`, data),
+  deleteClass: (id) => api.delete(`/school/classes/${id}`),
+
+  getStudents: (params) => api.get('/school/students', { params }),
+  createStudent: (data) => api.post('/school/students', data),
+  bulkCreateStudents: (students) => api.post('/school/students/bulk', { students }),
+  promote: (data) => api.post('/school/students/promote', data),
+  getStudent: (id) => api.get(`/school/students/${id}`),
+  updateStudent: (id, data) => api.put(`/school/students/${id}`, data),
+  deleteStudent: (id) => api.delete(`/school/students/${id}`),
+
+  getApplications: (params) => api.get('/school/admissions', { params }),
+  createApplication: (data) => api.post('/school/admissions', data),
+  getApplication: (id) => api.get(`/school/admissions/${id}`),
+  updateApplication: (id, data) => api.put(`/school/admissions/${id}`, data),
+  decide: (id, data) => api.post(`/school/admissions/${id}/decision`, data),
+  enroll: (id, data) => api.post(`/school/admissions/${id}/enroll`, data),
+  deleteApplication: (id) => api.delete(`/school/admissions/${id}`),
+
+  getStructures: (params) => api.get('/school/fees/structures', { params }),
+  createStructure: (data) => api.post('/school/fees/structures', data),
+  updateStructure: (id, data) => api.put(`/school/fees/structures/${id}`, data),
+  deleteStructure: (id) => api.delete(`/school/fees/structures/${id}`),
+  generateBills: (id) => api.post(`/school/fees/structures/${id}/generate`),
+  getBills: (params) => api.get('/school/fees/bills', { params }),
+  createBill: (data) => api.post('/school/fees/bills', data),
+  updateBill: (id, data) => api.put(`/school/fees/bills/${id}`, data),
+  waiveBill: (id, reason) => api.post(`/school/fees/bills/${id}/waive`, { reason }),
+  cancelBill: (id) => api.post(`/school/fees/bills/${id}/cancel`),
+  recalculateBill: (id) => api.post(`/school/fees/bills/${id}/recalculate`),
+  getDebtors: (params) => api.get('/school/fees/debtors', { params }),
+  feeSummary: (params) => api.get('/school/fees/summary', { params }),
+  getPayments: (params) => api.get('/school/fees/payments', { params }),
+  recordPayment: (data) => api.post('/school/fees/payments', data),
+  getPayment: (id) => api.get(`/school/fees/payments/${id}`),
+  voidPayment: (id, reason) => api.post(`/school/fees/payments/${id}/void`, { reason }),
+
+  getRegister: (params) => api.get('/school/attendance', { params }),
+  saveRegister: (data) => api.post('/school/attendance', data),
+  attendanceReport: (params) => api.get('/school/attendance/report', { params }),
+
+  getScoreSheet: (params) => api.get('/school/results/sheet', { params }),
+  saveScoreSheet: (data) => api.post('/school/results/sheet', data),
+  broadsheet: (params) => api.get('/school/results/broadsheet', { params }),
+  reportCard: (studentId, params) => api.get(`/school/results/report-card/${studentId}`, { params }),
+
+  // Public (parents)
+  publicSchool: (slug) => api.get(`/school/public/${slug}`),
+  publicApply: (slug, data) => api.post(`/school/public/${slug}/apply`, data),
+  publicLookup: (slug, data) => api.post(`/school/public/${slug}/fees/lookup`, data),
+  publicPay: (slug, data) => api.post(`/school/public/${slug}/fees/pay`, data),
+  publicVerify: (slug, reference) => api.get(`/school/public/${slug}/fees/verify/${encodeURIComponent(reference)}`),
+};
+
 // ─── Orders ───────────────────────────────────────────────────────────────────
 export const orderService = {
   getAll: (params) => api.get('/orders', { params }),

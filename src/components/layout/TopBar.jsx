@@ -68,6 +68,11 @@ export default function TopBar({ onMenuToggle, mobileOpen = false }) {
       loadNotifications();
     });
     socket.on('notification:refresh', () => loadNotifications());
+    // School: fees paid online by parents and new online applications.
+    socket.on('school:update', (evt) => {
+      if (evt?.kind === 'payment' && evt.message && !evt.voided && /online/.test(evt.message)) toast.success(evt.message, { icon: '💰' });
+      else if (evt?.kind === 'admissions' && evt.message) toast(evt.message, { icon: '📝' });
+    });
     return () => socket.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [company?.id, company?._id]);

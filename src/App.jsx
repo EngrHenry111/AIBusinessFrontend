@@ -81,6 +81,19 @@ const ContractView = lazy(() => import('./pages/contracts/ContractView'));
 const Matters = lazy(() => import('./pages/matters/Matters'));
 const MatterDetail = lazy(() => import('./pages/matters/MatterDetail'));
 const MatterCalendar = lazy(() => import('./pages/matters/MatterCalendar'));
+const SchoolDashboard = lazy(() => import('./pages/school/SchoolDashboard'));
+const SchoolAdmissions = lazy(() => import('./pages/school/Admissions'));
+const SchoolStudents = lazy(() => import('./pages/school/Students'));
+const SchoolStudentDetail = lazy(() => import('./pages/school/StudentDetail'));
+const SchoolClasses = lazy(() => import('./pages/school/SchoolClasses'));
+const SchoolFees = lazy(() => import('./pages/school/Fees'));
+const SchoolAttendance = lazy(() => import('./pages/school/Attendance'));
+const SchoolResults = lazy(() => import('./pages/school/Results'));
+const SchoolReceipt = lazy(() => import('./pages/school/Receipt'));
+const SchoolReportCard = lazy(() => import('./pages/school/ReportCard'));
+const SchoolSettingsPage = lazy(() => import('./pages/school/SchoolSettings'));
+const SchoolPublicApply = lazy(() => import('./pages/school/PublicApply'));
+const SchoolPublicPay = lazy(() => import('./pages/school/PublicPay'));
 const Procurement = lazy(() => import('./pages/procurement/Procurement'));
 const RequisitionForm = lazy(() => import('./pages/procurement/RequisitionForm'));
 const RequisitionDetail = lazy(() => import('./pages/procurement/RequisitionDetail'));
@@ -178,6 +191,10 @@ function AppRoutes() {
       {/* Public digital business card — no auth, must load fast */}
       <Route path="/card/:username" element={<Suspense fallback={<PageLoader />}><BusinessCard /></Suspense>} />
 
+      {/* Public school pages for parents — online admission form and fee payment */}
+      <Route path="/schools/:slug/apply" element={<Suspense fallback={<PageLoader />}><SchoolPublicApply /></Suspense>} />
+      <Route path="/schools/:slug/pay" element={<Suspense fallback={<PageLoader />}><SchoolPublicPay /></Suspense>} />
+
       {/* Protected app routes */}
       <Route path="/*" element={
         <ProtectedRoute>
@@ -216,6 +233,17 @@ function AppRoutes() {
                 <Route path="contracts/:id" element={<ContractView />} />
                 <Route path="matters" element={<Matters />} />
                 <Route path="matters/calendar" element={<MatterCalendar />} />
+                <Route path="school" element={<SchoolDashboard />} />
+                <Route path="school/admissions" element={<SchoolAdmissions />} />
+                <Route path="school/students" element={<SchoolStudents />} />
+                <Route path="school/students/:id" element={<SchoolStudentDetail />} />
+                <Route path="school/classes" element={<SchoolClasses />} />
+                <Route path="school/fees" element={<SchoolFees />} />
+                <Route path="school/attendance" element={<SchoolAttendance />} />
+                <Route path="school/results" element={<SchoolResults />} />
+                <Route path="school/receipts/:id" element={<SchoolReceipt />} />
+                <Route path="school/report-card/:studentId" element={<SchoolReportCard />} />
+                <Route path="school/settings" element={<SchoolSettingsPage />} />
                 <Route path="matters/:id" element={<MatterDetail />} />
                 <Route path="procurement" element={<Procurement />} />
                 <Route path="procurement/new" element={<RequisitionForm />} />
