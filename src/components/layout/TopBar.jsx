@@ -72,6 +72,13 @@ export default function TopBar({ onMenuToggle, mobileOpen = false }) {
     socket.on('school:update', (evt) => {
       if (evt?.kind === 'payment' && evt.message && !evt.voided && /online/.test(evt.message)) toast.success(evt.message, { icon: '💰' });
       else if (evt?.kind === 'admissions' && evt.message) toast(evt.message, { icon: '📝' });
+      else if (evt?.kind === 'reminders' && evt.result) {
+        const r = evt.result;
+        const parts = [r.email && `${r.email} email`, r.sms && `${r.sms} SMS`, r.whatsapp && `${r.whatsapp} WhatsApp`].filter(Boolean);
+        const head = evt.automatic ? 'Automatic fee reminders' : 'Fee reminders';
+        if (parts.length) toast.success(`${head}: ${parts.join(', ')} sent${r.failed ? ` · ${r.failed} could not be delivered` : ''}`, { duration: 7000 });
+        else if (r.students) toast.error(`${head}: none could be delivered — check email/SMS setup`, { duration: 7000 });
+      }
     });
     return () => socket.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps

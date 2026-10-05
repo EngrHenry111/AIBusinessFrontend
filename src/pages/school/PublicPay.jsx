@@ -1,103 +1,174 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
-import { RiCheckboxCircleLine, RiLoader4Line, RiLockLine } from 'react-icons/ri';
+import {
+  RiCheckboxCircleLine, RiLoader4Line, RiLockLine, RiLogoutBoxLine, RiPrinterLine, RiArrowLeftLine,
+} from 'react-icons/ri';
 import { schoolService } from '../../services';
-import { TERMS, money, fmtDate, fmtDateTime, errMsg } from './schoolConstants';
+import { TERMS, PAYMENT_METHODS, BILL_STATUS, money, fmtDate, fmtDateTime, errMsg } from './schoolConstants';
 import { PublicHeader } from './PublicApply';
+import ReportCardDoc from './ReportCardDoc';
 import './School.css';
 
 // Bank transfers / USSD can sit in "pending" for a while — keep checking.
 const POLL_MS = 4000;
 const POLL_MAX = 45;
 
-export default function PublicPay() {
+// The parent's session survives a reload / the Paystack round trip, but
+// only in this tab. Storage can be unavailable (private mode) — that's fine.
+const store = {
+  get: (slug) => { try { return JSON.parse(sessionStorage.getItem(`school-parent:${slug}`) || 'null'); } catch { return null; } },
+  set: (slug, v) => { try { if (v) sessionStorage.setItem(`school-parent:${slug}`, JSON.stringify(v)); else sessionStorage.removeItem(`school-parent:${slug}`); } catch { /* ignore */ } },
+};
+
+const expired = (e) => e?.response?.data?.code === 'PORTAL_EXPIRED';
+
+// Parent portal: fees (pay online), published report cards and attendance
+// for every child registered with the parent's phone/email.
+export default function ParentPortal() {
   const { slug } = useParams();
   const [params, setParams] = useSearchParams();
   const reference = params.get('reference') || params.get('trxref');
   const [school, setSchool] = useState(null);
   const [error, setError] = useState('');
+  const [session, setSession] = useState(() => store.get(slug)); // { token, guardianName, children }
+  const [notice, setNotice] = useState(params.get('payment') === 'cancelled' ? 'Payment was cancelled. You can try again.' : '');
 
   useEffect(() => {
-    schoolService.publicSchool(slug).then(({ data }) => { setSchool(data.data); document.title = `Pay school fees — ${data.data.schoolName}`; })
+    schoolService.publicSchool(slug).then(({ data }) => { setSchool(data.data); document.title = `Parent portal — ${data.data.schoolName}`; })
       .catch((e) => setError(errMsg(e, 'School not found')));
   }, [slug]);
+
+  const signIn = (s) => { store.set(slug, s); setSession(s); setNotice(''); };
+  const signOut = useCallback((msg = '') => { store.set(slug, null); setSession(null); setNotice(msg); }, [slug]);
+  const onError = useCallback((e) => { if (expired(e)) signOut('Your session has ended. Please sign in again.'); }, [signOut]);
 
   if (error) return <div className="sc-public"><div className="sc-public-inner"><div className="card"><h2>School not found</h2><p>{error}</p></div></div></div>;
   if (!school) return <div className="sc-loading" style={{ minHeight: '100vh' }}><RiLoader4Line className="spin" /></div>;
 
   return (
     <div className="sc-public school-page">
-      <div className="sc-public-inner">
-        <PublicHeader school={school} />
-        <div className="card">
-          {reference
-            ? <Verify slug={slug} reference={reference} onAgain={() => setParams({})} />
-            : <PayForm slug={slug} school={school} cancelled={params.get('payment') === 'cancelled'} />}
-        </div>
-        <p className="cell-sub" style={{ textAlign: 'center', marginTop: 16 }}><RiLockLine style={{ verticalAlign: '-2px' }} /> Payments are processed securely by Paystack and go directly to the school.</p>
+      <div className="sc-public-inner" style={{ maxWidth: 860 }}>
+        <div className="sc-no-print"><PublicHeader school={school} /></div>
+        {reference ? (
+          <div className="card"><Verify slug={slug} reference={reference} onDone={() => setParams({})} /></div>
+        ) : !session ? (
+          <div className="card"><SignIn slug={slug} notice={notice} onSignedIn={signIn} /></div>
+        ) : (
+          <Portal slug={slug} school={school} session={session} setSession={signIn} onSignOut={() => signOut()} onError={onError} notice={notice} />
+        )}
+        <p className="cell-sub sc-no-print" style={{ textAlign: 'center', marginTop: 16 }}><RiLockLine style={{ verticalAlign: '-2px' }} /> Payments are processed securely by Paystack and go directly to the school.</p>
       </div>
     </div>
   );
 }
 
-function PayForm({ slug, school, cancelled }) {
+function SignIn({ slug, notice, onSignedIn }) {
   const [creds, setCreds] = useState({ admissionNumber: '', contact: '' });
-  const [account, setAccount] = useState(null);
-  const [billId, setBillId] = useState('');
-  const [amount, setAmount] = useState('');
-  const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState(cancelled ? 'Payment was cancelled. You can try again below.' : '');
-  const bill = account?.bills.find((b) => b._id === billId);
-
-  async function lookup(e) {
+  const [err, setErr] = useState('');
+  async function submit(e) {
     e.preventDefault();
     setBusy(true); setErr('');
     try {
-      const { data } = await schoolService.publicLookup(slug, creds);
-      setAccount(data.data);
-      const first = data.data.bills[0];
-      if (first) { setBillId(first._id); setAmount(String(first.balance)); }
-      if (creds.contact.includes('@')) setEmail(creds.contact);
-    } catch (e2) { setErr(errMsg(e2, 'Could not find the student.')); }
+      const { data } = await schoolService.portalLogin(slug, creds);
+      onSignedIn({ ...data.data, contact: creds.contact.includes('@') ? creds.contact : '' });
+    } catch (e2) { setErr(errMsg(e2, 'Could not sign you in.')); }
     finally { setBusy(false); }
   }
+  return (
+    <form onSubmit={submit}>
+      <h2 style={{ marginTop: 0 }}>Parent portal</h2>
+      <p className="cell-sub">Pay school fees and see report cards and attendance. Sign in with any of your children's admission numbers and the phone number or email you gave the school — you'll see all your children.</p>
+      {notice && <div className="sc-note warn" style={{ marginTop: 12 }}>{notice}</div>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+        <div className="form-group"><label className="form-label">Admission number</label><input className="form-input" required autoComplete="off" placeholder="e.g. STU/2026/0001" value={creds.admissionNumber} onChange={(e) => setCreds({ ...creds, admissionNumber: e.target.value })} /></div>
+        <div className="form-group"><label className="form-label">Parent's phone number or email</label><input className="form-input" required value={creds.contact} onChange={(e) => setCreds({ ...creds, contact: e.target.value })} /></div>
+      </div>
+      {err && <div className="sc-note warn" style={{ marginTop: 16 }}>{err}</div>}
+      <button className="btn btn-primary btn-lg" style={{ marginTop: 20, width: '100%' }} disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+    </form>
+  );
+}
+
+function Portal({ slug, school, session, setSession, onSignOut, onError, notice }) {
+  const [childId, setChildId] = useState(session.children[0]?._id);
+  const [tab, setTab] = useState('fees');
+  const [detail, setDetail] = useState(null);
+
+  const load = useCallback(() => {
+    setDetail(null);
+    schoolService.portalChild(slug, session.token, childId).then(({ data }) => setDetail(data.data)).catch(onError);
+    // Refresh balances on the child switcher too.
+    schoolService.portalChildren(slug, session.token).then(({ data }) => setSession({ ...session, children: data.data })).catch(() => {});
+  }, [slug, session.token, childId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [load]);
+
+  return (
+    <>
+      <div className="card card-pad sc-no-print" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div>
+          <div className="sc-strong">Welcome{session.guardianName ? `, ${session.guardianName}` : ''}</div>
+          <span className="cell-sub">{session.children.length} child{session.children.length === 1 ? '' : 'ren'} at {school.schoolName}</span>
+        </div>
+        <button className="btn btn-ghost btn-sm" onClick={onSignOut}><RiLogoutBoxLine /> Sign out</button>
+      </div>
+      {notice && <div className="sc-note warn sc-no-print" style={{ marginBottom: 12 }}>{notice}</div>}
+
+      {session.children.length > 1 && (
+        <div className="sc-chips sc-no-print" style={{ marginBottom: 16 }}>
+          {session.children.map((c) => (
+            <button key={c._id} type="button" className={`sc-chip ${c._id === childId ? 'on' : ''}`} onClick={() => { setChildId(c._id); setTab('fees'); }}>
+              {c.firstName}{c.className && ` · ${c.className}`}{c.outstanding > 0 && ` · owes ${money(c.outstanding)}`}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!detail ? <div className="card"><div className="sc-loading"><RiLoader4Line className="spin" /></div></div> : (
+        <>
+          <div className="card card-pad sc-no-print" style={{ marginBottom: 16 }}>
+            <h2 style={{ margin: 0 }}>{detail.student.name}</h2>
+            <span className="cell-sub">{detail.student.admissionNumber}{detail.student.className && ` · ${detail.student.className}`}</span>
+            <div className="sc-tabs" role="tablist" style={{ marginTop: 16, marginBottom: 0 }}>
+              {[['fees', `Fees${detail.outstanding > 0 ? ` (${money(detail.outstanding)})` : ''}`], ['results', 'Results'], ['attendance', 'Attendance']].map(([k, l]) => (
+                <button key={k} role="tab" aria-selected={tab === k} className={`sc-tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>{l}</button>
+              ))}
+            </div>
+          </div>
+          {tab === 'fees' && <FeesTab slug={slug} school={school} session={session} detail={detail} onError={onError} />}
+          {tab === 'results' && <ResultsTab slug={slug} session={session} detail={detail} onError={onError} />}
+          {tab === 'attendance' && <AttendanceTab detail={detail} />}
+        </>
+      )}
+    </>
+  );
+}
+
+function FeesTab({ slug, school, session, detail, onError }) {
+  const open = detail.bills.filter((b) => ['unpaid', 'partial'].includes(b.status) && b.balance > 0);
+  const [billId, setBillId] = useState(open[0]?._id || '');
+  const [amount, setAmount] = useState(open[0] ? String(open[0].balance) : '');
+  const [email, setEmail] = useState(session.contact || '');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const bill = open.find((b) => b._id === billId);
+  const min = bill ? Math.min(bill.balance, school.minimumOnlinePayment || 0) : 0;
 
   async function pay(e) {
     e.preventDefault();
     setBusy(true); setErr('');
     try {
-      const { data } = await schoolService.publicPay(slug, { ...creds, billId, amount: Number(amount), email });
+      const { data } = await schoolService.portalPay(slug, session.token, { studentId: detail.student._id, billId, amount: Number(amount), email });
       window.location.href = data.data.authorizationUrl;
-    } catch (e2) { setErr(errMsg(e2, 'Could not start the payment.')); setBusy(false); }
-  }
-
-  if (!account) {
-    return (
-      <form onSubmit={lookup}>
-        <h2 style={{ marginTop: 0 }}>Pay school fees</h2>
-        <p className="cell-sub">Enter your child's admission number and the phone number or email you gave the school.</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
-          <div className="form-group"><label className="form-label">Admission number</label><input className="form-input" required placeholder="e.g. STU/2026/0001" value={creds.admissionNumber} onChange={(e) => setCreds({ ...creds, admissionNumber: e.target.value })} /></div>
-          <div className="form-group"><label className="form-label">Parent's phone number or email</label><input className="form-input" required value={creds.contact} onChange={(e) => setCreds({ ...creds, contact: e.target.value })} /></div>
-        </div>
-        {err && <div className="sc-note warn" style={{ marginTop: 16 }}>{err}</div>}
-        <button className="btn btn-primary btn-lg" style={{ marginTop: 20, width: '100%' }} disabled={busy}>{busy ? 'Checking…' : 'Continue'}</button>
-      </form>
-    );
+    } catch (e2) { onError(e2); setErr(errMsg(e2, 'Could not start the payment.')); setBusy(false); }
   }
 
   return (
-    <form onSubmit={pay}>
-      <h2 style={{ marginTop: 0 }}>{account.student.name}</h2>
-      <p className="cell-sub">{account.student.admissionNumber}{account.student.className && ` · ${account.student.className}`} · <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAccount(null)}>Not you?</button></p>
-
-      {account.bills.length === 0 ? (
-        <div className="sc-note ok" style={{ marginTop: 16 }}>There are no outstanding fees for this student. Thank you!</div>
-      ) : (
-        <>
-          <div className="sc-section">Outstanding fees — {money(account.outstanding)}</div>
-          {account.bills.map((b) => (
+    <div className="card card-pad">
+      {open.length === 0 ? <div className="sc-note ok">No outstanding fees for {detail.student.name.split(' ')[1] || 'this child'}. Thank you!</div> : (
+        <form onSubmit={pay}>
+          <div className="sc-section" style={{ marginTop: 0 }}>Outstanding — {money(detail.outstanding)}</div>
+          {open.map((b) => (
             <label key={b._id} className={`sc-bill-option ${billId === b._id ? 'on' : ''}`}>
               <input type="radio" name="bill" checked={billId === b._id} onChange={() => { setBillId(b._id); setAmount(String(b.balance)); }} />
               <div>
@@ -109,7 +180,6 @@ function PayForm({ slug, school, cancelled }) {
               <b className="sc-owing">{money(b.balance)}</b>
             </label>
           ))}
-
           {!school.onlinePayments ? (
             <div className="sc-note warn" style={{ marginTop: 16 }}>Online payment isn't available for this school yet. Please pay at the school's bursary.</div>
           ) : bill && (
@@ -117,8 +187,8 @@ function PayForm({ slug, school, cancelled }) {
               <div className="form-grid-2">
                 <div className="form-group">
                   <label className="form-label">Amount to pay (₦)</label>
-                  <input className="form-input" type="number" required min={Math.min(bill.balance, school.minimumOnlinePayment || 0)} max={bill.balance} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} />
-                  <span className="form-hint">Full balance or a part payment{school.minimumOnlinePayment ? ` (at least ${money(Math.min(bill.balance, school.minimumOnlinePayment))})` : ''}.</span>
+                  <input className="form-input" type="number" required min={min} max={bill.balance} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                  <span className="form-hint">Full balance or a part payment{min ? ` (at least ${money(min)})` : ''}.</span>
                 </div>
                 <div className="form-group"><label className="form-label">Email for your receipt</label><input className="form-input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
               </div>
@@ -126,22 +196,96 @@ function PayForm({ slug, school, cancelled }) {
               <button className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={busy || !(Number(amount) > 0)}>{busy ? 'Redirecting to Paystack…' : `Pay ${money(amount)}`}</button>
             </div>
           )}
-        </>
+        </form>
       )}
 
-      {account.payments.length > 0 && (
+      {detail.payments.length > 0 && (
         <>
-          <div className="sc-section">Recent payments</div>
+          <div className="sc-section">Payment history</div>
           <ul className="sc-list">
-            {account.payments.map((p) => <li key={p.receiptNumber}><span>{p.receiptNumber}<span className="cell-sub">{fmtDateTime(p.paidAt)}</span></span><b>{money(p.amount)}</b></li>)}
+            {detail.payments.map((p) => (
+              <li key={p._id}><span>{p.receiptNumber}<span className="cell-sub">{fmtDateTime(p.paidAt)} · {PAYMENT_METHODS[p.method]}</span></span><b>{money(p.amount)}</b></li>
+            ))}
           </ul>
         </>
       )}
-    </form>
+      {detail.bills.some((b) => !open.includes(b)) && (
+        <>
+          <div className="sc-section">Settled bills</div>
+          <ul className="sc-list">
+            {detail.bills.filter((b) => !open.includes(b)).map((b) => (
+              <li key={b._id}><span>{b.title}<span className="cell-sub">{b.session} {TERMS[b.term]}</span></span><span className={`badge badge-${BILL_STATUS[b.status]?.badge}`}>{BILL_STATUS[b.status]?.label}</span></li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
   );
 }
 
-function Verify({ slug, reference, onAgain }) {
+function ResultsTab({ slug, session, detail, onError }) {
+  const [open, setOpen] = useState(null); // { session, term }
+  const [card, setCard] = useState(null);
+  const [err, setErr] = useState('');
+  useEffect(() => {
+    if (!open) return;
+    setCard(null); setErr('');
+    schoolService.portalReportCard(slug, session.token, detail.student._id, open)
+      .then(({ data }) => setCard(data.data))
+      .catch((e) => { onError(e); setErr(errMsg(e)); });
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (open) {
+    return (
+      <>
+        <div className="sc-actions sc-no-print" style={{ justifyContent: 'space-between', marginBottom: 12 }}>
+          <button className="btn btn-ghost" onClick={() => setOpen(null)}><RiArrowLeftLine /> All results</button>
+          <button className="btn btn-primary" disabled={!card} onClick={() => window.print()}><RiPrinterLine /> Print / save as PDF</button>
+        </div>
+        {err ? <div className="sc-note warn">{err}</div> : !card ? <div className="card"><div className="sc-loading"><RiLoader4Line className="spin" /></div></div> : <ReportCardDoc data={card} />}
+      </>
+    );
+  }
+  return (
+    <div className="card card-pad">
+      {detail.results.length === 0 ? <p className="cell-sub" style={{ margin: 0 }}>No results have been released yet. You'll be notified when report cards are ready.</p> : (
+        <ul className="sc-list">
+          {detail.results.map((r) => (
+            <li key={`${r.session}-${r.term}`}>
+              <span><span className="sc-strong">{TERMS[r.term]} {r.session}</span><span className="cell-sub">{r.className}</span></span>
+              <button className="btn btn-secondary btn-sm" onClick={() => setOpen({ session: r.session, term: r.term })}>View report card</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function AttendanceTab({ detail }) {
+  const a = detail.attendance;
+  const attended = a.present + a.late;
+  const marked = attended + a.absent + a.excused;
+  return (
+    <div className="card card-pad">
+      <div className="sc-card-title">{a.session} · {TERMS[a.term]}</div>
+      {!marked ? <p className="cell-sub" style={{ margin: 0 }}>No attendance has been recorded this term yet.</p> : (
+        <>
+          <div className="stat-value">{Math.round((attended / marked) * 100)}%</div>
+          <div className="sc-progress"><div style={{ width: `${(attended / marked) * 100}%` }} /></div>
+          <div className="sc-summary">
+            <div><span>Present</span><b>{a.present}</b></div>
+            <div><span>Late</span><b>{a.late}</b></div>
+            <div><span>Absent</span><b className={a.absent ? 'sc-owing' : ''}>{a.absent}</b></div>
+            {a.excused > 0 && <div><span>Excused</span><b>{a.excused}</b></div>}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Verify({ slug, reference, onDone }) {
   const [state, setState] = useState('verifying');
   const [receipt, setReceipt] = useState(null);
   const [msg, setMsg] = useState('');
@@ -167,7 +311,7 @@ function Verify({ slug, reference, onAgain }) {
     return <div className="sc-done"><RiLoader4Line className="spin" style={{ color: 'var(--color-brand)' }} /><h2>{state === 'pending' ? 'Waiting for your bank…' : 'Confirming your payment…'}</h2><p className="cell-sub">Please don't close this page.</p></div>;
   }
   if (state === 'failed') {
-    return <div className="sc-done"><h2>Payment not confirmed</h2><p>{msg}</p><p className="cell-sub">Reference: {reference}</p><button className="btn btn-primary" onClick={onAgain}>Back to fees</button></div>;
+    return <div className="sc-done"><h2>Payment not confirmed</h2><p>{msg}</p><p className="cell-sub">Reference: {reference}</p><button className="btn btn-primary" onClick={onDone}>Back to the portal</button></div>;
   }
   return (
     <div className="sc-done">
@@ -181,7 +325,7 @@ function Verify({ slug, reference, onAgain }) {
         <div className="grand"><span>Balance remaining</span><span>{money(Math.max(0, receipt.bill?.balance))}</span></div>
       </div>
       <p className="cell-sub">A receipt has been emailed to you. The school's records are already updated.</p>
-      <Link to={`/schools/${slug}/pay`} className="btn btn-secondary" onClick={onAgain}>Make another payment</Link>
+      <Link to={`/schools/${slug}/portal`} className="btn btn-secondary" onClick={onDone}>Back to the portal</Link>
     </div>
   );
 }

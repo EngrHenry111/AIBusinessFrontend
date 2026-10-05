@@ -3,12 +3,12 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   RiArrowLeftLine, RiEditLine, RiLoader4Line, RiAddLine, RiPrinterLine, RiDeleteBinLine,
-  RiMoneyDollarCircleLine, RiFileList3Line, RiCloseLine,
+  RiMoneyDollarCircleLine, RiFileList3Line, RiCloseLine, RiNotification3Line,
 } from 'react-icons/ri';
 import { schoolService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import useSchoolLive from './useSchoolLive';
-import { StudentFormModal, RecordPaymentModal, Modal, Field, useClasses } from './SchoolForms';
+import { StudentFormModal, RecordPaymentModal, ReminderModal, Modal, Field, useClasses } from './SchoolForms';
 import {
   TERMS, STUDENT_STATUS, BILL_STATUS, PAYMENT_METHODS, money, fmtDate, fmtDateTime, fullName, errMsg,
 } from './schoolConstants';
@@ -59,6 +59,7 @@ export default function StudentDetail() {
         </div>
         <div className="sc-actions">
           <Link to={`/school/report-card/${student._id}`} className="btn btn-secondary"><RiFileList3Line /> Report card</Link>
+          {outstanding > 0 && <button className="btn btn-secondary" onClick={() => setModal('remind')}><RiNotification3Line /> Remind parent</button>}
           <button className="btn btn-secondary" onClick={() => setModal('edit')}><RiEditLine /> Edit</button>
           <button className="btn btn-primary" onClick={() => setModal('pay')} disabled={outstanding <= 0}><RiMoneyDollarCircleLine /> Record payment</button>
         </div>
@@ -178,6 +179,7 @@ export default function StudentDetail() {
       {modal === 'edit' && <StudentFormModal student={student} classes={classes} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
       {(modal === 'pay' || modal?.pay) && <RecordPaymentModal student={student} bill={modal?.pay} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
       {modal?.discount && <DiscountModal bill={modal.discount} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
+      {modal === 'remind' && <ReminderModal studentIds={[student._id]} title={`Remind ${student.firstName}'s parent`} onClose={() => setModal(null)} />}
       {modal === 'charge' && <ChargeModal student={student} settings={settings} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
     </div>
   );

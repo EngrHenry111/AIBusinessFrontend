@@ -59,7 +59,7 @@ export default function PublicApply() {
               <RiCheckboxCircleLine />
               <h2>Application received</h2>
               <p>Your application number is <b>{done}</b>. Please keep it — the school will contact you about the next steps{form.guardian.email ? ', and a confirmation has been emailed to you' : ''}.</p>
-              {school.onlinePayments && <p className="cell-sub">Once your child is enrolled you can pay fees online at <Link to={`/schools/${slug}/pay`}>the fee payment page</Link>.</p>}
+              {school.onlinePayments && <p className="cell-sub">Once your child is enrolled you can pay fees online at <Link to={`/schools/${slug}/portal`}>the parent portal</Link>.</p>}
             </div>
           ) : !school.admissionsOpen ? (
             <div className="sc-done"><h2>Admissions are closed</h2><p>{school.schoolName} is not taking online applications right now. Please contact the school{school.phone ? ` on ${school.phone}` : ''}.</p></div>

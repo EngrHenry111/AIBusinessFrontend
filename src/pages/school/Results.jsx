@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { RiFileList3Line, RiLoader4Line, RiSaveLine, RiDownload2Line } from 'react-icons/ri';
+import { RiFileList3Line, RiLoader4Line, RiSaveLine, RiDownload2Line, RiEyeLine, RiEyeOffLine } from 'react-icons/ri';
 import Papa from 'papaparse';
 import { schoolService } from '../../services';
 import { useClasses } from './SchoolForms';
-import { TERMS, errMsg } from './schoolConstants';
+import { useAuth } from '../../context/AuthContext';
+import useSchoolLive from './useSchoolLive';
+import { TERMS, errMsg, fmtDateTime } from './schoolConstants';
 import './School.css';
 
 export default function Results() {
@@ -123,11 +125,33 @@ function ScoreEntry({ cls, period, settings }) {
 }
 
 function Broadsheet({ classId, period }) {
+  const { user } = useAuth();
+  const canPublish = ['manager', 'company_owner', 'super_admin'].includes(user?.role);
   const [data, setData] = useState(null);
+  const [publication, setPublication] = useState(null);
+  const [notify, setNotify] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  const loadPublication = useCallback(() => schoolService.publications().then(({ data: r }) => {
+    setPublication(r.data.find((p) => p.classId === classId && p.session === period.session && p.term === period.term) || null);
+  }).catch(() => {}), [classId, period]);
   useEffect(() => {
     setData(null);
     schoolService.broadsheet({ classId, ...period }).then(({ data: r }) => setData(r.data)).catch((e) => toast.error(errMsg(e)));
-  }, [classId, period]);
+    loadPublication();
+  }, [classId, period, loadPublication]);
+  useSchoolLive((evt) => { if (evt.classId === classId) loadPublication(); }, ['results']);
+
+  async function togglePublish() {
+    const publish = !publication;
+    if (publish && !window.confirm(`Release ${data.class.name}'s ${TERMS[period.term]} results to parents?${notify ? ' Parents will be emailed/texted a link.' : ''}`)) return;
+    setBusy(true);
+    try {
+      const { data: r } = await schoolService.publishResults({ classId, ...period, publish, notify: publish && notify });
+      toast.success(publish ? `Results published${r.data.notifying ? ` — notifying ${r.data.notifying} parent(s)` : ''}` : 'Results hidden from parents');
+      loadPublication();
+    } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
+  }
   if (!data) return <div className="sc-loading"><RiLoader4Line className="spin" /></div>;
 
   const exportCsv = () => {
@@ -141,8 +165,17 @@ function Broadsheet({ classId, period }) {
   return (
     <div className="card">
       <div className="sc-filters" style={{ justifyContent: 'space-between' }}>
-        <span className="cell-sub" style={{ margin: 0 }}>{data.class.name} · {data.session} {TERMS[data.term]} — ranked by average.</span>
-        <button className="btn btn-secondary btn-sm" onClick={exportCsv}><RiDownload2Line /> Export</button>
+        <span className="cell-sub" style={{ margin: 0 }}>
+          {data.class.name} · {data.session} {TERMS[data.term]} — ranked by average.{' '}
+          {publication
+            ? <span className="badge badge-success"><RiEyeLine /> Published {fmtDateTime(publication.publishedAt)}</span>
+            : <span className="badge badge-neutral"><RiEyeOffLine /> Not visible to parents</span>}
+        </span>
+        <div className="sc-actions">
+          {canPublish && !publication && <label className="sc-check"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} /> Notify parents</label>}
+          {canPublish && <button className={`btn btn-sm ${publication ? 'btn-secondary' : 'btn-primary'}`} disabled={busy || !data.rows.some((r) => r.total != null)} onClick={togglePublish}>{publication ? <><RiEyeOffLine /> Unpublish</> : <><RiEyeLine /> Publish to parents</>}</button>}
+          <button className="btn btn-secondary btn-sm" onClick={exportCsv}><RiDownload2Line /> Export</button>
+        </div>
       </div>
       <div className="table-wrapper">
         <table className="table sc-broadsheet">

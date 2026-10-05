@@ -215,8 +215,18 @@ export const schoolService = {
   broadsheet: (params) => api.get('/school/results/broadsheet', { params }),
   reportCard: (studentId, params) => api.get(`/school/results/report-card/${studentId}`, { params }),
 
+  sendReminders: (data) => api.post('/school/fees/reminders', data),
+  saveReportComments: (studentId, data) => api.put(`/school/results/report-card/${studentId}/comments`, data),
+  publications: () => api.get('/school/results/publications'),
+  publishResults: (data) => api.post('/school/results/publish', data),
+
   // Public (parents)
   publicSchool: (slug) => api.get(`/school/public/${slug}`),
+  portalLogin: (slug, data) => api.post(`/school/public/${slug}/portal/login`, data),
+  portalChildren: (slug, token) => api.get(`/school/public/${slug}/portal/children`, { headers: { 'x-parent-token': token } }),
+  portalChild: (slug, token, id) => api.get(`/school/public/${slug}/portal/children/${id}`, { headers: { 'x-parent-token': token } }),
+  portalReportCard: (slug, token, id, params) => api.get(`/school/public/${slug}/portal/children/${id}/report-card`, { params, headers: { 'x-parent-token': token } }),
+  portalPay: (slug, token, data) => api.post(`/school/public/${slug}/fees/pay`, data, { headers: { 'x-parent-token': token } }),
   publicApply: (slug, data) => api.post(`/school/public/${slug}/apply`, data),
   publicLookup: (slug, data) => api.post(`/school/public/${slug}/fees/lookup`, data),
   publicPay: (slug, data) => api.post(`/school/public/${slug}/fees/pay`, data),

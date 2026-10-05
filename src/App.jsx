@@ -193,6 +193,7 @@ function AppRoutes() {
 
       {/* Public school pages for parents — online admission form and fee payment */}
       <Route path="/schools/:slug/apply" element={<Suspense fallback={<PageLoader />}><SchoolPublicApply /></Suspense>} />
+      <Route path="/schools/:slug/portal" element={<Suspense fallback={<PageLoader />}><SchoolPublicPay /></Suspense>} />
       <Route path="/schools/:slug/pay" element={<Suspense fallback={<PageLoader />}><SchoolPublicPay /></Suspense>} />
 
       {/* Protected app routes */}

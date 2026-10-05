@@ -178,6 +178,61 @@ export function ApplicationFormModal({ application, classes, onClose, onSaved })
   );
 }
 
+// Remind parents who owe fees. Targets everyone who owes, a class
+// (`classId`) or specific students (`studentIds`). Sending happens in the
+// background; the delivery summary arrives as a toast from the top bar.
+export function ReminderModal({ classId, studentIds, title = 'Send fee reminders', onClose, onSent }) {
+  const [preview, setPreview] = useState(null);
+  const [channels, setChannels] = useState({ email: true, sms: true, whatsapp: false });
+  const [busy, setBusy] = useState(false);
+  const target = { classId: classId || undefined, studentIds };
+
+  useEffect(() => {
+    schoolService.sendReminders({ ...target, dryRun: true }).then(({ data }) => {
+      setPreview(data.data);
+      if (data.data.whatsappConnected) setChannels((c) => ({ ...c, whatsapp: true }));
+    }).catch((e) => { toast.error(errMsg(e)); onClose(); });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function send() {
+    setBusy(true);
+    try {
+      const { data } = await schoolService.sendReminders({ ...target, channels });
+      toast.success(`Sending reminders to ${data.data.queued} parent(s)…`);
+      onSent?.();
+      onClose();
+    } catch (e) { toast.error(errMsg(e)); setBusy(false); }
+  }
+
+  const none = !channels.email && !channels.sms && !channels.whatsapp;
+  return (
+    <Modal title={title} size="sc-modal-sm" onClose={onClose}
+      footer={<><button className="btn btn-secondary" onClick={onClose}>Cancel</button><button className="btn btn-primary" disabled={busy || !preview?.withContact || none} onClick={send}>{busy ? 'Sending…' : `Remind ${preview?.withContact ?? ''} parent${preview?.withContact === 1 ? '' : 's'}`}</button></>}>
+      {!preview ? <div className="sc-loading"><RiLoader4Line className="spin" /></div> : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <p style={{ margin: 0 }}>Each parent gets one message with the total owed{' '}and a link to pay online (if online payments are on).</p>
+          <div className="sc-summary" style={{ marginTop: 0, borderTop: 0, paddingTop: 0 }}>
+            <div><span>Students owing fees</span><b>{preview.students}</b></div>
+            {preview.students > preview.withContact && <div><span>No parent phone or email on file</span><b className="sc-owing">{preview.students - preview.withContact}</b></div>}
+            {preview.skippedRecent > 0 && <div><span>Already reminded in the last 12 hours (skipped)</span><b>{preview.skippedRecent}</b></div>}
+          </div>
+          <div>
+            <label className="form-label">Send by</label>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              <label className="sc-check"><input type="checkbox" checked={channels.email} onChange={(e) => setChannels({ ...channels, email: e.target.checked })} /> Email</label>
+              <label className="sc-check"><input type="checkbox" checked={channels.sms} onChange={(e) => setChannels({ ...channels, sms: e.target.checked })} /> SMS</label>
+              <label className="sc-check" title={preview.whatsappConnected ? '' : 'Connect WhatsApp on the WhatsApp page first'}>
+                <input type="checkbox" disabled={!preview.whatsappConnected} checked={channels.whatsapp} onChange={(e) => setChannels({ ...channels, whatsapp: e.target.checked })} /> WhatsApp{!preview.whatsappConnected && <span className="form-hint"> (not connected)</span>}
+              </label>
+            </div>
+          </div>
+          {preview.withContact === 0 && <div className="sc-note ok">Nobody to remind right now.</div>}
+        </div>
+      )}
+    </Modal>
+  );
+}
+
 // Take a payment at the bursary. Pass `bill` to pay a known bill, or
 // `student` to choose among their bills, or nothing to search for a student.
 export function RecordPaymentModal({ bill: initialBill, student: initialStudent, onClose, onSaved }) {

@@ -4,11 +4,11 @@ import toast from 'react-hot-toast';
 import Papa from 'papaparse';
 import {
   RiMoneyDollarCircleLine, RiAddLine, RiLoader4Line, RiSearchLine, RiDownload2Line,
-  RiPrinterLine, RiCloseLine, RiEditLine, RiDeleteBinLine, RiFlashlightLine, RiLinkM,
+  RiPrinterLine, RiCloseLine, RiEditLine, RiDeleteBinLine, RiFlashlightLine, RiLinkM, RiNotification3Line,
 } from 'react-icons/ri';
 import { schoolService } from '../../services';
 import useSchoolLive from './useSchoolLive';
-import { RecordPaymentModal, Modal, Field, useClasses } from './SchoolForms';
+import { RecordPaymentModal, ReminderModal, Modal, Field, useClasses } from './SchoolForms';
 import {
   TERMS, BILL_STATUS, PAYMENT_METHODS, money, fmtDate, fmtDateTime, toInputDate, fullName, errMsg, publicLink,
 } from './schoolConstants';
@@ -63,7 +63,7 @@ export default function Fees() {
           <select className="form-input form-select" value={period.term} onChange={(e) => setPeriod({ ...period, term: e.target.value })} aria-label="Term">
             {Object.entries(TERMS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
-          <button className="btn btn-secondary" onClick={() => { navigator.clipboard?.writeText(publicLink(settings.slug, 'pay')); toast.success('Parent payment link copied'); }}><RiLinkM /> Parent pay link</button>
+          <button className="btn btn-secondary" onClick={() => { navigator.clipboard?.writeText(publicLink(settings.slug, 'portal')); toast.success('Parent portal link copied'); }}><RiLinkM /> Parent portal link</button>
           <button className="btn btn-primary" onClick={() => setRecording(true)}><RiAddLine /> Record payment</button>
         </div>
       </div>
@@ -391,6 +391,7 @@ function Debtors({ period, classes, tick }) {
   const [rows, setRows] = useState(null);
   const [total, setTotal] = useState(0);
   const [classId, setClassId] = useState('');
+  const [remind, setRemind] = useState(null); // { classId } | { student }
   useEffect(() => {
     schoolService.getDebtors({ ...period, classId: classId || undefined })
       .then(({ data }) => { setRows(data.data); setTotal(data.totalOutstanding); })
@@ -405,6 +406,7 @@ function Debtors({ period, classes, tick }) {
           {classes.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
         </select>
         <span style={{ marginLeft: 'auto' }}>Total owed: <b className="sc-owing">{money(total)}</b></span>
+        <button className="btn btn-primary btn-sm" disabled={!rows?.length} onClick={() => setRemind({ classId })}><RiNotification3Line /> Remind {classId ? 'this class' : 'all'}</button>
         <button className="btn btn-secondary btn-sm" disabled={!rows?.length} onClick={() => downloadCsv(rows.map((r) => ({
           admissionNumber: r.student.admissionNumber, student: fullName(r.student), class: r.className || '', billed: r.total, paid: r.paid, owing: r.balance,
           guardian: r.student.guardian?.name || '', phone: r.student.guardian?.phone || '', email: r.student.guardian?.email || '',
@@ -413,7 +415,7 @@ function Debtors({ period, classes, tick }) {
       {!rows ? <div className="sc-loading"><RiLoader4Line className="spin" /></div> : rows.length === 0 ? <div className="sc-note ok" style={{ margin: 16 }}>Nobody owes fees for {period.session} {TERMS[period.term]}.</div> : (
         <div className="table-wrapper">
           <table className="table">
-            <thead><tr><th>Student</th><th>Class</th><th>Parent / guardian</th><th className="num">Billed</th><th className="num">Paid</th><th className="num">Owing</th></tr></thead>
+            <thead><tr><th>Student</th><th>Class</th><th>Parent / guardian</th><th className="num">Billed</th><th className="num">Paid</th><th className="num">Owing</th><th>Last reminded</th><th /></tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r._id}>
@@ -423,11 +425,21 @@ function Debtors({ period, classes, tick }) {
                   <td className="num">{money(r.total)}</td>
                   <td className="num">{money(r.paid)}</td>
                   <td className="num sc-owing">{money(r.balance)}</td>
+                  <td><span className="cell-sub" style={{ marginTop: 0 }}>{r.lastReminded ? fmtDateTime(r.lastReminded) : 'Never'}</span></td>
+                  <td className="num"><button className="btn btn-ghost btn-sm" onClick={() => setRemind({ student: r.student })} title="Send a reminder to this parent"><RiNotification3Line /></button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+      {remind && (
+        <ReminderModal
+          classId={remind.classId}
+          studentIds={remind.student ? [remind.student._id] : undefined}
+          title={remind.student ? `Remind ${fullName(remind.student)}'s parent` : 'Send fee reminders'}
+          onClose={() => setRemind(null)}
+        />
       )}
     </div>
   );

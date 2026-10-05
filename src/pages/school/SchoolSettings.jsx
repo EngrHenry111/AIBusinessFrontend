@@ -14,7 +14,7 @@ export default function SchoolSettings() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    schoolService.getSettings().then(({ data }) => setForm({ ...data.data, termStart: toInputDate(data.data.termStart), termEnd: toInputDate(data.data.termEnd) }))
+    schoolService.getSettings().then(({ data }) => setForm({ ...data.data, termStart: toInputDate(data.data.termStart), termEnd: toInputDate(data.data.termEnd), nextTermBegins: toInputDate(data.data.nextTermBegins) }))
       .catch((e) => toast.error(errMsg(e)));
   }, []);
   if (!form) return <div className="sc-loading"><RiLoader4Line className="spin" /></div>;
@@ -27,15 +27,17 @@ export default function SchoolSettings() {
     try {
       const { data } = await schoolService.updateSettings({
         ...form, caMax: Number(form.caMax), minimumOnlinePayment: Number(form.minimumOnlinePayment) || 0,
-        termStart: form.termStart || null, termEnd: form.termEnd || null,
+        termStart: form.termStart || null, termEnd: form.termEnd || null, nextTermBegins: form.nextTermBegins || null,
         gradingScale: form.gradingScale.map((g) => ({ ...g, min: Number(g.min) })),
       });
-      setForm({ ...data.data, termStart: toInputDate(data.data.termStart), termEnd: toInputDate(data.data.termEnd) });
+      setForm({ ...data.data, termStart: toInputDate(data.data.termStart), termEnd: toInputDate(data.data.termEnd), nextTermBegins: toInputDate(data.data.nextTermBegins) });
       toast.success('School settings saved');
     } catch (err) { toast.error(errMsg(err)); } finally { setSaving(false); }
   }
 
-  const links = [['Online admission form', 'apply'], ['Parent fee payment', 'pay']];
+  const links = [['Online admission form', 'apply'], ['Parent portal (fees, results, attendance)', 'portal']];
+  const rem = form.reminders || {};
+  const setRem = (k, v) => set('reminders', { ...rem, [k]: v });
 
   return (
     <form className="school-page fade-in" onSubmit={save}>
@@ -59,6 +61,7 @@ export default function SchoolSettings() {
             </Field>
             <Field label="Term starts"><input className="form-input" type="date" value={form.termStart} onChange={(e) => set('termStart', e.target.value)} /></Field>
             <Field label="Term ends"><input className="form-input" type="date" value={form.termEnd} onChange={(e) => set('termEnd', e.target.value)} /></Field>
+            <Field label="Next term begins" hint="(printed on report cards)"><input className="form-input" type="date" value={form.nextTermBegins || ''} onChange={(e) => set('nextTermBegins', e.target.value)} /></Field>
           </div>
           <p className="cell-sub">Moving to a new term? Change it here, then create that term's fee structures and generate bills. At the end of a session, promote classes from the Students page.</p>
         </div>
@@ -97,6 +100,22 @@ export default function SchoolSettings() {
             <Field label="Logo URL" span><input className="form-input" placeholder="https://…" value={form.logo || ''} onChange={(e) => set('logo', e.target.value)} /></Field>
             <Field label="Admission number prefix" hint={`(e.g. ${form.admissionNumberPrefix || 'STU'}/${new Date().getFullYear()}/0001)`}><input className="form-input" maxLength={12} value={form.admissionNumberPrefix || ''} onChange={(e) => set('admissionNumberPrefix', e.target.value.toUpperCase())} /></Field>
           </div>
+        </div>
+
+        <div className="card card-pad">
+          <div className="sc-card-title">Fee reminders</div>
+          <label className="sc-check"><input type="checkbox" checked={Boolean(rem.autoEnabled)} onChange={(e) => setRem('autoEnabled', e.target.checked)} /> Remind parents automatically (every morning at 9am)</label>
+          <div className="form-grid-2" style={{ marginTop: 12 }}>
+            <Field label="Start reminding" hint="(days before the due date)"><input className="form-input" type="number" min="0" max="60" disabled={!rem.autoEnabled} value={rem.daysBeforeDue ?? 3} onChange={(e) => setRem('daysBeforeDue', e.target.value)} /></Field>
+            <Field label="Then repeat every" hint="(days, until paid)"><input className="form-input" type="number" min="1" max="60" disabled={!rem.autoEnabled} value={rem.repeatEveryDays ?? 7} onChange={(e) => setRem('repeatEveryDays', e.target.value)} /></Field>
+          </div>
+          <label className="form-label" style={{ marginTop: 12 }}>Send automatic reminders by</label>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <label className="sc-check"><input type="checkbox" disabled={!rem.autoEnabled} checked={rem.email !== false} onChange={(e) => setRem('email', e.target.checked)} /> Email</label>
+            <label className="sc-check"><input type="checkbox" disabled={!rem.autoEnabled} checked={rem.sms !== false} onChange={(e) => setRem('sms', e.target.checked)} /> SMS</label>
+            <label className="sc-check"><input type="checkbox" disabled={!rem.autoEnabled} checked={Boolean(rem.whatsapp)} onChange={(e) => setRem('whatsapp', e.target.checked)} /> WhatsApp <span className="form-hint">(when connected)</span></label>
+          </div>
+          <p className="cell-sub">Only bills with a due date are chased automatically. You can always remind parents yourself from Fees → Debtors.</p>
         </div>
 
         <div className="card card-pad">
