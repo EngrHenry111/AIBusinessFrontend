@@ -686,3 +686,26 @@ export const adminService = {
   // more room than the shared 60s default instead of failing a slow-but-fine run.
   reconcileOrders: (days) => api.post('/admin/reconcile-orders', null, { params: { days }, timeout: 120000 }),
 };
+
+// ─── Group operations (multi-branch) ──────────────────────────────────────────
+export const groupService = {
+  me: () => api.get('/group/me'),
+  members: () => api.get('/group/members'),
+  overview: (params) => api.get('/group/overview', { params }),
+  aiBrief: (params) => api.post('/group/ai-brief', null, { params }),
+  ledger: (params) => api.get('/group/ledger', { params }),
+  getBranches: () => api.get('/group/branches'),
+  createBranch: (data) => api.post('/group/branches', data),
+  updateBranch: (id, data) => api.put(`/group/branches/${id}`, data),
+  deleteBranch: (id) => api.delete(`/group/branches/${id}`),
+  getReports: (params) => api.get('/group/reports', { params }),
+  getReport: (id) => api.get(`/group/reports/${id}`),
+  createReport: (data) => api.post('/group/reports', data),
+  updateReport: (id, data) => api.put(`/group/reports/${id}`, data),
+  submitReport: (id) => api.post(`/group/reports/${id}/submit`),
+  approveReport: (id, comment) => api.post(`/group/reports/${id}/approve`, { comment }),
+  rejectReport: (id, reason) => api.post(`/group/reports/${id}/reject`, { reason }),
+  bulkApprove: (ids) => api.post('/group/reports/bulk-approve', { ids }),
+  loadDemo: () => api.post('/group/demo'),
+  clearDemo: () => api.delete('/group/demo'),
+};

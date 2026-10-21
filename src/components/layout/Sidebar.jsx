@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { whatsappService, productService, widgetService, loyaltyService, contractService, procurementService } from '../../services';
+import { whatsappService, productService, widgetService, loyaltyService, contractService, procurementService, groupService } from '../../services';
 import {
   RiDashboardLine, RiRobot2Line, RiFileTextLine, RiUserLine,
   RiCalendarLine, RiMoneyDollarCircleLine, RiBarChartLine,
@@ -12,6 +12,7 @@ import {
   RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine, RiGovernmentLine, RiBankCardLine,
   RiGroupLine, RiScales3Line, RiCalendarEventLine, RiGraduationCapLine, RiUserAddLine,
   RiCalendarCheckLine, RiFileList3Line, RiBook2Line, RiTimeLine, RiUserSettingsLine, RiPieChartLine,
+  RiBuilding2Line, RiRadarLine, RiFileCheckLine, RiClipboardLine,
 } from 'react-icons/ri';
 import useSchoolMe from '../../pages/school/useSchoolMe';
 import './Sidebar.css';
@@ -21,6 +22,12 @@ const NAV_ITEMS = [
   { label: 'AI Assistant', icon: RiRobot2Line, path: '/chat' },
   { label: 'Knowledge', icon: RiBookOpenLine, path: '/knowledge' },
   { label: 'AI Agents', icon: RiRobot2Line, path: '/agents' },
+  // Multi-branch group operations — owner command center + department reports.
+  { type: 'divider', label: 'Group Operations' },
+  { label: 'Command Center', icon: RiRadarLine, path: '/group', roles: ['company_owner', 'super_admin'] },
+  { label: 'Daily Reports', icon: RiClipboardLine, path: '/group/reports' },
+  { label: 'Approved Sales', icon: RiFileCheckLine, path: '/group/ledger' },
+  { label: 'Branches', icon: RiBuilding2Line, path: '/group/branches', roles: ['company_owner', 'super_admin'] },
   // Legal practice — shown to companies whose industry is "legal".
   { type: 'divider', label: 'Legal Practice', legalOnly: true },
   { label: 'Matters', icon: RiScales3Line, path: '/matters', legalOnly: true },
@@ -79,6 +86,21 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const [loyaltyMembers, setLoyaltyMembers] = useState(0);
   const [draftContracts, setDraftContracts] = useState(0);
   const [pendingRequisitions, setPendingRequisitions] = useState(0);
+  const [groupAwaiting, setGroupAwaiting] = useState(0);
+
+  // Poll for branch reports waiting on this user's approval
+  useEffect(() => {
+    let alive = true;
+    const check = async () => {
+      try {
+        const { data } = await groupService.getReports({ awaiting: 'me', limit: 500 });
+        if (alive) setGroupAwaiting(data.data?.length || 0);
+      } catch { /* ignore */ }
+    };
+    check();
+    const iv = setInterval(check, 60000);
+    return () => { alive = false; clearInterval(iv); };
+  }, []);
 
   // Poll for WhatsApp conversations waiting on a human
   useEffect(() => {
@@ -184,6 +206,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     if (item.path === '/loyalty') return loyaltyMembers > 0 ? loyaltyMembers : null;
     if (item.path === '/contracts') return draftContracts > 0 ? draftContracts : null;
     if (item.path === '/procurement') return pendingRequisitions > 0 ? pendingRequisitions : null;
+    if (item.path === '/group/reports') return groupAwaiting > 0 ? groupAwaiting : null;
     return item.badge;
   };
 
@@ -228,7 +251,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
           return (
             <NavLink
               key={item.path}
-              end={item.path === '/matters' || item.path === '/school'}
+              end={item.path === '/matters' || item.path === '/school' || item.path === '/group'}
               to={item.path}
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={() => onClose && onClose()}

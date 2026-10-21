@@ -100,6 +100,12 @@ const SchoolPublicPay = lazy(() => import('./pages/school/PublicPay'));
 const Procurement = lazy(() => import('./pages/procurement/Procurement'));
 const RequisitionForm = lazy(() => import('./pages/procurement/RequisitionForm'));
 const RequisitionDetail = lazy(() => import('./pages/procurement/RequisitionDetail'));
+const GroupCommand = lazy(() => import('./pages/group/GroupCommand'));
+const GroupReports = lazy(() => import('./pages/group/GroupReports'));
+const GroupReportForm = lazy(() => import('./pages/group/GroupReportForm'));
+const GroupReportDetail = lazy(() => import('./pages/group/GroupReportDetail'));
+const GroupBranches = lazy(() => import('./pages/group/Branches'));
+const SalesLedger = lazy(() => import('./pages/group/SalesLedger'));
 const Billing = lazy(() => import('./pages/billing/Billing'));
 const Messages = lazy(() => import('./pages/messages/Messages'));
 const Admin = lazy(() => import('./pages/admin/Admin'));
@@ -255,6 +261,13 @@ function AppRoutes() {
                 <Route path="procurement" element={<Procurement />} />
                 <Route path="procurement/new" element={<RequisitionForm />} />
                 <Route path="procurement/:id" element={<RequisitionDetail />} />
+                <Route path="group" element={<GroupCommand />} />
+                <Route path="group/reports" element={<GroupReports />} />
+                <Route path="group/reports/new" element={<GroupReportForm />} />
+                <Route path="group/reports/:id" element={<GroupReportDetail />} />
+                <Route path="group/reports/:id/edit" element={<GroupReportForm />} />
+                <Route path="group/branches" element={<GroupBranches />} />
+                <Route path="group/ledger" element={<SalesLedger />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="team" element={<Team />} />
                 <Route path="settings/audit-log" element={<AuditLog />} />
