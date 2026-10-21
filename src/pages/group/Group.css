@@ -96,6 +96,7 @@
 .grp-lines { width: 100%; border-collapse: collapse; font-size: 13px; }
 .grp-lines th { text-align: left; font-weight: 600; color: var(--text-secondary); padding: 6px; font-size: 12px; white-space: nowrap; }
 .grp-lines td { padding: 4px 6px; vertical-align: middle; }
+.grp-th-hint { font-weight: 400; font-size: 11px; color: var(--text-muted); white-space: normal; max-width: 130px; line-height: 1.3; margin-top: 2px; }
 .grp-lines .form-input, .grp-lines .form-select { padding: 7px 9px; font-size: 13px; min-width: 80px; }
 .grp-row-error td { background: rgba(239,68,68,0.08); }
 .grp-row-error .form-input { border-color: var(--color-danger); }

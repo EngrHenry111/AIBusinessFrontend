@@ -358,7 +358,10 @@ export default function GroupReportForm() {
             <table className="grp-lines">
               <thead>
                 <tr>
-                  <th>Nozzle</th><th>Product</th><th>Opening</th><th>Closing</th><th title="Litres dispensed for calibration and poured back into the tank">Pump test (L)</th>
+                  <th>Nozzle</th><th>Product</th><th>Opening</th><th>Closing</th><th title="Fuel dispensed into a measuring can to check the pump, then poured back into the tank. It went through the meter but was not sold.">
+                    Pump test (L)
+                    <div className="grp-th-hint">Fuel tested and poured back into tank. Leave empty if no test.</div>
+                  </th>
                   <th>Price/L</th><th style={{ textAlign: 'right' }}>Litres</th><th style={{ textAlign: 'right' }}>Amount</th>
                   <th>Cash</th><th>POS</th><th>Transfer</th><th style={{ textAlign: 'right' }}>Short / over</th><th />
                 </tr>
@@ -392,7 +395,10 @@ export default function GroupReportForm() {
                         )}
                       </td>
                       <td><input type="number" inputMode="decimal" className="form-input" value={p.closingMeter} onChange={(e) => setLine('pumps', i, 'closingMeter', e.target.value)} /></td>
-                      <td><input type="number" inputMode="decimal" className="form-input" value={p.pumpTest} onChange={(e) => setLine('pumps', i, 'pumpTest', e.target.value)} style={{ width: 80 }} placeholder="0" /></td>
+                      <td>
+                        <input type="number" inputMode="decimal" className="form-input" value={p.pumpTest} onChange={(e) => setLine('pumps', i, 'pumpTest', e.target.value)} style={{ width: 80 }} placeholder="0" />
+                        {num(p.pumpTest) > 30 && <div className="grp-neg" style={{ fontSize: 11, marginTop: 2, maxWidth: 120, whiteSpace: 'normal' }}>Unusually high. Tests are normally 10–20 L.</div>}
+                      </td>
                       <td><input type="number" inputMode="decimal" className="form-input" value={p.pricePerLitre} onChange={(e) => setLine('pumps', i, 'pricePerLitre', e.target.value)} style={{ width: 90 }} /></td>
                       <td className="calc">{backwards ? <span className="grp-neg">Check meters</span> : (r.litres || 0).toLocaleString()}</td>
                       <td className="calc">{naira(r.amount)}</td>
@@ -413,7 +419,7 @@ export default function GroupReportForm() {
             <button className="btn btn-secondary btn-sm" style={{ marginTop: 8 }} onClick={() => addLine('pumps', manualRow(form.pumps.length, priceFor('PMS')))}><RiAddLine /> Add pump</button>
           )}
           <p className="muted" style={{ fontSize: 12, marginBottom: 0 }}>
-            Litres = closing − opening − pump test. Leave a nozzle's closing empty if it wasn't used this shift.
+            Litres sold = closing − opening − pump test. Pump test is only for fuel used to check a pump and poured back into the tank, so the attendant isn't charged for it. Leave a nozzle's closing empty if it wasn't used this shift.
           </p>
         </div>
       ) : (
