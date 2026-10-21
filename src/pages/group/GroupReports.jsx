@@ -174,7 +174,13 @@ export default function GroupReports() {
                         </td>
                       )}
                       <td style={{ whiteSpace: 'nowrap' }}>{fmtDate(r.reportDate)}</td>
-                      <td><div style={{ fontWeight: 600 }}>{r.branchName}</div><div className="muted" style={{ fontSize: 12 }}>{r.department} · {r.preparedByName}</div></td>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{r.branchName}</div>
+                        <div className="muted" style={{ fontSize: 12 }}>
+                          {r.attendantName ? <>{r.attendantName} · {r.shift?.name} shift{r.shift?.start ? ` (${r.shift.start}–${r.shift.end})` : ''}</> : <>{r.department} · {r.preparedByName}</>}
+                        </div>
+                        {r.totals?.meterGapLitres >= 1 && <div className="grp-neg" style={{ fontSize: 11 }}>Meter gap {Math.round(r.totals.meterGapLitres).toLocaleString()} L</div>}
+                      </td>
                       <td className="grp-mono">{r.ledgerNumber || r.referenceNumber}</td>
                       <td className="grp-num" style={{ textAlign: 'right', fontWeight: 600 }}>{naira(r.totals?.expectedSales)}</td>
                       <td className={`grp-num ${r.totals?.variance < -1000 ? 'grp-neg' : ''}`} style={{ textAlign: 'right' }}>

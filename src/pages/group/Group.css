@@ -109,6 +109,10 @@
 .grp-recon .verdict.over { background: rgba(59,130,246,0.12); }
 .grp-sticky-actions { position: sticky; bottom: 0; background: var(--bg-primary); padding: var(--space-3) 0; display: flex; gap: var(--space-3); justify-content: flex-end; border-top: 1px solid var(--border); z-index: 2; }
 
+.grp-transfer-row { display: grid; grid-template-columns: 1.3fr 1fr 1.3fr 0.8fr 1fr auto; gap: 8px; margin-bottom: 8px; }
+@media (max-width: 760px) { .grp-transfer-row { grid-template-columns: 1fr 1fr; } }
+.grp-shift-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 2px 8px; border-radius: var(--radius-full); background: var(--bg-tertiary); color: var(--text-secondary); font-weight: 500; }
+
 /* Timeline */
 .grp-timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .grp-timeline li { display: flex; gap: 10px; font-size: 13px; }

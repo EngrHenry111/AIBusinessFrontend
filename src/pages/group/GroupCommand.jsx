@@ -7,7 +7,7 @@ import {
 import {
   RiRadarLine, RiSparkling2Line, RiAlarmWarningLine, RiRefreshLine, RiGasStationLine, RiBuilding2Line,
   RiCheckDoubleLine, RiTimeLine, RiErrorWarningLine, RiFileCheckLine, RiDatabase2Line, RiDeleteBinLine,
-  RiLoader4Line, RiArrowRightSLine,
+  RiLoader4Line, RiArrowRightSLine, RiUserLine,
 } from 'react-icons/ri';
 import { groupService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
@@ -15,7 +15,7 @@ import { naira, nairaShort, LINE_LABELS, LINE_SHORT, LINE_COLORS, isOwner } from
 import './Group.css';
 
 const RANGES = [{ d: 1, l: 'Today' }, { d: 7, l: '7 days' }, { d: 30, l: '30 days' }];
-const ALERT_ICON = { shortage: RiAlarmWarningLine, missing: RiTimeLine, rejected: RiErrorWarningLine, target: RiErrorWarningLine };
+const ALERT_ICON = { shortage: RiAlarmWarningLine, missing: RiTimeLine, rejected: RiErrorWarningLine, target: RiErrorWarningLine, attendant: RiUserLine, meter: RiGasStationLine };
 
 function useClock() {
   const [now, setNow] = useState(new Date());
@@ -249,6 +249,40 @@ export default function GroupCommand() {
           })}
         </div>
       </div>
+
+      {/* ── Attendant watch ── */}
+      {data.attendants?.length > 0 && (
+        <div className="card card-pad">
+          <div className="grp-card-title"><RiUserLine /> Attendant watch <span className="grp-spacer" /><span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>Most short first</span></div>
+          <div className="table-wrapper">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Attendant</th><th>Branch</th><th style={{ textAlign: 'right' }}>Shifts</th><th style={{ textAlign: 'right' }}>Sales handled</th>
+                  <th style={{ textAlign: 'right' }}>Short shifts</th><th style={{ textAlign: 'right' }}>Net short / over</th><th style={{ textAlign: 'right' }}>Meter gaps</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.attendants.slice(0, 10).map((a) => (
+                  <tr key={`${a.name}|${a.branch}`}>
+                    <td style={{ fontWeight: 600 }}>{a.name}</td>
+                    <td className="muted">{a.branch}</td>
+                    <td className="grp-num" style={{ textAlign: 'right' }}>{a.shifts}</td>
+                    <td className="grp-num" style={{ textAlign: 'right' }}>{nairaShort(a.sales)}</td>
+                    <td className="grp-num" style={{ textAlign: 'right' }}>
+                      {a.shortShifts > 0 ? <span className={a.shortShifts >= 3 ? 'badge badge-danger' : 'badge badge-warning'}>{a.shortShifts} of {a.shifts}</span> : '—'}
+                    </td>
+                    <td className={`grp-num ${a.variance < -1000 ? 'grp-neg' : 'grp-pos'}`} style={{ textAlign: 'right', fontWeight: 600 }}>
+                      {Math.abs(a.variance) < 1000 ? 'Balanced' : naira(a.variance)}
+                    </td>
+                    <td className={`grp-num ${a.meterGapLitres >= 1 ? 'grp-neg' : ''}`} style={{ textAlign: 'right' }}>{a.meterGapLitres >= 1 ? `${Math.round(a.meterGapLitres).toLocaleString()} L` : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* ── Charts ── */}
       <div className="grp-grid-2">

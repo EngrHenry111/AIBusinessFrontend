@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { RiArrowLeftLine, RiCheckLine, RiCloseLine, RiEditLine, RiSendPlaneLine, RiLoader4Line, RiAlarmWarningLine, RiPrinterLine } from 'react-icons/ri';
+import {
+  RiArrowLeftLine, RiCheckLine, RiCloseLine, RiEditLine, RiSendPlaneLine, RiLoader4Line, RiAlarmWarningLine, RiPrinterLine,
+  RiTimeLine, RiUserLine, RiGasStationLine, RiBankLine, RiErrorWarningLine,
+} from 'react-icons/ri';
 import { groupService } from '../../services';
 import { naira, fmtDate, fmtDateTime, STATUS_META, fuelLabel } from './groupUtils';
 import { ApprovalPipeline } from './GroupReports';
@@ -43,6 +46,7 @@ export default function GroupReportDetail() {
   const meta = STATUS_META[report.status] || {};
   const short = t.variance < -1000;
   const isFinalStep = report.status === 'pending_owner';
+  const gapLines = (report.pumps || []).filter((p) => Math.abs(p.meterGap || 0) >= 1);
 
   return (
     <div className="grp-page fade-in">
@@ -60,11 +64,27 @@ export default function GroupReportDetail() {
             <div className="grp-mono muted">{report.referenceNumber}{report.ledgerNumber && <> · Ledger <strong style={{ color: 'var(--color-success)' }}>{report.ledgerNumber}</strong></>}</div>
             <h1 style={{ margin: '4px 0', fontSize: 22 }}>{report.branchName} · {report.department}</h1>
             <div className="muted" style={{ fontSize: 13 }}>{fmtDate(report.reportDate)} · prepared by {report.preparedByName || '—'}</div>
+            {(report.shift?.name || report.attendantName) && (
+              <div className="grp-row" style={{ marginTop: 8, gap: 8 }}>
+                {report.shift?.name && <span className="grp-shift-chip"><RiTimeLine /> {report.shift.name} shift{report.shift.start ? ` · ${report.shift.start}–${report.shift.end}` : ''}</span>}
+                {report.attendantName && <span className="grp-shift-chip"><RiUserLine /> {report.attendantName}</span>}
+              </div>
+            )}
           </div>
           <span className="grp-spacer" />
           <span className={`badge badge-${meta.badge}`} style={{ fontSize: 13 }}>{meta.label}</span>
         </div>
         <div style={{ marginTop: 14 }}><ApprovalPipeline report={report} /></div>
+        {gapLines.length > 0 && (
+          <div className="grp-alert high" style={{ marginTop: 14 }}>
+            <RiErrorWarningLine style={{ color: 'var(--color-danger)' }} />
+            <span>
+              <strong>Meter handover gap of {Math.round(t.meterGapLitres).toLocaleString()} L.</strong> The opening meter didn't match the previous shift's closing.
+              {' '}{gapLines.map((p) => `${p.nozzle}: opened ${p.openingMeter.toLocaleString()}, last closed ${Number(p.prevClosing).toLocaleString()}`).join(' · ')}.
+              {' '}A higher opening usually means fuel was sold between shifts without being recorded.
+            </span>
+          </div>
+        )}
         {short && (
           <div className="grp-alert high" style={{ marginTop: 14 }}>
             <RiAlarmWarningLine style={{ color: 'var(--color-danger)' }} />
@@ -73,30 +93,75 @@ export default function GroupReportDetail() {
         )}
       </div>
 
+      {report.pumps?.length > 0 && (
+        <div className="card card-pad">
+          <div className="grp-card-title"><RiGasStationLine /> Nozzles: meters & takings</div>
+          <div className="table-wrapper">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Nozzle</th><th>Product</th><th style={{ textAlign: 'right' }}>Opening</th><th style={{ textAlign: 'right' }}>Closing</th>
+                  <th style={{ textAlign: 'right' }}>Test</th><th style={{ textAlign: 'right' }}>Litres</th><th style={{ textAlign: 'right' }}>Amount</th>
+                  <th style={{ textAlign: 'right' }}>Cash</th><th style={{ textAlign: 'right' }}>POS</th><th style={{ textAlign: 'right' }}>Transfer</th><th style={{ textAlign: 'right' }}>Short / over</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.pumps.map((p, i) => {
+                  const gap = Math.abs(p.meterGap || 0) >= 1;
+                  const hasTakings = p.cash || p.pos || p.transfer;
+                  return (
+                    <tr key={i}>
+                      <td><strong className="grp-mono">{p.nozzle || p.pump}</strong>{p.nozzle && <div className="muted" style={{ fontSize: 11 }}>{p.pump}</div>}</td>
+                      <td>{fuelLabel(p.product)}</td>
+                      <td className="grp-num" style={{ textAlign: 'right' }}>
+                        <span className={gap ? 'grp-neg' : ''}>{p.openingMeter.toLocaleString()}</span>
+                        {gap && <div className="grp-neg" style={{ fontSize: 11 }}>last close {Number(p.prevClosing).toLocaleString()} ({p.meterGap > 0 ? '+' : ''}{p.meterGap.toLocaleString()} L)</div>}
+                      </td>
+                      <td className="grp-num" style={{ textAlign: 'right' }}>{p.closingMeter.toLocaleString()}</td>
+                      <td className="grp-num" style={{ textAlign: 'right' }}>{p.pumpTest ? p.pumpTest.toLocaleString() : '—'}</td>
+                      <td className="grp-num" style={{ textAlign: 'right' }}>{p.litres.toLocaleString()}</td>
+                      <td className="grp-num" style={{ textAlign: 'right', fontWeight: 600 }}>{naira(p.amount)}</td>
+                      <td className="grp-num" style={{ textAlign: 'right' }}>{hasTakings ? naira(p.cash) : '—'}</td>
+                      <td className="grp-num" style={{ textAlign: 'right' }}>{hasTakings ? naira(p.pos) : '—'}</td>
+                      <td className="grp-num" style={{ textAlign: 'right' }}>{hasTakings ? naira(p.transfer) : '—'}</td>
+                      <td className={`grp-num ${hasTakings && p.variance < -100 ? 'grp-neg' : ''}`} style={{ textAlign: 'right' }}>
+                        {!hasTakings ? '—' : Math.abs(p.variance) < 100 ? <span className="grp-pos">Balanced</span> : naira(p.variance)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {report.transfers?.length > 0 && (
+        <div className="card card-pad">
+          <div className="grp-card-title">
+            <RiBankLine /> Transfers to verify
+            <span className="grp-spacer" />
+            <span className="muted" style={{ fontSize: 13, fontWeight: 400 }}>{report.transfers.length} transfers · {naira(report.transfers.reduce((s, x) => s + x.amount, 0))}</span>
+          </div>
+          <div className="table-wrapper">
+            <table className="table">
+              <thead><tr><th>Sender</th><th>Bank</th><th>Reference</th><th>Nozzle</th><th style={{ textAlign: 'right' }}>Amount</th></tr></thead>
+              <tbody>
+                {report.transfers.map((x, i) => (
+                  <tr key={i}>
+                    <td>{x.sender || '—'}</td><td>{x.bank || '—'}</td><td className="grp-mono">{x.reference || '—'}</td><td className="grp-mono">{x.nozzle || '—'}</td>
+                    <td className="grp-num" style={{ textAlign: 'right' }}>{naira(x.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       <div className="grp-grid-2">
         <div className="card card-pad">
-          {report.pumps?.length > 0 && (
-            <>
-              <div className="grp-card-title">Pump readings</div>
-              <div className="table-wrapper">
-                <table className="table">
-                  <thead><tr><th>Pump</th><th>Product</th><th style={{ textAlign: 'right' }}>Opening</th><th style={{ textAlign: 'right' }}>Closing</th><th style={{ textAlign: 'right' }}>Litres</th><th style={{ textAlign: 'right' }}>Price</th><th style={{ textAlign: 'right' }}>Amount</th></tr></thead>
-                  <tbody>
-                    {report.pumps.map((p, i) => (
-                      <tr key={i}>
-                        <td>{p.pump}</td><td>{fuelLabel(p.product)}</td>
-                        <td className="grp-num" style={{ textAlign: 'right' }}>{p.openingMeter.toLocaleString()}</td>
-                        <td className="grp-num" style={{ textAlign: 'right' }}>{p.closingMeter.toLocaleString()}</td>
-                        <td className="grp-num" style={{ textAlign: 'right' }}>{p.litres.toLocaleString()}</td>
-                        <td className="grp-num" style={{ textAlign: 'right' }}>{naira(p.pricePerLitre)}</td>
-                        <td className="grp-num" style={{ textAlign: 'right', fontWeight: 600 }}>{naira(p.amount)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+          {!report.items?.length && !report.expenses?.length && !report.notes && <p className="muted" style={{ fontSize: 13, margin: 0 }}>No items, expenses or notes on this report.</p>}
           {report.items?.length > 0 && (
             <>
               <div className="grp-card-title">Items sold</div>
@@ -132,7 +197,8 @@ export default function GroupReportDetail() {
           <div className="card card-pad">
             <div className="grp-card-title">Reconciliation</div>
             <div className="grp-recon">
-              {t.litres > 0 && <div><div className="l">Litres</div><div className="v">{t.litres.toLocaleString()} L</div></div>}
+              {t.litres > 0 && <div><div className="l">Litres sold</div><div className="v">{t.litres.toLocaleString()} L</div></div>}
+              {t.pumpTest > 0 && <div><div className="l">Pump test</div><div className="v">{t.pumpTest.toLocaleString()} L</div></div>}
               <div><div className="l">Expected</div><div className="v">{naira(t.expectedSales)}</div></div>
               <div><div className="l">Cash</div><div className="v">{naira(report.collections?.cash)}</div></div>
               <div><div className="l">POS</div><div className="v">{naira(report.collections?.pos)}</div></div>

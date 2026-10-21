@@ -35,6 +35,7 @@ export default function SalesLedger() {
     if (!data?.entries.length) return;
     const rows = data.entries.map((e) => ({
       'Ledger No': e.ledgerNumber, Date: e.reportDate.slice(0, 10), Branch: e.branchName, Department: e.department,
+      Shift: e.shift?.name ? `${e.shift.name} ${e.shift.start || ''}-${e.shift.end || ''}` : '', Attendant: e.attendantName || '',
       Reference: e.referenceNumber, 'Litres': e.totals.litres || '', 'Sales (NGN)': e.totals.expectedSales,
       'Collected (NGN)': e.totals.collected, 'Expenses (NGN)': e.totals.expenses, 'Variance (NGN)': e.totals.variance,
       'Branch approval': e.approvals?.find((a) => a.level === 'branch_manager')?.byName || '',
@@ -134,7 +135,7 @@ export default function SalesLedger() {
                       <tr key={e._id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/group/reports/${e._id}`)}>
                         <td className="grp-mono">{e.ledgerNumber}</td>
                         <td style={{ whiteSpace: 'nowrap' }}>{fmtDate(e.reportDate)}</td>
-                        <td>{e.branchName}<div className="muted" style={{ fontSize: 12 }}>{e.department}</div></td>
+                        <td>{e.branchName}<div className="muted" style={{ fontSize: 12 }}>{e.attendantName ? `${e.attendantName} · ${e.shift?.name || ''} shift` : e.department}</div></td>
                         <td className="grp-num" style={{ textAlign: 'right' }}>{naira(e.totals.expectedSales)}</td>
                         <td className={`grp-num ${e.totals.variance < -1000 ? 'grp-neg' : ''}`} style={{ textAlign: 'right' }}>{Math.abs(e.totals.variance) < 1000 ? '—' : naira(e.totals.variance)}</td>
                         <td style={{ fontSize: 12 }}>

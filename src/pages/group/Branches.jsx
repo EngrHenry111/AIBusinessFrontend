@@ -11,15 +11,21 @@ const DEFAULT_DEPTS = {
   building_materials: ['Cement & Blocks', 'Iron Rods & Steel', 'Roofing & Finishing', 'Plumbing & Electrical'],
   general: ['Sales'],
 };
+const DEFAULT_SHIFTS = [{ name: 'Morning', start: '06:00', end: '14:00' }, { name: 'Afternoon', start: '14:00', end: '22:00' }];
+const makeNozzles = (pumps, perPump, dieselPumps) => Array.from({ length: pumps }).flatMap((_, pi) => Array.from({ length: perPump }).map((__, ni) => ({
+  code: `P${pi + 1}-N${ni + 1}`, pump: `Pump ${pi + 1}`, product: pi >= pumps - dieselPumps ? 'AGO' : 'PMS',
+})));
 const blank = () => ({
   name: '', code: '', businessLine: 'filling_station', address: '', city: '', state: '',
   dailySalesTarget: '', fuelPrices: { PMS: '', AGO: '', DPK: '' }, managerId: '', staff: [],
   departments: DEFAULT_DEPTS.filling_station.map((name) => ({ name, headId: '' })), status: 'active',
+  shifts: DEFAULT_SHIFTS.map((x) => ({ ...x })), nozzles: makeNozzles(4, 2, 1),
 });
 const refId = (v) => (v && typeof v === 'object' ? v._id : v || '');
 
 function BranchModal({ initial, members, onClose, onSaved }) {
   const [f, setF] = useState(initial);
+  const [gen, setGen] = useState({ pumps: 4, perPump: 2, diesel: 1 });
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
 
@@ -79,6 +85,43 @@ function BranchModal({ initial, members, onClose, onSaved }) {
                   <input type="number" className="form-input" value={f.fuelPrices?.[p] ?? ''} onChange={(e) => set('fuelPrices', { ...f.fuelPrices, [p]: e.target.value })} /></div>
               ))}
             </div>
+          )}
+
+          {f.businessLine === 'filling_station' && (
+            <>
+              <label className="form-label">Shifts</label>
+              {f.shifts.map((x, i) => (
+                <div className="grp-dept-row" key={i} style={{ gridTemplateColumns: '1.2fr 1fr 1fr auto' }}>
+                  <input className="form-input" value={x.name} placeholder="Shift name" onChange={(e) => set('shifts', f.shifts.map((y, j) => (j === i ? { ...y, name: e.target.value } : y)))} />
+                  <input type="time" className="form-input" value={x.start} onChange={(e) => set('shifts', f.shifts.map((y, j) => (j === i ? { ...y, start: e.target.value } : y)))} />
+                  <input type="time" className="form-input" value={x.end} onChange={(e) => set('shifts', f.shifts.map((y, j) => (j === i ? { ...y, end: e.target.value } : y)))} />
+                  <button className="btn btn-ghost btn-icon" onClick={() => set('shifts', f.shifts.filter((_, j) => j !== i))} aria-label="Remove shift"><RiDeleteBinLine /></button>
+                </div>
+              ))}
+              <button className="btn btn-secondary btn-sm" onClick={() => set('shifts', [...f.shifts, { name: 'Night', start: '22:00', end: '06:00' }])}><RiAddLine /> Add shift</button>
+
+              <label className="form-label" style={{ marginTop: 16, display: 'block' }}>Pumps & nozzles ({f.nozzles.length})</label>
+              <div className="grp-row" style={{ marginBottom: 8, fontSize: 13 }}>
+                <input type="number" min={1} max={40} className="form-input" style={{ width: 70 }} value={gen.pumps} onChange={(e) => setGen({ ...gen, pumps: Number(e.target.value) || 1 })} /> pumps ×
+                <input type="number" min={1} max={8} className="form-input" style={{ width: 60 }} value={gen.perPump} onChange={(e) => setGen({ ...gen, perPump: Number(e.target.value) || 1 })} /> nozzles, last
+                <input type="number" min={0} max={40} className="form-input" style={{ width: 60 }} value={gen.diesel} onChange={(e) => setGen({ ...gen, diesel: Number(e.target.value) || 0 })} /> diesel
+                <button className="btn btn-secondary btn-sm" onClick={() => set('nozzles', makeNozzles(gen.pumps, gen.perPump, gen.diesel))}>Generate</button>
+              </div>
+              <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+                {f.nozzles.map((n, i) => (
+                  <div className="grp-dept-row" key={i} style={{ gridTemplateColumns: '0.8fr 1fr 1.2fr auto' }}>
+                    <input className="form-input grp-mono" value={n.code} onChange={(e) => set('nozzles', f.nozzles.map((y, j) => (j === i ? { ...y, code: e.target.value.toUpperCase() } : y)))} />
+                    <input className="form-input" value={n.pump} onChange={(e) => set('nozzles', f.nozzles.map((y, j) => (j === i ? { ...y, pump: e.target.value } : y)))} />
+                    <select className="form-select" value={n.product} onChange={(e) => set('nozzles', f.nozzles.map((y, j) => (j === i ? { ...y, product: e.target.value } : y)))}>
+                      {Object.entries(FUEL_LABELS).map(([c, l]) => <option key={c} value={c}>{l}</option>)}
+                    </select>
+                    <button className="btn btn-ghost btn-icon" onClick={() => set('nozzles', f.nozzles.filter((_, j) => j !== i))} aria-label="Remove nozzle"><RiDeleteBinLine /></button>
+                  </div>
+                ))}
+              </div>
+              <button className="btn btn-secondary btn-sm" onClick={() => set('nozzles', [...f.nozzles, { code: `P${f.nozzles.length + 1}-N1`, pump: `Pump ${f.nozzles.length + 1}`, product: 'PMS' }])}><RiAddLine /> Add nozzle</button>
+              <div style={{ height: 16 }} />
+            </>
           )}
 
           <div className="form-group">
@@ -150,6 +193,8 @@ export default function Branches() {
       staff: (b.staff || []).map(refId),
       departments: (b.departments || []).map((d) => ({ _id: d._id, name: d.name, headId: refId(d.headId) })),
       fuelPrices: b.fuelPrices || { PMS: '', AGO: '', DPK: '' },
+      shifts: b.shifts?.length ? b.shifts.map((x) => ({ name: x.name, start: x.start, end: x.end })) : DEFAULT_SHIFTS.map((x) => ({ ...x })),
+      nozzles: (b.nozzles || []).map((n) => ({ code: n.code, pump: n.pump, product: n.product })),
       dailySalesTarget: b.dailySalesTarget || '',
     });
   }
@@ -203,6 +248,11 @@ export default function Branches() {
               </div>
               <div style={{ fontSize: 13 }}><RiUserStarLine style={{ verticalAlign: '-2px' }} /> Manager: <strong>{b.managerId?.name || 'Not assigned'}</strong></div>
               <div style={{ fontSize: 13 }} className="muted">{b.departments.map((d) => d.name).join(' · ')}</div>
+              {b.businessLine === 'filling_station' && (
+                <div style={{ fontSize: 13 }}>
+                  {b.nozzles?.length || 0} nozzles · {(b.shifts || []).map((x) => `${x.name} ${x.start}–${x.end}`).join(', ')}
+                </div>
+              )}
               {b.dailySalesTarget > 0 && <div style={{ fontSize: 13 }}>Daily target: <strong>{naira(b.dailySalesTarget)}</strong></div>}
               {b.status === 'inactive' && <span className="badge badge-neutral">Inactive</span>}
               <div className="grp-row" style={{ marginTop: 'auto' }}>

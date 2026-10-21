@@ -698,6 +698,7 @@ export const groupService = {
   createBranch: (data) => api.post('/group/branches', data),
   updateBranch: (id, data) => api.put(`/group/branches/${id}`, data),
   deleteBranch: (id) => api.delete(`/group/branches/${id}`),
+  lastMeters: (id, params) => api.get(`/group/branches/${id}/last-meters`, { params }),
   getReports: (params) => api.get('/group/reports', { params }),
   getReport: (id) => api.get(`/group/reports/${id}`),
   createReport: (data) => api.post('/group/reports', data),
