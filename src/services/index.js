@@ -707,6 +707,4 @@ export const groupService = {
   approveReport: (id, comment) => api.post(`/group/reports/${id}/approve`, { comment }),
   rejectReport: (id, reason) => api.post(`/group/reports/${id}/reject`, { reason }),
   bulkApprove: (ids) => api.post('/group/reports/bulk-approve', { ids }),
-  loadDemo: () => api.post('/group/demo'),
-  clearDemo: () => api.delete('/group/demo'),
 };

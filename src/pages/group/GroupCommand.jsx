@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import {
   RiRadarLine, RiSparkling2Line, RiAlarmWarningLine, RiRefreshLine, RiGasStationLine, RiBuilding2Line,
-  RiCheckDoubleLine, RiTimeLine, RiErrorWarningLine, RiFileCheckLine, RiDatabase2Line, RiDeleteBinLine,
+  RiCheckDoubleLine, RiTimeLine, RiErrorWarningLine, RiFileCheckLine,
   RiLoader4Line, RiArrowRightSLine, RiUserLine,
 } from 'react-icons/ri';
 import { groupService } from '../../services';
@@ -58,30 +58,6 @@ export default function GroupCommand() {
     }
   }
 
-  async function loadDemo() {
-    setBusy(true);
-    try {
-      const { data: r } = await groupService.loadDemo();
-      toast.success(`Loaded ${r.data.branches} branches and ${r.data.reports} reports`);
-      load();
-    } catch (e) {
-      toast.error(e.response?.data?.message || 'Could not load demo data');
-    } finally { setBusy(false); }
-  }
-
-  async function clearDemo() {
-    if (!window.confirm('Remove all demo branches and their reports? Your real data is not touched.')) return;
-    setBusy(true);
-    try {
-      await groupService.clearDemo();
-      toast.success('Demo data removed');
-      setBrief(null);
-      load();
-    } catch (e) {
-      toast.error(e.response?.data?.message || 'Could not clear demo data');
-    } finally { setBusy(false); }
-  }
-
   async function approveAllPending() {
     setBusy(true);
     try {
@@ -116,11 +92,6 @@ export default function GroupCommand() {
           </p>
           <div className="grp-row" style={{ justifyContent: 'center' }}>
             <Link to="/group/branches" className="btn btn-primary"><RiBuilding2Line /> Add your first branch</Link>
-            {isOwner(user) && (
-              <button className="btn btn-secondary" onClick={loadDemo} disabled={busy}>
-                <RiDatabase2Line /> {busy ? 'Loading…' : 'Load demo group'}
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -329,11 +300,6 @@ export default function GroupCommand() {
         </div>
       </div>
 
-      {isOwner(user) && (
-        <div className="grp-row grp-no-print" style={{ justifyContent: 'flex-end' }}>
-          <button className="btn btn-ghost btn-sm" onClick={clearDemo} disabled={busy}><RiDeleteBinLine /> Remove demo data</button>
-        </div>
-      )}
     </div>
   );
 }

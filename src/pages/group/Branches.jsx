@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { RiBuilding2Line, RiAddLine, RiEditLine, RiDeleteBinLine, RiCloseLine, RiLoader4Line, RiMapPinLine, RiUserStarLine, RiDatabase2Line } from 'react-icons/ri';
+import { RiBuilding2Line, RiAddLine, RiEditLine, RiDeleteBinLine, RiCloseLine, RiLoader4Line, RiMapPinLine, RiUserStarLine } from 'react-icons/ri';
 import { groupService } from '../../services';
 import { naira, LINE_LABELS, LINE_COLORS, FUEL_LABELS } from './groupUtils';
 import './Group.css';
@@ -208,14 +208,6 @@ export default function Branches() {
     } catch (e) { toast.error(e.response?.data?.message || 'Could not remove the branch'); }
   }
 
-  async function loadDemo() {
-    try {
-      const { data } = await groupService.loadDemo();
-      toast.success(`Loaded ${data.data.branches} demo branches`);
-      load();
-    } catch (e) { toast.error(e.response?.data?.message || 'Could not load demo data'); }
-  }
-
   return (
     <div className="grp-page fade-in">
       <div className="page-header">
@@ -225,7 +217,6 @@ export default function Branches() {
             <p className="muted">Every station and outlet in the group, who manages it, and which departments report daily.</p>
           </div>
           <div className="grp-row">
-            {!branches.length && !loading && <button className="btn btn-secondary" onClick={loadDemo}><RiDatabase2Line /> Load demo group</button>}
             <button className="btn btn-primary" onClick={() => setEditing(blank())}><RiAddLine /> Add branch</button>
           </div>
         </div>
