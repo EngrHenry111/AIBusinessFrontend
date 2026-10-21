@@ -97,6 +97,8 @@
 .grp-lines th { text-align: left; font-weight: 600; color: var(--text-secondary); padding: 6px; font-size: 12px; white-space: nowrap; }
 .grp-lines td { padding: 4px 6px; vertical-align: middle; }
 .grp-lines .form-input, .grp-lines .form-select { padding: 7px 9px; font-size: 13px; min-width: 80px; }
+.grp-row-error td { background: rgba(239,68,68,0.08); }
+.grp-row-error .form-input { border-color: var(--color-danger); }
 .grp-lines td.calc { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-secondary); text-align: right; }
 .grp-recon { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-3); }
 .grp-recon > div { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 12px 14px; }

@@ -93,7 +93,11 @@ export default function GroupReportForm() {
         pump: p.pump, product: p.product, openingMeter: num(p.openingMeter), closingMeter: num(p.closingMeter), pricePerLitre: num(p.pricePerLitre),
       }))
       : [];
-    if (pumps.some((p) => p.closingMeter < p.openingMeter)) { toast.error('A closing meter is lower than its opening meter'); return; }
+    const backwards = pumps.find((p) => p.closingMeter < p.openingMeter);
+    if (backwards) {
+      toast.error(`${backwards.pump}: closing meter (${backwards.closingMeter.toLocaleString()}) is lower than opening meter (${backwards.openingMeter.toLocaleString()}). Check the readings weren't swapped, and enter the full meter number, not the litres sold.`, { duration: 7000 });
+      return;
+    }
     const items = mode === 'items'
       ? form.items.filter((it) => it.description.trim() && it.quantity !== '').map((it) => ({
         description: it.description.trim(), quantity: num(it.quantity), unit: it.unit || 'pcs', unitPrice: num(it.unitPrice),
@@ -185,8 +189,9 @@ export default function GroupReportForm() {
               <tbody>
                 {form.pumps.map((p, i) => {
                   const litres = Math.max(0, num(p.closingMeter) - num(p.openingMeter));
+                  const backwards = p.closingMeter !== '' && p.openingMeter !== '' && num(p.closingMeter) < num(p.openingMeter);
                   return (
-                    <tr key={i}>
+                    <tr key={i} className={backwards ? 'grp-row-error' : ''} title={backwards ? 'Closing meter must be the same as or higher than the opening meter' : ''}>
                       <td><input className="form-input" value={p.pump} onChange={(e) => setLine('pumps', i, 'pump', e.target.value)} style={{ width: 90 }} /></td>
                       <td>
                         <select className="form-select" value={p.product} onChange={(e) => setLine('pumps', i, 'product', e.target.value)}>
@@ -196,7 +201,7 @@ export default function GroupReportForm() {
                       <td><input type="number" inputMode="decimal" className="form-input" value={p.openingMeter} onChange={(e) => setLine('pumps', i, 'openingMeter', e.target.value)} /></td>
                       <td><input type="number" inputMode="decimal" className="form-input" value={p.closingMeter} onChange={(e) => setLine('pumps', i, 'closingMeter', e.target.value)} /></td>
                       <td><input type="number" inputMode="decimal" className="form-input" value={p.pricePerLitre} onChange={(e) => setLine('pumps', i, 'pricePerLitre', e.target.value)} style={{ width: 100 }} /></td>
-                      <td className="calc">{litres.toLocaleString()}</td>
+                      <td className="calc">{backwards ? <span className="grp-neg">Check meters</span> : litres.toLocaleString()}</td>
                       <td className="calc">{naira(litres * num(p.pricePerLitre))}</td>
                       <td><button className="btn btn-ghost btn-icon btn-sm" onClick={() => removeLine('pumps', i)} aria-label="Remove pump"><RiDeleteBinLine /></button></td>
                     </tr>
