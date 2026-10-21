@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { RiAddLine, RiDeleteBinLine, RiSendPlaneLine, RiSaveLine, RiLoader4Line, RiGasStationLine, RiShoppingCartLine } from 'react-icons/ri';
 import { groupService } from '../../services';
-import { naira, todayYmd } from './groupUtils';
+import { naira, todayYmd, FUEL_LABELS } from './groupUtils';
 import './Group.css';
 
 const num = (v) => (v === '' || v == null ? 0 : Number(v) || 0);
@@ -190,7 +190,7 @@ export default function GroupReportForm() {
                       <td><input className="form-input" value={p.pump} onChange={(e) => setLine('pumps', i, 'pump', e.target.value)} style={{ width: 90 }} /></td>
                       <td>
                         <select className="form-select" value={p.product} onChange={(e) => setLine('pumps', i, 'product', e.target.value)}>
-                          {['PMS', 'AGO', 'DPK', 'LPG'].map((x) => <option key={x}>{x}</option>)}
+                          {Object.entries(FUEL_LABELS).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
                         </select>
                       </td>
                       <td><input type="number" inputMode="decimal" className="form-input" value={p.openingMeter} onChange={(e) => setLine('pumps', i, 'openingMeter', e.target.value)} /></td>

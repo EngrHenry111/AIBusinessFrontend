@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { RiArrowLeftLine, RiCheckLine, RiCloseLine, RiEditLine, RiSendPlaneLine, RiLoader4Line, RiAlarmWarningLine, RiPrinterLine } from 'react-icons/ri';
 import { groupService } from '../../services';
-import { naira, fmtDate, fmtDateTime, STATUS_META } from './groupUtils';
+import { naira, fmtDate, fmtDateTime, STATUS_META, fuelLabel } from './groupUtils';
 import { ApprovalPipeline } from './GroupReports';
 import './Group.css';
 
@@ -84,7 +84,7 @@ export default function GroupReportDetail() {
                   <tbody>
                     {report.pumps.map((p, i) => (
                       <tr key={i}>
-                        <td>{p.pump}</td><td>{p.product}</td>
+                        <td>{p.pump}</td><td>{fuelLabel(p.product)}</td>
                         <td className="grp-num" style={{ textAlign: 'right' }}>{p.openingMeter.toLocaleString()}</td>
                         <td className="grp-num" style={{ textAlign: 'right' }}>{p.closingMeter.toLocaleString()}</td>
                         <td className="grp-num" style={{ textAlign: 'right' }}>{p.litres.toLocaleString()}</td>

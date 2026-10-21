@@ -36,3 +36,12 @@ export const STATUS_META = {
 };
 
 export const isOwner = (user) => ['company_owner', 'super_admin'].includes(user?.role);
+
+// Nigerian industry codes, with the everyday name alongside.
+export const FUEL_LABELS = {
+  PMS: 'PMS (Petrol)',
+  AGO: 'AGO (Diesel)',
+  DPK: 'DPK (Kerosene)',
+  LPG: 'LPG (Cooking Gas)',
+};
+export const fuelLabel = (code) => FUEL_LABELS[code] || code;

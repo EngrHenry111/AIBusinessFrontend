@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { RiBuilding2Line, RiAddLine, RiEditLine, RiDeleteBinLine, RiCloseLine, RiLoader4Line, RiMapPinLine, RiUserStarLine, RiDatabase2Line } from 'react-icons/ri';
 import { groupService } from '../../services';
-import { naira, LINE_LABELS, LINE_COLORS } from './groupUtils';
+import { naira, LINE_LABELS, LINE_COLORS, FUEL_LABELS } from './groupUtils';
 import './Group.css';
 
 const DEFAULT_DEPTS = {
@@ -75,7 +75,7 @@ function BranchModal({ initial, members, onClose, onSaved }) {
           {f.businessLine === 'filling_station' && (
             <div className="grp-form-grid">
               {['PMS', 'AGO', 'DPK'].map((p) => (
-                <div className="form-group" key={p}><label className="form-label">{p} price / litre (₦)</label>
+                <div className="form-group" key={p}><label className="form-label">{FUEL_LABELS[p]} price / litre (₦)</label>
                   <input type="number" className="form-input" value={f.fuelPrices?.[p] ?? ''} onChange={(e) => set('fuelPrices', { ...f.fuelPrices, [p]: e.target.value })} /></div>
               ))}
             </div>
