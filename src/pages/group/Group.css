@@ -111,6 +111,7 @@
 
 .grp-transfer-row { display: grid; grid-template-columns: 1.3fr 1fr 1.3fr 0.8fr 1fr auto; gap: 8px; margin-bottom: 8px; }
 @media (max-width: 760px) { .grp-transfer-row { grid-template-columns: 1fr 1fr; } }
+.grp-chip-x { border: none; background: transparent; color: inherit; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 0 0 2px; }
 .grp-shift-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 2px 8px; border-radius: var(--radius-full); background: var(--bg-tertiary); color: var(--text-secondary); font-weight: 500; }
 
 /* Timeline */

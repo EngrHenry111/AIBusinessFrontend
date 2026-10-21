@@ -177,7 +177,11 @@ export default function GroupReports() {
                       <td>
                         <div style={{ fontWeight: 600 }}>{r.branchName}</div>
                         <div className="muted" style={{ fontSize: 12 }}>
-                          {r.attendantName ? <>{r.attendantName} · {r.shift?.name} shift{r.shift?.start ? ` (${r.shift.start}–${r.shift.end})` : ''}</> : <>{r.department} · {r.preparedByName}</>}
+                          {r.department}{r.shift?.name ? ` · ${r.shift.name}${r.shift.start ? ` ${r.shift.start}–${r.shift.end}` : ''}` : ''}
+                        </div>
+                        <div className="muted" style={{ fontSize: 12 }}>
+                          {r.attendantName ? <>On duty: <strong style={{ color: 'var(--text-secondary)' }}>{r.attendantName}</strong>{r.onDuty?.length ? ` +${r.onDuty.length}` : ''} · </> : null}
+                          by {r.preparedByName || '—'}
                         </div>
                         {r.totals?.meterGapLitres >= 1 && <div className="grp-neg" style={{ fontSize: 11 }}>Meter gap {Math.round(r.totals.meterGapLitres).toLocaleString()} L</div>}
                       </td>

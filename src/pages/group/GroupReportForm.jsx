@@ -38,7 +38,7 @@ export default function GroupReportForm() {
   const [prefilling, setPrefilling] = useState(false);
   const [form, setForm] = useState({
     branchId: params.get('branchId') || '', department: '', reportDate: todayYmd(),
-    shift: { name: '', start: '', end: '' }, attendantName: '',
+    shift: { name: '', start: '', end: '' }, attendantName: '', onDuty: [],
     pumps: [], items: [emptyItem()], expenses: [], transfers: [],
     collections: { cash: '', pos: '', transfer: '', credit: '' }, notes: '',
   });
@@ -56,7 +56,7 @@ export default function GroupReportForm() {
           const rep = r.data;
           setForm({
             branchId: rep.branchId, department: rep.department, reportDate: rep.reportDate.slice(0, 10),
-            shift: rep.shift?.name ? rep.shift : { name: '', start: '', end: '' }, attendantName: rep.attendantName || '',
+            shift: rep.shift?.name ? rep.shift : { name: '', start: '', end: '' }, attendantName: rep.attendantName || '', onDuty: rep.onDuty || [],
             pumps: rep.pumps.map((p) => ({ ...p, prev: p.prevClosing != null ? { closing: p.prevClosing } : null })),
             items: rep.items.length ? rep.items : [emptyItem()], expenses: rep.expenses, transfers: rep.transfers || [],
             collections: rep.collections, notes: rep.notes || '',
@@ -73,6 +73,17 @@ export default function GroupReportForm() {
   }, [id]);
 
   const branch = branches.find((b) => b._id === form.branchId);
+  const [dutyDraft, setDutyDraft] = useState('');
+  // Name suggestions: this branch's duty roster first, then people with app logins.
+  const dutyNames = [...new Set([
+    ...(branch?.dutyStaff || []).filter((d) => d.active !== false).map((d) => d.name),
+    ...members.map((m) => m.name),
+  ])];
+  const addOnDuty = (name) => {
+    const n = String(name || '').trim();
+    if (n && !form.onDuty.includes(n)) set('onDuty', [...form.onDuty, n]);
+    setDutyDraft('');
+  };
   const hasLayout = (branch?.nozzles?.length || 0) > 0;
   const priceFor = (product) => branch?.fuelPrices?.[product] || '';
 
@@ -154,7 +165,7 @@ export default function GroupReportForm() {
   async function save(submit) {
     if (!form.branchId || !form.department) { toast.error('Choose the branch and department'); return; }
     if (mode === 'pumps' && branch?.businessLine === 'filling_station' && !form.attendantName.trim()) {
-      toast.error('Enter the attendant who worked this shift'); return;
+      toast.error('Enter the attendant who was on duty for this shift'); return;
     }
     if (mode === 'pumps' && !form.shift.name) { toast.error('Choose the shift'); return; }
     const pumps = mode === 'pumps'
@@ -188,8 +199,9 @@ export default function GroupReportForm() {
 
     const payload = {
       branchId: form.branchId, department: form.department, reportDate: form.reportDate, pumps, items,
-      shift: mode === 'pumps' && form.shift.name ? form.shift : undefined,
+      shift: form.shift.name ? form.shift : undefined,
       attendantName: form.attendantName,
+      onDuty: form.onDuty.filter((n) => n.trim() && n.trim() !== form.attendantName.trim()),
       expenses: form.expenses.filter((e) => e.description.trim() && e.amount !== '').map((e) => ({ description: e.description.trim(), amount: num(e.amount) })),
       transfers: form.transfers.filter((t) => t.amount !== '').map((t) => ({ ...t, amount: num(t.amount) })),
       collections: Object.fromEntries(Object.entries(form.collections).map(([k, v]) => [k, num(v)])),
@@ -254,10 +266,10 @@ export default function GroupReportForm() {
           </div>
         </div>
 
-        {perNozzleMode && (
+        {branch && form.department && (
           <div className="grp-form-grid" style={{ marginTop: 4 }}>
             <div className="form-group">
-              <label className="form-label"><RiTimeLine style={{ verticalAlign: '-2px' }} /> Shift</label>
+              <label className="form-label"><RiTimeLine style={{ verticalAlign: '-2px' }} /> Shift{!perNozzleMode && <span className="muted"> (optional)</span>}</label>
               <select className="form-select" value={form.shift.name} onChange={(e) => chooseShift(e.target.value)}>
                 <option value="">Select shift…</option>
                 {(branch?.shifts || []).map((s) => <option key={s.name} value={s.name}>{s.name} ({s.start}–{s.end})</option>)}
@@ -272,10 +284,36 @@ export default function GroupReportForm() {
               </div>
             </div>
             <div className="form-group">
-              <label className="form-label"><RiUserLine style={{ verticalAlign: '-2px' }} /> Attendant</label>
-              <input className="form-input" list="grp-attendants" value={form.attendantName} placeholder="Who sold on these nozzles?"
+              <label className="form-label">
+                <RiUserLine style={{ verticalAlign: '-2px' }} /> {perNozzleMode ? 'Attendant on duty' : 'Sales person on duty'}
+                {!perNozzleMode && <span className="muted"> (optional)</span>}
+              </label>
+              <input className="form-input" list="grp-attendants" value={form.attendantName}
+                placeholder={perNozzleMode ? 'Who sold on these nozzles?' : 'Who made these sales?'}
                 onChange={(e) => set('attendantName', e.target.value)} />
-              <datalist id="grp-attendants">{members.map((m) => <option key={m._id} value={m.name} />)}</datalist>
+              <datalist id="grp-attendants">{dutyNames.map((n) => <option key={n} value={n} />)}</datalist>
+            </div>
+          </div>
+        )}
+
+        {branch && form.department && (
+          <div className="form-group" style={{ marginTop: 4 }}>
+            <label className="form-label">Others on duty <span className="muted">(optional)</span></label>
+            <div className="grp-row" style={{ gap: 6 }}>
+              {form.onDuty.map((n) => (
+                <span key={n} className="grp-shift-chip">
+                  {n}
+                  <button type="button" className="grp-chip-x" onClick={() => set('onDuty', form.onDuty.filter((x) => x !== n))} aria-label={`Remove ${n}`}>×</button>
+                </span>
+              ))}
+              <input className="form-input" list="grp-attendants" placeholder="Add a name, then press Enter" value={dutyDraft}
+                style={{ maxWidth: 260 }}
+                onChange={(e) => setDutyDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOnDuty(dutyDraft); } }}
+                onBlur={() => addOnDuty(dutyDraft)} />
+            </div>
+            <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+              Staff who don't use the app can still be named here. Your name is recorded automatically as the person submitting.
             </div>
           </div>
         )}

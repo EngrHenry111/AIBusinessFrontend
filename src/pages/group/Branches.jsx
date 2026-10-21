@@ -11,7 +11,11 @@ const DEFAULT_DEPTS = {
   building_materials: ['Cement & Blocks', 'Iron Rods & Steel', 'Roofing & Finishing', 'Plumbing & Electrical'],
   general: ['Sales'],
 };
-const DEFAULT_SHIFTS = [{ name: 'Morning', start: '06:00', end: '14:00' }, { name: 'Afternoon', start: '14:00', end: '22:00' }];
+const DEFAULT_SHIFTS = [
+  { name: 'Morning', start: '06:00', end: '12:00' },
+  { name: 'Afternoon', start: '12:00', end: '18:00' },
+  { name: 'Evening', start: '18:00', end: '22:00' },
+];
 const makeNozzles = (pumps, perPump, dieselPumps) => Array.from({ length: pumps }).flatMap((_, pi) => Array.from({ length: perPump }).map((__, ni) => ({
   code: `P${pi + 1}-N${ni + 1}`, pump: `Pump ${pi + 1}`, product: pi >= pumps - dieselPumps ? 'AGO' : 'PMS',
 })));
@@ -19,7 +23,7 @@ const blank = () => ({
   name: '', code: '', businessLine: 'filling_station', address: '', city: '', state: '',
   dailySalesTarget: '', fuelPrices: { PMS: '', AGO: '', DPK: '' }, managerId: '', staff: [],
   departments: DEFAULT_DEPTS.filling_station.map((name) => ({ name, headId: '' })), status: 'active',
-  shifts: DEFAULT_SHIFTS.map((x) => ({ ...x })), nozzles: makeNozzles(4, 2, 1),
+  shifts: DEFAULT_SHIFTS.map((x) => ({ ...x })), nozzles: makeNozzles(4, 2, 1), dutyStaff: [],
 });
 const refId = (v) => (v && typeof v === 'object' ? v._id : v || '');
 
@@ -87,20 +91,36 @@ function BranchModal({ initial, members, onClose, onSaved }) {
             </div>
           )}
 
+          <label className="form-label">Duty roster <span className="muted">(staff who sell but don't log in)</span></label>
+          {f.dutyStaff.map((d, i) => (
+            <div className="grp-dept-row" key={d._id || `new-${i}`} style={{ gridTemplateColumns: '1.3fr 1fr 1fr auto auto', opacity: d.active === false ? 0.55 : 1 }}>
+              <input className="form-input" value={d.name} placeholder="Full name" onChange={(e) => set('dutyStaff', f.dutyStaff.map((y, j) => (j === i ? { ...y, name: e.target.value } : y)))} />
+              <input className="form-input" value={d.role} placeholder={f.businessLine === 'filling_station' ? 'Pump attendant' : 'Sales rep'} onChange={(e) => set('dutyStaff', f.dutyStaff.map((y, j) => (j === i ? { ...y, role: e.target.value } : y)))} />
+              <input className="form-input" value={d.phone} placeholder="Phone (optional)" onChange={(e) => set('dutyStaff', f.dutyStaff.map((y, j) => (j === i ? { ...y, phone: e.target.value } : y)))} />
+              <label className="grp-row" style={{ gap: 4, fontSize: 12, flexWrap: 'nowrap' }} title="Untick when they leave. Their name stays on past reports.">
+                <input type="checkbox" checked={d.active !== false} onChange={(e) => set('dutyStaff', f.dutyStaff.map((y, j) => (j === i ? { ...y, active: e.target.checked } : y)))} /> Active
+              </label>
+              <button className="btn btn-ghost btn-icon" onClick={() => set('dutyStaff', f.dutyStaff.filter((_, j) => j !== i))} aria-label="Remove from roster"><RiDeleteBinLine /></button>
+            </div>
+          ))}
+          <button className="btn btn-secondary btn-sm" onClick={() => set('dutyStaff', [...f.dutyStaff, { name: '', role: '', phone: '', active: true }])}><RiAddLine /> Add staff</button>
+          <div style={{ height: 16 }} />
+
+          <label className="form-label">Shifts</label>
+          {f.shifts.map((x, i) => (
+            <div className="grp-dept-row" key={i} style={{ gridTemplateColumns: '1.2fr 1fr 1fr auto' }}>
+              <input className="form-input" value={x.name} placeholder="Shift name" onChange={(e) => set('shifts', f.shifts.map((y, j) => (j === i ? { ...y, name: e.target.value } : y)))} />
+              <input type="time" className="form-input" value={x.start} onChange={(e) => set('shifts', f.shifts.map((y, j) => (j === i ? { ...y, start: e.target.value } : y)))} />
+              <input type="time" className="form-input" value={x.end} onChange={(e) => set('shifts', f.shifts.map((y, j) => (j === i ? { ...y, end: e.target.value } : y)))} />
+              <button className="btn btn-ghost btn-icon" onClick={() => set('shifts', f.shifts.filter((_, j) => j !== i))} aria-label="Remove shift"><RiDeleteBinLine /></button>
+            </div>
+          ))}
+          <button className="btn btn-secondary btn-sm" onClick={() => set('shifts', [...f.shifts, { name: 'Night', start: '22:00', end: '06:00' }])}><RiAddLine /> Add shift</button>
+          <div style={{ height: 16 }} />
+
           {f.businessLine === 'filling_station' && (
             <>
-              <label className="form-label">Shifts</label>
-              {f.shifts.map((x, i) => (
-                <div className="grp-dept-row" key={i} style={{ gridTemplateColumns: '1.2fr 1fr 1fr auto' }}>
-                  <input className="form-input" value={x.name} placeholder="Shift name" onChange={(e) => set('shifts', f.shifts.map((y, j) => (j === i ? { ...y, name: e.target.value } : y)))} />
-                  <input type="time" className="form-input" value={x.start} onChange={(e) => set('shifts', f.shifts.map((y, j) => (j === i ? { ...y, start: e.target.value } : y)))} />
-                  <input type="time" className="form-input" value={x.end} onChange={(e) => set('shifts', f.shifts.map((y, j) => (j === i ? { ...y, end: e.target.value } : y)))} />
-                  <button className="btn btn-ghost btn-icon" onClick={() => set('shifts', f.shifts.filter((_, j) => j !== i))} aria-label="Remove shift"><RiDeleteBinLine /></button>
-                </div>
-              ))}
-              <button className="btn btn-secondary btn-sm" onClick={() => set('shifts', [...f.shifts, { name: 'Night', start: '22:00', end: '06:00' }])}><RiAddLine /> Add shift</button>
-
-              <label className="form-label" style={{ marginTop: 16, display: 'block' }}>Pumps & nozzles ({f.nozzles.length})</label>
+              <label className="form-label" style={{ display: 'block' }}>Pumps & nozzles ({f.nozzles.length})</label>
               <div className="grp-row" style={{ marginBottom: 8, fontSize: 13 }}>
                 <input type="number" min={1} max={40} className="form-input" style={{ width: 70 }} value={gen.pumps} onChange={(e) => setGen({ ...gen, pumps: Number(e.target.value) || 1 })} /> pumps ×
                 <input type="number" min={1} max={8} className="form-input" style={{ width: 60 }} value={gen.perPump} onChange={(e) => setGen({ ...gen, perPump: Number(e.target.value) || 1 })} /> nozzles, last
@@ -195,6 +215,7 @@ export default function Branches() {
       fuelPrices: b.fuelPrices || { PMS: '', AGO: '', DPK: '' },
       shifts: b.shifts?.length ? b.shifts.map((x) => ({ name: x.name, start: x.start, end: x.end })) : DEFAULT_SHIFTS.map((x) => ({ ...x })),
       nozzles: (b.nozzles || []).map((n) => ({ code: n.code, pump: n.pump, product: n.product })),
+      dutyStaff: (b.dutyStaff || []).map((d) => ({ _id: d._id, name: d.name, role: d.role || '', phone: d.phone || '', active: d.active !== false })),
       dailySalesTarget: b.dailySalesTarget || '',
     });
   }
@@ -239,11 +260,10 @@ export default function Branches() {
               </div>
               <div style={{ fontSize: 13 }}><RiUserStarLine style={{ verticalAlign: '-2px' }} /> Manager: <strong>{b.managerId?.name || 'Not assigned'}</strong></div>
               <div style={{ fontSize: 13 }} className="muted">{b.departments.map((d) => d.name).join(' · ')}</div>
-              {b.businessLine === 'filling_station' && (
-                <div style={{ fontSize: 13 }}>
-                  {b.nozzles?.length || 0} nozzles · {(b.shifts || []).map((x) => `${x.name} ${x.start}–${x.end}`).join(', ')}
-                </div>
-              )}
+              <div style={{ fontSize: 13 }}>
+                {b.businessLine === 'filling_station' && <>{b.nozzles?.length || 0} nozzles · </>}
+                {(b.dutyStaff || []).filter((d) => d.active !== false).length} staff on roster · {(b.shifts || []).map((x) => x.name).join(', ')}
+              </div>
               {b.dailySalesTarget > 0 && <div style={{ fontSize: 13 }}>Daily target: <strong>{naira(b.dailySalesTarget)}</strong></div>}
               {b.status === 'inactive' && <span className="badge badge-neutral">Inactive</span>}
               <div className="grp-row" style={{ marginTop: 'auto' }}>

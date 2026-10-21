@@ -63,11 +63,12 @@ export default function GroupReportDetail() {
           <div>
             <div className="grp-mono muted">{report.referenceNumber}{report.ledgerNumber && <> · Ledger <strong style={{ color: 'var(--color-success)' }}>{report.ledgerNumber}</strong></>}</div>
             <h1 style={{ margin: '4px 0', fontSize: 22 }}>{report.branchName} · {report.department}</h1>
-            <div className="muted" style={{ fontSize: 13 }}>{fmtDate(report.reportDate)} · prepared by {report.preparedByName || '—'}</div>
-            {(report.shift?.name || report.attendantName) && (
+            <div className="muted" style={{ fontSize: 13 }}>{fmtDate(report.reportDate)} · submitted by {report.preparedByName || '—'}</div>
+            {(report.shift?.name || report.attendantName || report.onDuty?.length > 0) && (
               <div className="grp-row" style={{ marginTop: 8, gap: 8 }}>
                 {report.shift?.name && <span className="grp-shift-chip"><RiTimeLine /> {report.shift.name} shift{report.shift.start ? ` · ${report.shift.start}–${report.shift.end}` : ''}</span>}
-                {report.attendantName && <span className="grp-shift-chip"><RiUserLine /> {report.attendantName}</span>}
+                {report.attendantName && <span className="grp-shift-chip"><RiUserLine /> On duty: {report.attendantName}</span>}
+                {report.onDuty?.length > 0 && <span className="grp-shift-chip">Also on duty: {report.onDuty.join(', ')}</span>}
               </div>
             )}
           </div>
