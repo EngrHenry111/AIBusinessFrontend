@@ -249,3 +249,7 @@
     display: none;
   }
 }
+
+/* Plan-locked items (e.g. Group Operations on non-Enterprise plans) — a label, not an alert. */
+.nav-badge.nav-badge-plan { background: rgba(16,185,129,0.14); color: #059669; }
+[data-theme='dark'] .nav-badge.nav-badge-plan { background: rgba(16,185,129,0.22); color: #6ee7b7; }

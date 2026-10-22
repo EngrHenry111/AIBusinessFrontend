@@ -2,6 +2,8 @@
 .grp-page { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
 .grp-page .muted { color: var(--text-muted); }
 .grp-page .page-header h1 { display: flex; align-items: center; gap: 10px; }
+/* The global reset makes svg block-level; inline icons in text should sit on the line. */
+.grp-branch svg, .grp-branch-city svg, .grp-alert svg, .grp-shift-chip svg { display: inline-block; vertical-align: -2px; }
 .grp-page .page-header h1 svg { flex-shrink: 0; color: var(--color-brand); }
 .grp-mono { font-family: var(--font-mono); font-size: 12px; }
 .grp-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
@@ -131,6 +133,20 @@
 
 .grp-aging-bar { display: flex; height: 10px; border-radius: var(--radius-full); overflow: hidden; background: var(--bg-tertiary); margin-top: 16px; }
 .grp-aging-bar span { display: block; height: 100%; }
+
+.grp-upgrade { max-width: 680px; margin: 0 auto; text-align: center; padding: var(--space-10) var(--space-6); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.grp-upgrade h2 { margin: 8px 0 0; font-size: 24px; }
+.grp-upgrade-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: var(--radius-full); background: linear-gradient(135deg, #10b981, #059669); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; }
+.grp-upgrade-price { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; margin-top: 8px; }
+.grp-upgrade-price span { font-size: 16px; font-weight: 500; color: var(--text-muted); }
+.grp-upgrade-list { list-style: none; padding: 0; margin: 16px 0; text-align: left; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px 20px; width: 100%; }
+.grp-upgrade-list li { display: flex; gap: 8px; font-size: 14px; }
+.grp-upgrade-list svg { color: #10b981; flex-shrink: 0; margin-top: 3px; }
+.grp-plan-note { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; padding: 10px 14px; border-radius: var(--radius-md); background: rgba(16,185,129,0.1); color: var(--text-primary); margin-bottom: var(--space-4); }
+.grp-plan-note svg { color: #10b981; }
+.grp-plan-note a { font-weight: 600; margin-left: auto; }
+.grp-plan-note.warn { background: rgba(245,158,11,0.14); }
+.grp-plan-note.warn svg { color: var(--color-warning); }
 
 /* Timeline */
 .grp-timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }

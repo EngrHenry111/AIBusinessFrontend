@@ -15,6 +15,7 @@ import {
   RiBuilding2Line, RiRadarLine, RiFileCheckLine, RiClipboardLine, RiArchiveLine, RiHandCoinLine, RiLineChartLine, RiBankCard2Line,
 } from 'react-icons/ri';
 import useSchoolMe from '../../pages/school/useSchoolMe';
+import { useGroupAccess } from '../../pages/group/GroupGate';
 import './Sidebar.css';
 
 const NAV_ITEMS = [
@@ -24,14 +25,14 @@ const NAV_ITEMS = [
   { label: 'AI Agents', icon: RiRobot2Line, path: '/agents' },
   // Multi-branch group operations — owner command center + department reports.
   { type: 'divider', label: 'Group Operations' },
-  { label: 'Command Center', icon: RiRadarLine, path: '/group', roles: ['company_owner', 'super_admin'] },
-  { label: 'Daily Reports', icon: RiClipboardLine, path: '/group/reports' },
-  { label: 'Approved Sales', icon: RiFileCheckLine, path: '/group/ledger' },
-  { label: 'Inventory', icon: RiArchiveLine, path: '/group/stock' },
-  { label: 'Credit Customers', icon: RiHandCoinLine, path: '/group/credit' },
-  { label: 'POS Settlement', icon: RiBankCard2Line, path: '/group/pos' },
-  { label: 'Profit', icon: RiLineChartLine, path: '/group/profit', roles: ['company_owner', 'super_admin'] },
-  { label: 'Branches', icon: RiBuilding2Line, path: '/group/branches', roles: ['company_owner', 'super_admin'] },
+  { label: 'Command Center', icon: RiRadarLine, path: '/group', roles: ['company_owner', 'super_admin'], enterprise: true },
+  { label: 'Daily Reports', icon: RiClipboardLine, path: '/group/reports', enterprise: true },
+  { label: 'Approved Sales', icon: RiFileCheckLine, path: '/group/ledger', enterprise: true },
+  { label: 'Inventory', icon: RiArchiveLine, path: '/group/stock', enterprise: true },
+  { label: 'Credit Customers', icon: RiHandCoinLine, path: '/group/credit', enterprise: true },
+  { label: 'POS Settlement', icon: RiBankCard2Line, path: '/group/pos', enterprise: true },
+  { label: 'Profit', icon: RiLineChartLine, path: '/group/profit', roles: ['company_owner', 'super_admin'], enterprise: true },
+  { label: 'Branches', icon: RiBuilding2Line, path: '/group/branches', roles: ['company_owner', 'super_admin'], enterprise: true },
   // Legal practice — shown to companies whose industry is "legal".
   { type: 'divider', label: 'Legal Practice', legalOnly: true },
   { label: 'Matters', icon: RiScales3Line, path: '/matters', legalOnly: true },
@@ -91,9 +92,12 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const [draftContracts, setDraftContracts] = useState(0);
   const [pendingRequisitions, setPendingRequisitions] = useState(0);
   const [groupAwaiting, setGroupAwaiting] = useState(0);
+  const groupAccess = useGroupAccess();
+  const groupLocked = groupAccess && !groupAccess.allowed;
 
-  // Poll for branch reports waiting on this user's approval
+  // Poll for branch reports waiting on this user's approval (only when the plan includes it)
   useEffect(() => {
+    if (!groupAccess?.allowed) return undefined;
     let alive = true;
     const check = async () => {
       try {
@@ -104,7 +108,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     check();
     const iv = setInterval(check, 60000);
     return () => { alive = false; clearInterval(iv); };
-  }, []);
+  }, [groupAccess?.allowed]);
 
   // Poll for WhatsApp conversations waiting on a human
   useEffect(() => {
@@ -210,6 +214,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     if (item.path === '/loyalty') return loyaltyMembers > 0 ? loyaltyMembers : null;
     if (item.path === '/contracts') return draftContracts > 0 ? draftContracts : null;
     if (item.path === '/procurement') return pendingRequisitions > 0 ? pendingRequisitions : null;
+    if (item.enterprise && groupLocked) return 'Enterprise';
     if (item.path === '/group/reports') return groupAwaiting > 0 ? groupAwaiting : null;
     return item.badge;
   };
@@ -264,7 +269,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
               <Icon className="nav-icon" />
               {!collapsed && <span className="nav-label">{item.label}</span>}
               {badgeFor(item) ? (
-                <span className={`nav-badge ${collapsed ? 'nav-badge-dot' : ''}`}>
+                <span className={`nav-badge ${collapsed ? 'nav-badge-dot' : ''} ${badgeFor(item) === 'Enterprise' ? 'nav-badge-plan' : ''}`}>
                   {collapsed ? '' : badgeFor(item)}
                 </span>
               ) : null}

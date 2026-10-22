@@ -605,6 +605,7 @@ export const paymentService = {
   subscribe: (plan, billingCycle) => api.post('/payments/subscribe', { plan, billingCycle }),
   cancelSubscription: () => api.post('/payments/cancel-subscription'),
   getSubscription: () => api.get('/payments/subscription'),
+  enterpriseQuote: () => api.get('/payments/enterprise-quote'),
 };
 
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
@@ -690,6 +691,7 @@ export const adminService = {
 // ─── Group operations (multi-branch) ──────────────────────────────────────────
 export const groupService = {
   me: () => api.get('/group/me'),
+  access: () => api.get('/group/access'),
   members: () => api.get('/group/members'),
   overview: (params) => api.get('/group/overview', { params }),
   aiBrief: (params) => api.post('/group/ai-brief', null, { params }),

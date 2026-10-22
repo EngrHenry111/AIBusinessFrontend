@@ -101,6 +101,7 @@ const Procurement = lazy(() => import('./pages/procurement/Procurement'));
 const RequisitionForm = lazy(() => import('./pages/procurement/RequisitionForm'));
 const RequisitionDetail = lazy(() => import('./pages/procurement/RequisitionDetail'));
 const GroupCommand = lazy(() => import('./pages/group/GroupCommand'));
+const GroupGate = lazy(() => import('./pages/group/GroupGate'));
 const GroupReports = lazy(() => import('./pages/group/GroupReports'));
 const GroupReportForm = lazy(() => import('./pages/group/GroupReportForm'));
 const GroupReportDetail = lazy(() => import('./pages/group/GroupReportDetail'));
@@ -266,18 +267,18 @@ function AppRoutes() {
                 <Route path="procurement" element={<Procurement />} />
                 <Route path="procurement/new" element={<RequisitionForm />} />
                 <Route path="procurement/:id" element={<RequisitionDetail />} />
-                <Route path="group" element={<GroupCommand />} />
-                <Route path="group/reports" element={<GroupReports />} />
-                <Route path="group/reports/new" element={<GroupReportForm />} />
-                <Route path="group/reports/:id" element={<GroupReportDetail />} />
-                <Route path="group/reports/:id/edit" element={<GroupReportForm />} />
-                <Route path="group/branches" element={<GroupBranches />} />
-                <Route path="group/ledger" element={<SalesLedger />} />
-                <Route path="group/stock" element={<GroupInventory />} />
-                <Route path="group/credit" element={<GroupCredit />} />
-                <Route path="group/credit/:id" element={<GroupCreditDetail />} />
-                <Route path="group/profit" element={<GroupProfit />} />
-                <Route path="group/pos" element={<GroupPos />} />
+                <Route path="group" element={<GroupGate><GroupCommand /></GroupGate>} />
+                <Route path="group/reports" element={<GroupGate><GroupReports /></GroupGate>} />
+                <Route path="group/reports/new" element={<GroupGate><GroupReportForm /></GroupGate>} />
+                <Route path="group/reports/:id" element={<GroupGate><GroupReportDetail /></GroupGate>} />
+                <Route path="group/reports/:id/edit" element={<GroupGate><GroupReportForm /></GroupGate>} />
+                <Route path="group/branches" element={<GroupGate><GroupBranches /></GroupGate>} />
+                <Route path="group/ledger" element={<GroupGate><SalesLedger /></GroupGate>} />
+                <Route path="group/stock" element={<GroupGate><GroupInventory /></GroupGate>} />
+                <Route path="group/credit" element={<GroupGate><GroupCredit /></GroupGate>} />
+                <Route path="group/credit/:id" element={<GroupGate><GroupCreditDetail /></GroupGate>} />
+                <Route path="group/profit" element={<GroupGate><GroupProfit /></GroupGate>} />
+                <Route path="group/pos" element={<GroupGate><GroupPos /></GroupGate>} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="team" element={<Team />} />
                 <Route path="settings/audit-log" element={<AuditLog />} />

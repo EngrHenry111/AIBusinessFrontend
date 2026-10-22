@@ -25,6 +25,9 @@ const PLAN_FEATURES = {
 };
 
 const ENTERPRISE_FEATURES = [
+  'Group Operations: run every branch from one dashboard', 'Shift sheets per attendant & nozzle, meter checks',
+  'Two-step approvals + approved sales ledger', 'Inventory, credit customers, POS settlement',
+  'Profit per branch, nightly summary, monthly PDF',
   'Unlimited team members', 'Unlimited documents', 'Unlimited AI questions',
   'All business modules', 'AI chat widget — unlimited websites', 'e-Procurement module',
   'White-label options', 'Dedicated account manager', 'Custom AI training',
@@ -43,7 +46,8 @@ const STATUS_BADGE = {
 };
 
 export default function Billing() {
-  const { company } = useAuth();
+  const { company, user } = useAuth();
+  const userIsOwner = ['company_owner', 'super_admin'].includes(user?.role);
   const [searchParams] = useSearchParams();
   const [plans, setPlans] = useState([]);
   const [history, setHistory] = useState([]);
@@ -53,6 +57,7 @@ export default function Billing() {
   const [cancelling, setCancelling] = useState(false);
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [activeTab, setActiveTab] = useState('plans');
+  const [entQuote, setEntQuote] = useState(null);
 
   const currentPlan = subscription?.plan || company?.plan || 'trial';
   const status = subscription?.status || company?.subscription?.status || 'active';
@@ -62,7 +67,7 @@ export default function Billing() {
   useEffect(() => {
     loadData();
     const payment = searchParams.get('payment');
-    const reference = searchParams.get('reference');
+    const reference = searchParams.get('reference') || searchParams.get('trxref');
     if (payment === 'success' && reference) verifyPayment(reference);
     else if (payment === 'success') setTimeout(loadData, 2500); // subscription webhook lag
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,6 +84,7 @@ export default function Billing() {
       setPlans(plansRes.data.data);
       setHistory(historyRes.data.data || []);
       setSubscription(subRes.data.data || null);
+      paymentService.enterpriseQuote().then(({ data: q }) => setEntQuote(q.data)).catch(() => {});
       if (subRes.data.data?.billingCycle) setBillingCycle(subRes.data.data.billingCycle);
     } catch { toast.error('Failed to load billing data'); }
     finally { setLoading(false); }
@@ -91,6 +97,19 @@ export default function Billing() {
       window.location.href = data.data.authorizationUrl;
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not start the subscription');
+      setPaying(null);
+    }
+  }
+
+  // Enterprise is a one-off Paystack checkout priced by branch count (worked
+  // out on the server). Paying again before the period ends extends it.
+  async function payEnterprise() {
+    setPaying('enterprise');
+    try {
+      const { data } = await paymentService.initialize('enterprise', billingCycle);
+      window.location.href = data.data.authorizationUrl;
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not start the payment');
       setPaying(null);
     }
   }
@@ -296,21 +315,36 @@ export default function Billing() {
               <div className="enterprise-body">
                 <div className="enterprise-info">
                   <div className="enterprise-price">
-                    ₦99,900<span className="plan-period">/mo</span>
+                    {fmtMoney(entQuote ? (billingCycle === 'annual' ? entQuote.annual : entQuote.monthly) : (billingCycle === 'annual' ? 999000 : 99900))}
+                    <span className="plan-period">/{billingCycle === 'annual' ? 'yr' : 'mo'}</span>
                   </div>
-                  <div className="plan-billed-note">Billed monthly, cancel anytime</div>
+                  <div className="plan-billed-note">
+                    {entQuote
+                      ? <>For {entQuote.branches} branch{entQuote.branches === 1 ? '' : 'es'} · includes {entQuote.includedBranches}, then {fmtMoney(entQuote.perBranch)}/mo per extra branch</>
+                      : 'Priced by number of branches'}
+                  </div>
+                  {billingCycle === 'annual' && entQuote && <div className="plan-savings">2 months free · save {fmtMoney(entQuote.annualSavings)}</div>}
                   <p className="enterprise-note">
-                    For large organizations and government agencies. Custom pricing available for annual contracts.
+                    For businesses with more than one branch: filling stations, outlets, warehouses. Pay {billingCycle === 'annual' ? 'yearly' : 'monthly'}; paying early adds to the time you have left.
                   </p>
-                  {currentPlan === 'enterprise' ? (
-                    <button className="btn enterprise-btn" disabled>
-                      <RiCheckboxCircleLine /> Current Plan
+                  {currentPlan === 'enterprise' && entQuote?.current?.periodEnd && (
+                    <p className="enterprise-note" style={{ fontWeight: 600 }}>
+                      Paid until {fmtDate(entQuote.current.periodEnd)}{entQuote.current.paidBranches ? ` for ${entQuote.current.paidBranches} branches` : ''}.
+                      {entQuote.current.paidBranches && entQuote.activeBranches > entQuote.current.paidBranches
+                        ? ` You now have ${entQuote.activeBranches} branches; your next payment covers all of them.` : ''}
+                    </p>
+                  )}
+                  {userIsOwner ? (
+                    <button className="btn enterprise-btn" onClick={payEnterprise} disabled={paying === 'enterprise'}>
+                      {paying === 'enterprise' ? <RiLoader4Line className="spin" /> : currentPlan === 'enterprise' ? <RiRepeatLine /> : <RiVipCrownLine />}
+                      {' '}{currentPlan === 'enterprise' ? 'Renew / extend Enterprise' : 'Upgrade to Enterprise'}
                     </button>
                   ) : (
-                    <a className="btn enterprise-btn" href={WHATSAPP_ENTERPRISE_URL} target="_blank" rel="noopener noreferrer">
-                      <RiWhatsappLine /> Contact Sales
-                    </a>
+                    <p className="enterprise-note">Ask the account owner to upgrade.</p>
                   )}
+                  <a className="btn btn-ghost btn-sm" href={WHATSAPP_ENTERPRISE_URL} target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.8)', marginTop: 6, paddingLeft: 0 }}>
+                    <RiWhatsappLine /> Talk to sales about a private deployment
+                  </a>
                 </div>
                 <ul className="enterprise-features">
                   {ENTERPRISE_FEATURES.map((f, i) => (
