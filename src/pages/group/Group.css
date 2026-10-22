@@ -120,6 +120,13 @@
 .grp-person.short { border-left-color: var(--color-danger); }
 .grp-person-name { font-weight: 600; display: flex; align-items: center; gap: 6px; }
 
+.grp-digest-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--space-6); }
+@media (max-width: 760px) { .grp-digest-grid { grid-template-columns: minmax(0, 1fr); } }
+.grp-wa-preview { background: #e7ffdb; color: #111b21; border-radius: 10px 10px 10px 2px; padding: 12px 14px; font-size: 13px; line-height: 1.5; box-shadow: var(--shadow-sm); max-height: 460px; overflow-y: auto; word-break: break-word; }
+[data-theme='dark'] .grp-wa-preview { background: #005c4b; color: #e9edef; }
+.grp-recipient { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; font-size: 13px; padding: 8px 10px; background: var(--bg-secondary); border-radius: var(--radius-sm); margin-bottom: 8px; align-items: center; }
+@media (max-width: 640px) { .grp-recipient { grid-template-columns: 1fr; } }
+
 /* Timeline */
 .grp-timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .grp-timeline li { display: flex; gap: 10px; font-size: 13px; }

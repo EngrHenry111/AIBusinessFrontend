@@ -7,11 +7,12 @@ import {
 import {
   RiRadarLine, RiSparkling2Line, RiAlarmWarningLine, RiRefreshLine, RiGasStationLine, RiBuilding2Line,
   RiCheckDoubleLine, RiTimeLine, RiErrorWarningLine, RiFileCheckLine,
-  RiLoader4Line, RiArrowRightSLine, RiUserLine,
+  RiLoader4Line, RiArrowRightSLine, RiUserLine, RiWhatsappLine,
 } from 'react-icons/ri';
 import { groupService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import { naira, nairaShort, LINE_LABELS, LINE_SHORT, LINE_COLORS, isOwner } from './groupUtils';
+import DigestSettings from './DigestSettings';
 import './Group.css';
 
 const RANGES = [{ d: 1, l: 'Today' }, { d: 7, l: '7 days' }, { d: 30, l: '30 days' }];
@@ -33,6 +34,7 @@ export default function GroupCommand() {
   const [brief, setBrief] = useState(null);
   const [briefing, setBriefing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [digestOpen, setDigestOpen] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -118,6 +120,11 @@ export default function GroupCommand() {
                 ))}
               </div>
               <button className="btn btn-ghost btn-sm" onClick={load} title="Refresh"><RiRefreshLine className={loading ? 'spin' : ''} /></button>
+              {isOwner(user) && (
+                <button className="btn btn-ghost btn-sm" onClick={() => setDigestOpen(true)} title="Nightly WhatsApp summary">
+                  <RiWhatsappLine /> Nightly summary
+                </button>
+              )}
             </div>
           </div>
           <div className="grp-hero-today">
@@ -139,6 +146,8 @@ export default function GroupCommand() {
           </div></div>
         </div>
       </section>
+
+      {digestOpen && <DigestSettings onClose={() => setDigestOpen(false)} />}
 
       {/* ── AI brief + alerts ── */}
       <div className="grp-grid-2">
