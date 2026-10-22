@@ -9,6 +9,7 @@ import { groupService } from '../../services';
 import { naira, fmtDate, fmtDateTime, STATUS_META, fuelLabel } from './groupUtils';
 import { ApprovalPipeline } from './GroupReports';
 import { attendantBreakdown } from './attendantBreakdown';
+import { useAuth } from '../../context/AuthContext';
 import './Group.css';
 
 export default function GroupReportDetail() {
@@ -18,6 +19,8 @@ export default function GroupReportDetail() {
   const [perms, setPerms] = useState({});
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
+  const { user } = useAuth();
+  const ownerView = ['company_owner', 'super_admin'].includes(user?.role);
 
   const load = useCallback(() => {
     groupService.getReport(id)
@@ -52,6 +55,7 @@ export default function GroupReportDetail() {
     pumps: (report.pumps || []).map((p) => ({ ...p, nozzle: p.nozzle || p.pump })),
     expenses: report.expenses || [],
     credit: report.collections?.credit || 0,
+    creditSales: report.creditSales || [],
     totalVariance: t.variance || 0,
   });
 
@@ -210,6 +214,18 @@ export default function GroupReportDetail() {
               </div>
             </>
           )}
+          {report.creditSales?.length > 0 && (
+            <>
+              <div className="grp-card-title" style={{ marginTop: 16 }}>Credit sales</div>
+              {report.creditSales.map((x, i) => (
+                <div key={i} className="grp-row" style={{ fontSize: 13, padding: '4px 0' }}>
+                  <Link to={`/group/credit/${x.customerId}`}>{x.customerName}</Link>
+                  <span className="muted">{[x.nozzle, x.vehicle && `Vehicle ${x.vehicle}`, x.reference].filter(Boolean).join(' · ')}</span>
+                  <span className="grp-spacer" /><span className="grp-num">{naira(x.amount)}</span>
+                </div>
+              ))}
+            </>
+          )}
           {report.expenses?.length > 0 && (
             <>
               <div className="grp-card-title" style={{ marginTop: 16 }}>Expenses</div>
@@ -227,6 +243,7 @@ export default function GroupReportDetail() {
             <div className="grp-recon">
               {t.litres > 0 && <div><div className="l">Litres sold</div><div className="v">{t.litres.toLocaleString()} L</div></div>}
               {t.pumpTest > 0 && <div><div className="l">Pump test</div><div className="v">{t.pumpTest.toLocaleString()} L</div></div>}
+              {ownerView && t.cost > 0 && <div><div className="l">Gross profit</div><div className="v grp-pos">{naira(t.grossProfit)}</div></div>}
               <div><div className="l">Expected</div><div className="v">{naira(t.expectedSales)}</div></div>
               <div><div className="l">Cash</div><div className="v">{naira(report.collections?.cash)}</div></div>
               <div><div className="l">POS</div><div className="v">{naira(report.collections?.pos)}</div></div>

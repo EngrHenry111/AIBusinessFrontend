@@ -3,15 +3,17 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   RiAddLine, RiDeleteBinLine, RiSendPlaneLine, RiSaveLine, RiLoader4Line, RiGasStationLine, RiShoppingCartLine,
-  RiTimeLine, RiUserLine, RiBankLine, RiErrorWarningLine,
+  RiTimeLine, RiUserLine, RiBankLine, RiErrorWarningLine, RiScissorsCutLine, RiHandCoinLine,
 } from 'react-icons/ri';
+import { Link } from 'react-router-dom';
 import { groupService } from '../../services';
 import { naira, todayYmd, FUEL_LABELS } from './groupUtils';
 import { attendantBreakdown } from './attendantBreakdown';
 import './Group.css';
 
 const num = (v) => (v === '' || v == null ? 0 : Number(v) || 0);
-const emptyItem = () => ({ description: '', quantity: '', unit: 'pcs', unitPrice: '' });
+const emptyItem = () => ({ itemId: '', description: '', quantity: '', unit: 'pcs', unitPrice: '' });
+const emptyCredit = () => ({ customerId: '', amount: '', nozzle: '', vehicle: '', reference: '' });
 const emptyTransfer = (nozzle = '') => ({ sender: '', bank: '', reference: '', nozzle, amount: '' });
 const usesPumps = (branch, dept) => branch?.businessLine === 'filling_station' && /forecourt|pump/i.test(dept || '');
 
@@ -34,13 +36,15 @@ export default function GroupReportForm() {
   const editing = Boolean(id);
   const [branches, setBranches] = useState([]);
   const [members, setMembers] = useState([]);
+  const [stock, setStock] = useState([]);
+  const [creditCustomers, setCreditCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [prefilling, setPrefilling] = useState(false);
   const [form, setForm] = useState({
     branchId: params.get('branchId') || '', department: '', reportDate: todayYmd(),
     shift: { name: '', start: '', end: '' }, attendantName: '', onDuty: [],
-    pumps: [], items: [emptyItem()], expenses: [], transfers: [],
+    pumps: [], items: [emptyItem()], expenses: [], transfers: [], creditSales: [],
     collections: { cash: '', pos: '', transfer: '', credit: '' }, notes: '',
   });
   const [mode, setMode] = useState('items');
@@ -52,6 +56,7 @@ export default function GroupReportForm() {
         const list = (data.data || []).filter((b) => b.status === 'active');
         setBranches(list);
         setMembers(m.data.data || []);
+        groupService.getCredit().then(({ data: c }) => setCreditCustomers(c.data || [])).catch(() => {});
         if (editing) {
           const { data: r } = await groupService.getReport(id);
           const rep = r.data;
@@ -59,7 +64,8 @@ export default function GroupReportForm() {
             branchId: rep.branchId, department: rep.department, reportDate: rep.reportDate.slice(0, 10),
             shift: rep.shift?.name ? rep.shift : { name: '', start: '', end: '' }, attendantName: rep.attendantName || '', onDuty: rep.onDuty || [],
             pumps: rep.pumps.map((p) => ({ ...p, prev: p.prevClosing != null ? { closing: p.prevClosing } : null })),
-            items: rep.items.length ? rep.items : [emptyItem()], expenses: rep.expenses, transfers: rep.transfers || [],
+            items: rep.items.length ? rep.items.map((it) => ({ ...it, itemId: it.itemId || '' })) : [emptyItem()], expenses: rep.expenses, transfers: rep.transfers || [],
+            creditSales: (rep.creditSales || []).map((x) => ({ ...x, customerId: String(x.customerId) })),
             collections: rep.collections, notes: rep.notes || '',
           });
           setMode(rep.pumps.length ? 'pumps' : 'items');
@@ -75,6 +81,43 @@ export default function GroupReportForm() {
 
   const branch = branches.find((b) => b._id === form.branchId);
   const [dutyDraft, setDutyDraft] = useState('');
+
+  // Stock items at this branch, so goods sold can be picked (and deducted).
+  useEffect(() => {
+    if (!form.branchId) { setStock([]); return; }
+    groupService.getStock({ branchId: form.branchId }).then(({ data }) => setStock(data.data || [])).catch(() => setStock([]));
+  }, [form.branchId]);
+  const stockById = new Map(stock.map((x) => [x._id, x]));
+  function chooseStock(i, itemId) {
+    const it = stockById.get(itemId);
+    setForm((f) => {
+      const rows = [...f.items];
+      rows[i] = it
+        ? { ...rows[i], itemId, description: it.name, unit: it.unit, unitPrice: rows[i].unitPrice || it.sellingPrice || '' }
+        : { ...rows[i], itemId: '' };
+      return { ...f, items: rows };
+    });
+  }
+
+  // Price changed mid-shift: close this line at the reading when the price
+  // changed, and continue the same nozzle on a new line at the new price.
+  function splitRow(i) {
+    const row = form.pumps[i];
+    if (row.closingMeter === '' || row.closingMeter == null) {
+      toast.error('First enter the meter reading at the moment the price changed in this row\'s Closing box.', { duration: 6000 });
+      return;
+    }
+    setForm((f) => {
+      const rows = [...f.pumps];
+      rows.splice(i + 1, 0, {
+        ...row, openingMeter: row.closingMeter, closingMeter: '', pumpTest: '', pricePerLitre: '',
+        cash: '', pos: '', transfer: '', prev: null, split: true,
+      });
+      return { ...f, pumps: rows };
+    });
+    toast('Enter the new price and the end-of-shift closing on the new line.', { icon: '✂️' });
+  }
+  const customerById = new Map(creditCustomers.map((c) => [String(c._id), c]));
   // Name suggestions: this branch's duty roster first, then people with app logins.
   const dutyNames = [...new Set([
     ...(branch?.dutyStaff || []).filter((d) => d.active !== false).map((d) => d.name),
@@ -139,11 +182,15 @@ export default function GroupReportForm() {
   const calc = useMemo(() => {
     const pumps = mode === 'pumps' ? form.pumps : [];
     const items = mode === 'items' ? form.items : [];
-    const rows = pumps.map((p) => {
+    const rows = pumps.map((p, i) => {
       const litres = Math.max(0, num(p.closingMeter) - num(p.openingMeter) - num(p.pumpTest));
       const amount = litres * num(p.pricePerLitre);
       const taken = num(p.cash) + num(p.pos) + num(p.transfer);
-      const gap = p.prev && p.openingMeter !== '' ? num(p.openingMeter) - p.prev.closing : 0;
+      // A later line for the same nozzle (price change) continues from the line before it.
+      const before = p.nozzle ? pumps.slice(0, i).reverse().find((x) => x.nozzle === p.nozzle) : null;
+      const gap = p.openingMeter === '' ? 0
+        : before ? (before.closingMeter === '' ? 0 : num(p.openingMeter) - num(before.closingMeter))
+          : p.prev ? num(p.openingMeter) - p.prev.closing : 0;
       return { litres, amount, taken, variance: taken - amount, gap };
     });
     const perNozzle = pumps.some((p) => num(p.cash) || num(p.pos) || num(p.transfer));
@@ -153,11 +200,12 @@ export default function GroupReportForm() {
     const cash = perNozzle ? pumps.reduce((s, p) => s + num(p.cash), 0) : num(c.cash);
     const pos = perNozzle ? pumps.reduce((s, p) => s + num(p.pos), 0) : num(c.pos);
     const transfer = perNozzle ? pumps.reduce((s, p) => s + num(p.transfer), 0) : num(c.transfer);
-    const collected = cash + pos + transfer + num(c.credit);
+    const credit = form.creditSales.reduce((s, x) => s + num(x.amount), 0);
+    const collected = cash + pos + transfer + credit;
     const expenses = form.expenses.reduce((s, e) => s + num(e.amount), 0);
     const itemisedTransfers = form.transfers.reduce((s, t) => s + num(t.amount), 0);
     return {
-      rows, litres, expected, cash, pos, transfer, collected, expenses, itemisedTransfers,
+      rows, litres, expected, cash, pos, transfer, credit, collected, expenses, itemisedTransfers,
       variance: collected + expenses - expected,
       gapLitres: rows.reduce((s, r) => s + Math.abs(r.gap), 0),
     };
@@ -184,9 +232,10 @@ export default function GroupReportForm() {
     }
     const items = mode === 'items'
       ? form.items.filter((it) => it.description.trim() && it.quantity !== '').map((it) => ({
-        description: it.description.trim(), quantity: num(it.quantity), unit: it.unit || 'pcs', unitPrice: num(it.unitPrice),
+        itemId: it.itemId || null, description: it.description.trim(), quantity: num(it.quantity), unit: it.unit || 'pcs', unitPrice: num(it.unitPrice),
       }))
       : [];
+    if (form.creditSales.some((x) => num(x.amount) > 0 && !x.customerId)) { toast.error('Choose the customer for each credit sale'); return; }
     if (!pumps.length && !items.length) { toast.error(mode === 'pumps' ? 'Enter at least one nozzle reading' : 'Add at least one item sold'); return; }
 
     if (submit) {
@@ -206,6 +255,7 @@ export default function GroupReportForm() {
       onDuty: form.onDuty.filter((n) => n.trim() && n.trim() !== form.attendantName.trim()),
       expenses: form.expenses.filter((e) => e.description.trim() && e.amount !== '').map((e) => ({ description: e.description.trim(), amount: num(e.amount), paidBy: e.paidBy || '' })),
       transfers: form.transfers.filter((t) => t.amount !== '').map((t) => ({ ...t, amount: num(t.amount) })),
+      creditSales: form.creditSales.filter((x) => x.customerId && num(x.amount) > 0).map((x) => ({ ...x, amount: num(x.amount) })),
       collections: Object.fromEntries(Object.entries(form.collections).map(([k, v]) => [k, num(v)])),
       notes: form.notes, submit,
     };
@@ -239,7 +289,8 @@ export default function GroupReportForm() {
         variance: calc.rows[i]?.variance || 0, cash: num(p.cash), pos: num(p.pos), transfer: num(p.transfer),
       })).filter(Boolean),
       expenses: form.expenses.map((e) => ({ amount: num(e.amount), paidBy: e.paidBy })),
-      credit: num(form.collections.credit),
+      credit: calc.credit,
+      creditSales: form.creditSales.map((x) => ({ nozzle: x.nozzle, amount: num(x.amount) })),
       fallback: form.attendantName,
       totalVariance: calc.variance,
     })
@@ -262,7 +313,7 @@ export default function GroupReportForm() {
         <div className="grp-form-grid">
           <div className="form-group">
             <label className="form-label">Branch</label>
-            <select className="form-select" value={form.branchId} disabled={editing}
+            <select className="form-input form-select" value={form.branchId} disabled={editing}
               onChange={(e) => setForm((f) => ({ ...f, branchId: e.target.value, department: '', pumps: [], shift: { name: '', start: '', end: '' } }))}>
               <option value="">Select branch…</option>
               {branches.map((b) => <option key={b._id} value={b._id}>{b.name}</option>)}
@@ -270,7 +321,7 @@ export default function GroupReportForm() {
           </div>
           <div className="form-group">
             <label className="form-label">Department</label>
-            <select className="form-select" value={form.department} onChange={(e) => chooseDepartment(e.target.value)} disabled={!branch}>
+            <select className="form-input form-select" value={form.department} onChange={(e) => chooseDepartment(e.target.value)} disabled={!branch}>
               <option value="">Select department…</option>
               {branch?.departments.map((d) => <option key={d._id} value={d.name}>{d.name}</option>)}
             </select>
@@ -285,7 +336,7 @@ export default function GroupReportForm() {
           <div className="grp-form-grid" style={{ marginTop: 4 }}>
             <div className="form-group">
               <label className="form-label"><RiTimeLine style={{ verticalAlign: '-2px' }} /> Shift{!perNozzleMode && <span className="muted"> (optional)</span>}</label>
-              <select className="form-select" value={form.shift.name} onChange={(e) => chooseShift(e.target.value)}>
+              <select className="form-input form-select" value={form.shift.name} onChange={(e) => chooseShift(e.target.value)}>
                 <option value="">Select shift…</option>
                 {(branch?.shifts || []).map((s) => <option key={s.name} value={s.name}>{s.name} ({s.start}–{s.end})</option>)}
               </select>
@@ -391,7 +442,7 @@ export default function GroupReportForm() {
                     <tr key={i} className={backwards ? 'grp-row-error' : ''}>
                       <td>
                         {p.nozzle
-                          ? <div><strong className="grp-mono">{p.nozzle}</strong><div className="muted" style={{ fontSize: 11 }}>{p.pump}</div></div>
+                          ? <div><strong className="grp-mono">{p.nozzle}</strong><div className="muted" style={{ fontSize: 11 }}>{p.pump}</div>{p.split && <span className="badge badge-info" style={{ fontSize: 10 }}>new price</span>}</div>
                           : <input className="form-input" value={p.pump} onChange={(e) => setLine('pumps', i, 'pump', e.target.value)} style={{ width: 90 }} />}
                       </td>
                       <td>
@@ -400,7 +451,7 @@ export default function GroupReportForm() {
                           onChange={(e) => setLine('pumps', i, 'attendant', e.target.value)} />
                       </td>
                       <td>
-                        <select className="form-select" value={p.product} onChange={(e) => setLine('pumps', i, 'product', e.target.value)}>
+                        <select className="form-input form-select" value={p.product} onChange={(e) => setLine('pumps', i, 'product', e.target.value)}>
                           {Object.entries(FUEL_LABELS).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
                         </select>
                       </td>
@@ -429,7 +480,10 @@ export default function GroupReportForm() {
                       <td className={`calc ${filled && r.variance < -100 ? 'grp-neg' : ''}`}>
                         {!filled ? '—' : Math.abs(r.variance) < 100 ? <span className="grp-pos">Balanced</span> : naira(r.variance)}
                       </td>
-                      <td><button className="btn btn-ghost btn-icon btn-sm" onClick={() => removeLine('pumps', i)} aria-label="Remove nozzle"><RiDeleteBinLine /></button></td>
+                      <td style={{ whiteSpace: 'nowrap' }}>
+                        <button className="btn btn-ghost btn-icon btn-sm" onClick={() => splitRow(i)} title="Price changed during this shift? Split this nozzle at the new price" aria-label="Split for price change"><RiScissorsCutLine /></button>
+                        <button className="btn btn-ghost btn-icon btn-sm" onClick={() => removeLine('pumps', i)} aria-label="Remove nozzle"><RiDeleteBinLine /></button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -453,7 +507,7 @@ export default function GroupReportForm() {
             </div>
           )}
           <p className="muted" style={{ fontSize: 12, marginBottom: 0 }}>
-            Litres sold = closing − opening − pump test. Pump test is only for fuel used to check a pump and poured back into the tank, so the attendant isn't charged for it. Leave a nozzle's closing empty if it wasn't used this shift.
+            <RiScissorsCutLine style={{ verticalAlign: '-2px' }} /> If the price changed during the shift, enter the meter reading at the change as Closing, then press the scissors to continue that nozzle at the new price. Litres sold = closing − opening − pump test. Pump test is only for fuel used to check a pump and poured back into the tank, so the attendant isn't charged for it. Leave a nozzle's closing empty if it wasn't used this shift.
           </p>
         </div>
       ) : (
@@ -463,16 +517,29 @@ export default function GroupReportForm() {
             <table className="grp-lines">
               <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Unit price</th><th style={{ textAlign: 'right' }}>Amount</th><th /></tr></thead>
               <tbody>
-                {form.items.map((it, i) => (
+                {form.items.map((it, i) => {
+                  const st = it.itemId ? stockById.get(it.itemId) : null;
+                  const over = st && num(it.quantity) > st.quantity;
+                  return (
                   <tr key={i}>
-                    <td><input className="form-input" placeholder="e.g. Dangote Cement 50kg" value={it.description} onChange={(e) => setLine('items', i, 'description', e.target.value)} style={{ minWidth: 200 }} /></td>
+                    <td style={{ minWidth: 220 }}>
+                      {stock.length > 0 && (
+                        <select className="form-input form-select" value={it.itemId || ''} onChange={(e) => chooseStock(i, e.target.value)} style={{ marginBottom: it.itemId ? 0 : 4 }}>
+                          <option value="">Not from stock (type below)</option>
+                          {stock.map((x) => <option key={x._id} value={x._id}>{x.name} ({x.quantity.toLocaleString()} {x.unit} in stock)</option>)}
+                        </select>
+                      )}
+                      {!it.itemId && <input className="form-input" placeholder="e.g. Dangote Cement 50kg" value={it.description} onChange={(e) => setLine('items', i, 'description', e.target.value)} />}
+                      {over && <div className="grp-neg" style={{ fontSize: 11 }}>Only {st.quantity.toLocaleString()} {st.unit} in stock</div>}
+                    </td>
                     <td><input type="number" inputMode="decimal" className="form-input" value={it.quantity} onChange={(e) => setLine('items', i, 'quantity', e.target.value)} style={{ width: 90 }} /></td>
                     <td><input className="form-input" value={it.unit} onChange={(e) => setLine('items', i, 'unit', e.target.value)} style={{ width: 90 }} /></td>
                     <td><input type="number" inputMode="decimal" className="form-input" value={it.unitPrice} onChange={(e) => setLine('items', i, 'unitPrice', e.target.value)} style={{ width: 120 }} /></td>
                     <td className="calc">{naira(num(it.quantity) * num(it.unitPrice))}</td>
                     <td><button className="btn btn-ghost btn-icon btn-sm" onClick={() => removeLine('items', i)} aria-label="Remove item"><RiDeleteBinLine /></button></td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -495,7 +562,7 @@ export default function GroupReportForm() {
               <input className="form-input" placeholder="Sender name" value={t.sender} onChange={(e) => setLine('transfers', i, 'sender', e.target.value)} />
               <input className="form-input" placeholder="Bank" value={t.bank} onChange={(e) => setLine('transfers', i, 'bank', e.target.value)} />
               <input className="form-input" placeholder="Reference / session ID" value={t.reference} onChange={(e) => setLine('transfers', i, 'reference', e.target.value)} />
-              <select className="form-select" value={t.nozzle} onChange={(e) => setLine('transfers', i, 'nozzle', e.target.value)}>
+              <select className="form-input form-select" value={t.nozzle} onChange={(e) => setLine('transfers', i, 'nozzle', e.target.value)}>
                 <option value="">Nozzle…</option>
                 {form.pumps.map((p) => p.nozzle || p.pump).map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
@@ -514,6 +581,52 @@ export default function GroupReportForm() {
         </div>
       )}
 
+      {branch && form.department && (
+        <div className="card card-pad">
+          <div className="grp-card-title">
+            <RiHandCoinLine /> Credit sales
+            <span className="grp-spacer" />
+            <span className="muted" style={{ fontSize: 13, fontWeight: 400 }}>{naira(calc.credit)}</span>
+          </div>
+          <p className="muted" style={{ fontSize: 13, marginTop: -6 }}>
+            Fuel or goods given to registered credit customers (fleets, companies). Each one is added to that customer's account.
+            {' '}{!creditCustomers.length && <Link to="/group/credit">Add credit customers first.</Link>}
+          </p>
+          {form.creditSales.map((x, i) => {
+            const c = customerById.get(String(x.customerId));
+            const projected = c ? c.outstanding + num(x.amount) : 0;
+            return (
+              <div key={i} style={{ marginBottom: 8 }}>
+                <div className="grp-transfer-row">
+                  <select className="form-input form-select" value={x.customerId} onChange={(e) => setLine('creditSales', i, 'customerId', e.target.value)}>
+                    <option value="">Customer…</option>
+                    {creditCustomers.filter((cc) => cc.active !== false).map((cc) => <option key={cc._id} value={cc._id}>{cc.name}</option>)}
+                  </select>
+                  <input type="number" inputMode="decimal" className="form-input" placeholder="₦ amount" value={x.amount} onChange={(e) => setLine('creditSales', i, 'amount', e.target.value)} />
+                  <input className="form-input" placeholder="Coupon / LPO / waybill no." value={x.reference} onChange={(e) => setLine('creditSales', i, 'reference', e.target.value)} />
+                  {perNozzleMode ? (
+                    <select className="form-input form-select" value={x.nozzle} onChange={(e) => setLine('creditSales', i, 'nozzle', e.target.value)}>
+                      <option value="">Nozzle…</option>
+                      {[...new Set(form.pumps.map((p) => p.nozzle || p.pump))].map((n) => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  ) : <span />}
+                  <input className="form-input" placeholder="Vehicle no." value={x.vehicle} onChange={(e) => setLine('creditSales', i, 'vehicle', e.target.value)} />
+                  <button className="btn btn-ghost btn-icon btn-sm" onClick={() => removeLine('creditSales', i)} aria-label="Remove credit sale"><RiDeleteBinLine /></button>
+                </div>
+                {c && (
+                  <div style={{ fontSize: 12 }} className={c.creditLimit && projected > c.creditLimit ? 'grp-neg' : 'muted'}>
+                    Owes {naira(c.outstanding)}{c.creditLimit ? ` · limit ${naira(c.creditLimit)}` : ''}
+                    {c.creditLimit && projected > c.creditLimit ? ` · this sale takes them over their limit (${naira(projected)})` : ''}
+                    {c.overdue > 0 ? ` · ${naira(c.overdue)} overdue` : ''}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <button className="btn btn-secondary btn-sm" onClick={() => addLine('creditSales', emptyCredit())} disabled={!creditCustomers.length}><RiAddLine /> Add credit sale</button>
+        </div>
+      )}
+
       <div className="grp-grid-2">
         <div className="card card-pad">
           <div className="grp-card-title">Money collected</div>
@@ -524,15 +637,11 @@ export default function GroupReportForm() {
                 <div><div className="l">POS</div><div className="v">{naira(calc.pos)}</div></div>
                 <div><div className="l">Transfer</div><div className="v">{naira(calc.transfer)}</div></div>
               </div>
-              <div className="form-group" style={{ marginTop: 12, maxWidth: 260 }}>
-                <label className="form-label">Credit sales (₦)</label>
-                <input type="number" inputMode="decimal" className="form-input" value={form.collections.credit}
-                  onChange={(e) => set('collections', { ...form.collections, credit: e.target.value })} />
-              </div>
+              {calc.credit > 0 && <p className="muted" style={{ fontSize: 13 }}>Plus credit sales: <strong>{naira(calc.credit)}</strong></p>}
             </>
           ) : (
             <div className="grp-form-grid">
-              {[['cash', 'Cash'], ['pos', 'POS'], ['transfer', 'Bank transfer'], ['credit', 'Credit sales']].map(([k, l]) => (
+              {[['cash', 'Cash'], ['pos', 'POS'], ['transfer', 'Bank transfer']].map(([k, l]) => (
                 <div className="form-group" key={k}>
                   <label className="form-label">{l} (₦)</label>
                   <input type="number" inputMode="decimal" className="form-input" value={form.collections[k]}
@@ -547,7 +656,7 @@ export default function GroupReportForm() {
               <input className="form-input" placeholder="e.g. Generator diesel" value={e.description} onChange={(ev) => setLine('expenses', i, 'description', ev.target.value)} />
               <input type="number" inputMode="decimal" className="form-input" placeholder="₦" value={e.amount} onChange={(ev) => setLine('expenses', i, 'amount', ev.target.value)} style={{ width: 140 }} />
               {perNozzleMode && people.length > 0 && (
-                <select className="form-select" value={e.paidBy || ''} onChange={(ev) => setLine('expenses', i, 'paidBy', ev.target.value)} style={{ width: 160 }} title="Whose cash paid for this?">
+                <select className="form-input form-select" value={e.paidBy || ''} onChange={(ev) => setLine('expenses', i, 'paidBy', ev.target.value)} style={{ width: 160 }} title="Whose cash paid for this?">
                   <option value="">Paid by… (shared)</option>
                   {people.map((a) => <option key={a.name} value={a.name}>{a.name}</option>)}
                 </select>

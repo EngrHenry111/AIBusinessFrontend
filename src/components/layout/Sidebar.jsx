@@ -12,7 +12,7 @@ import {
   RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine, RiGovernmentLine, RiBankCardLine,
   RiGroupLine, RiScales3Line, RiCalendarEventLine, RiGraduationCapLine, RiUserAddLine,
   RiCalendarCheckLine, RiFileList3Line, RiBook2Line, RiTimeLine, RiUserSettingsLine, RiPieChartLine,
-  RiBuilding2Line, RiRadarLine, RiFileCheckLine, RiClipboardLine,
+  RiBuilding2Line, RiRadarLine, RiFileCheckLine, RiClipboardLine, RiArchiveLine, RiHandCoinLine, RiLineChartLine, RiBankCard2Line,
 } from 'react-icons/ri';
 import useSchoolMe from '../../pages/school/useSchoolMe';
 import './Sidebar.css';
@@ -27,6 +27,10 @@ const NAV_ITEMS = [
   { label: 'Command Center', icon: RiRadarLine, path: '/group', roles: ['company_owner', 'super_admin'] },
   { label: 'Daily Reports', icon: RiClipboardLine, path: '/group/reports' },
   { label: 'Approved Sales', icon: RiFileCheckLine, path: '/group/ledger' },
+  { label: 'Inventory', icon: RiArchiveLine, path: '/group/stock' },
+  { label: 'Credit Customers', icon: RiHandCoinLine, path: '/group/credit' },
+  { label: 'POS Settlement', icon: RiBankCard2Line, path: '/group/pos' },
+  { label: 'Profit', icon: RiLineChartLine, path: '/group/profit', roles: ['company_owner', 'super_admin'] },
   { label: 'Branches', icon: RiBuilding2Line, path: '/group/branches', roles: ['company_owner', 'super_admin'] },
   // Legal practice — shown to companies whose industry is "legal".
   { type: 'divider', label: 'Legal Practice', legalOnly: true },

@@ -24,6 +24,7 @@ const blank = () => ({
   dailySalesTarget: '', fuelPrices: { PMS: '', AGO: '', DPK: '' }, managerId: '', staff: [],
   departments: DEFAULT_DEPTS.filling_station.map((name) => ({ name, headId: '' })), status: 'active',
   shifts: DEFAULT_SHIFTS.map((x) => ({ ...x })), nozzles: makeNozzles(4, 2, 1), dutyStaff: [],
+  fuelCosts: { PMS: '', AGO: '', DPK: '', LPG: '' }, posTerminals: [],
 });
 const refId = (v) => (v && typeof v === 'object' ? v._id : v || '');
 
@@ -46,6 +47,7 @@ function BranchModal({ initial, members, onClose, onSaved }) {
       ...f,
       dailySalesTarget: Number(f.dailySalesTarget) || 0,
       fuelPrices: Object.fromEntries(Object.entries(f.fuelPrices || {}).map(([k, v]) => [k, Number(v) || 0])),
+      fuelCosts: Object.fromEntries(Object.entries(f.fuelCosts || {}).map(([k, v]) => [k, Number(v) || 0])),
       managerId: f.managerId || null,
       departments: f.departments.filter((d) => d.name.trim()).map((d) => ({ ...(d._id ? { _id: d._id } : {}), name: d.name.trim(), headId: d.headId || null })),
     };
@@ -72,7 +74,7 @@ function BranchModal({ initial, members, onClose, onSaved }) {
             <div className="form-group"><label className="form-label">Short code</label><input className="form-input" value={f.code} onChange={(e) => set('code', e.target.value.toUpperCase())} placeholder="MFLK" maxLength={12} /></div>
             <div className="form-group">
               <label className="form-label">Business type</label>
-              <select className="form-select" value={f.businessLine} onChange={(e) => changeLine(e.target.value)}>
+              <select className="form-input form-select" value={f.businessLine} onChange={(e) => changeLine(e.target.value)}>
                 {Object.entries(LINE_LABELS).map(([k, l]) => <option key={k} value={k}>{l.replace(/s$/, '')}</option>)}
               </select>
             </div>
@@ -83,13 +85,41 @@ function BranchModal({ initial, members, onClose, onSaved }) {
           <div className="form-group"><label className="form-label">Address</label><input className="form-input" value={f.address} onChange={(e) => set('address', e.target.value)} /></div>
 
           {f.businessLine === 'filling_station' && (
-            <div className="grp-form-grid">
-              {['PMS', 'AGO', 'DPK'].map((p) => (
-                <div className="form-group" key={p}><label className="form-label">{FUEL_LABELS[p]} price / litre (₦)</label>
-                  <input type="number" className="form-input" value={f.fuelPrices?.[p] ?? ''} onChange={(e) => set('fuelPrices', { ...f.fuelPrices, [p]: e.target.value })} /></div>
-              ))}
-            </div>
+            <>
+              <label className="form-label">Fuel prices per litre (₦): selling price and what the station pays (for profit)</label>
+              <div className="table-wrapper" style={{ marginBottom: 12 }}>
+                <table className="grp-lines">
+                  <thead><tr><th>Product</th><th>Selling price</th><th>Cost price</th><th style={{ textAlign: 'right' }}>Margin / L</th></tr></thead>
+                  <tbody>
+                    {['PMS', 'AGO', 'DPK', 'LPG'].map((p) => {
+                      const sell = Number(f.fuelPrices?.[p]) || 0;
+                      const cost = Number(f.fuelCosts?.[p]) || 0;
+                      return (
+                        <tr key={p}>
+                          <td>{FUEL_LABELS[p]}</td>
+                          <td><input type="number" className="form-input" value={f.fuelPrices?.[p] ?? ''} onChange={(e) => set('fuelPrices', { ...f.fuelPrices, [p]: e.target.value })} /></td>
+                          <td><input type="number" className="form-input" value={f.fuelCosts?.[p] ?? ''} onChange={(e) => set('fuelCosts', { ...f.fuelCosts, [p]: e.target.value })} /></td>
+                          <td className="calc">{sell && cost ? naira(sell - cost) : '—'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
+
+          <label className="form-label">POS terminals <span className="muted">(for checking bank settlements)</span></label>
+          {f.posTerminals.map((t, i) => (
+            <div className="grp-dept-row" key={i} style={{ gridTemplateColumns: '1fr 1fr 1fr auto' }}>
+              <input className="form-input" placeholder="Terminal ID" value={t.terminalId} onChange={(e) => set('posTerminals', f.posTerminals.map((x, j) => (j === i ? { ...x, terminalId: e.target.value } : x)))} />
+              <input className="form-input" placeholder="Bank (e.g. GTBank)" value={t.bank} onChange={(e) => set('posTerminals', f.posTerminals.map((x, j) => (j === i ? { ...x, bank: e.target.value } : x)))} />
+              <input className="form-input" placeholder="Label (e.g. Island A)" value={t.label} onChange={(e) => set('posTerminals', f.posTerminals.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} />
+              <button className="btn btn-ghost btn-icon" onClick={() => set('posTerminals', f.posTerminals.filter((_, j) => j !== i))} aria-label="Remove terminal"><RiDeleteBinLine /></button>
+            </div>
+          ))}
+          <button className="btn btn-secondary btn-sm" onClick={() => set('posTerminals', [...f.posTerminals, { terminalId: '', bank: '', label: '' }])}><RiAddLine /> Add POS terminal</button>
+          <div style={{ height: 16 }} />
 
           <label className="form-label">Duty roster <span className="muted">(staff who sell but don't log in)</span></label>
           {f.dutyStaff.map((d, i) => (
@@ -132,7 +162,7 @@ function BranchModal({ initial, members, onClose, onSaved }) {
                   <div className="grp-dept-row" key={i} style={{ gridTemplateColumns: '0.8fr 1fr 1.2fr auto' }}>
                     <input className="form-input grp-mono" value={n.code} onChange={(e) => set('nozzles', f.nozzles.map((y, j) => (j === i ? { ...y, code: e.target.value.toUpperCase() } : y)))} />
                     <input className="form-input" value={n.pump} onChange={(e) => set('nozzles', f.nozzles.map((y, j) => (j === i ? { ...y, pump: e.target.value } : y)))} />
-                    <select className="form-select" value={n.product} onChange={(e) => set('nozzles', f.nozzles.map((y, j) => (j === i ? { ...y, product: e.target.value } : y)))}>
+                    <select className="form-input form-select" value={n.product} onChange={(e) => set('nozzles', f.nozzles.map((y, j) => (j === i ? { ...y, product: e.target.value } : y)))}>
                       {Object.entries(FUEL_LABELS).map(([c, l]) => <option key={c} value={c}>{l}</option>)}
                     </select>
                     <button className="btn btn-ghost btn-icon" onClick={() => set('nozzles', f.nozzles.filter((_, j) => j !== i))} aria-label="Remove nozzle"><RiDeleteBinLine /></button>
@@ -146,7 +176,7 @@ function BranchModal({ initial, members, onClose, onSaved }) {
 
           <div className="form-group">
             <label className="form-label">Branch manager (first approval)</label>
-            <select className="form-select" value={f.managerId} onChange={(e) => set('managerId', e.target.value)}>
+            <select className="form-input form-select" value={f.managerId} onChange={(e) => set('managerId', e.target.value)}>
               <option value="">No manager. Reports go straight to the owner.</option>
               {members.map((m) => <option key={m._id} value={m._id}>{m.name} · {m.email}</option>)}
             </select>
@@ -157,7 +187,7 @@ function BranchModal({ initial, members, onClose, onSaved }) {
             <div className="grp-dept-row" key={d._id || i}>
               <input className="form-input" value={d.name} placeholder="Department name"
                 onChange={(e) => set('departments', f.departments.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
-              <select className="form-select" value={d.headId || ''}
+              <select className="form-input form-select" value={d.headId || ''}
                 onChange={(e) => set('departments', f.departments.map((x, j) => (j === i ? { ...x, headId: e.target.value } : x)))}>
                 <option value="">No head assigned</option>
                 {members.map((m) => <option key={m._id} value={m._id}>{m.name}</option>)}
@@ -212,7 +242,9 @@ export default function Branches() {
       managerId: refId(b.managerId),
       staff: (b.staff || []).map(refId),
       departments: (b.departments || []).map((d) => ({ _id: d._id, name: d.name, headId: refId(d.headId) })),
-      fuelPrices: b.fuelPrices || { PMS: '', AGO: '', DPK: '' },
+      fuelPrices: b.fuelPrices || { PMS: '', AGO: '', DPK: '', LPG: '' },
+      fuelCosts: b.fuelCosts || { PMS: '', AGO: '', DPK: '', LPG: '' },
+      posTerminals: (b.posTerminals || []).map((t) => ({ terminalId: t.terminalId || '', bank: t.bank || '', label: t.label || '' })),
       shifts: b.shifts?.length ? b.shifts.map((x) => ({ name: x.name, start: x.start, end: x.end })) : DEFAULT_SHIFTS.map((x) => ({ ...x })),
       nozzles: (b.nozzles || []).map((n) => ({ code: n.code, pump: n.pump, product: n.product })),
       dutyStaff: (b.dutyStaff || []).map((d) => ({ _id: d._id, name: d.name, role: d.role || '', phone: d.phone || '', active: d.active !== false })),

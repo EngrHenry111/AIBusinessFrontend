@@ -118,12 +118,12 @@ export default function GroupReports() {
 
       <div className="card card-pad">
         <div className="grp-filters">
-          <select className="form-select" value={filters.branchId} onChange={(e) => setParam('branchId', e.target.value)}>
+          <select className="form-input form-select" value={filters.branchId} onChange={(e) => setParam('branchId', e.target.value)}>
             <option value="">All branches</option>
             {branches.map((b) => <option key={b._id} value={b._id}>{b.name}</option>)}
           </select>
           {tab === 'all' && (
-            <select className="form-select" value={filters.status} onChange={(e) => setParam('status', e.target.value)}>
+            <select className="form-input form-select" value={filters.status} onChange={(e) => setParam('status', e.target.value)}>
               <option value="">Any status</option>
               {Object.entries(STATUS_META).map(([k, m]) => <option key={k} value={k}>{m.label}</option>)}
             </select>

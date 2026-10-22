@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Papa from 'papaparse';
-import { RiFileCheckLine, RiPrinterLine, RiDownloadLine, RiLoader4Line, RiShieldCheckLine } from 'react-icons/ri';
+import { RiFileCheckLine, RiPrinterLine, RiDownloadLine, RiLoader4Line, RiShieldCheckLine, RiFilePdf2Line } from 'react-icons/ri';
+import { isOwner } from './groupUtils';
 import { groupService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import { naira, fmtDate, todayYmd, LINE_SHORT } from './groupUtils';
@@ -12,13 +13,29 @@ const minusDays = (ymd, n) => { const d = new Date(`${ymd}T00:00:00Z`); d.setUTC
 
 export default function SalesLedger() {
   const navigate = useNavigate();
-  const { company } = useAuth();
   const [from, setFrom] = useState(minusDays(todayYmd(), 6));
   const [to, setTo] = useState(todayYmd());
   const [branchId, setBranchId] = useState('');
   const [branches, setBranches] = useState([]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [month, setMonth] = useState(todayYmd().slice(0, 7));
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const { user, company } = useAuth();
+
+  async function downloadMonthly() {
+    setPdfBusy(true);
+    try {
+      const { data: blob } = await groupService.monthlyReport(month);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${(company?.companyName || 'group').replace(/[^\w]+/g, '-')}-${month}-report.pdf`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    } catch {
+      toast.error('Could not build the monthly report');
+    } finally { setPdfBusy(false); }
+  }
 
   useEffect(() => { groupService.getBranches().then(({ data: r }) => setBranches(r.data || [])).catch(() => {}); }, []);
 
@@ -61,6 +78,12 @@ export default function SalesLedger() {
             <p className="muted">Only reports with final owner approval appear here. This is the official sales record.</p>
           </div>
           <div className="grp-row">
+            {isOwner(user) && (
+              <span className="grp-row" style={{ gap: 6, flexWrap: 'nowrap' }}>
+                <input type="month" className="form-input" value={month} max={todayYmd().slice(0, 7)} onChange={(e) => setMonth(e.target.value)} style={{ width: 150 }} />
+                <button className="btn btn-secondary" onClick={downloadMonthly} disabled={pdfBusy}>{pdfBusy ? <RiLoader4Line className="spin" /> : <RiFilePdf2Line />} Monthly report</button>
+              </span>
+            )}
             <button className="btn btn-secondary" onClick={exportCsv} disabled={!data?.entries.length}><RiDownloadLine /> Excel / CSV</button>
             <button className="btn btn-primary" onClick={() => window.print()} disabled={!data?.entries.length}><RiPrinterLine /> Print / PDF</button>
           </div>
@@ -73,7 +96,7 @@ export default function SalesLedger() {
           <input type="date" className="form-input" value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
           <label className="muted" style={{ fontSize: 13 }}>To</label>
           <input type="date" className="form-input" value={to} min={from} max={todayYmd()} onChange={(e) => setTo(e.target.value)} />
-          <select className="form-select" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
+          <select className="form-input form-select" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
             <option value="">All branches</option>
             {branches.map((b) => <option key={b._id} value={b._id}>{b.name}</option>)}
           </select>
