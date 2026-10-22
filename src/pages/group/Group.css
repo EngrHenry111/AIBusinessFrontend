@@ -115,6 +115,11 @@
 .grp-chip-x { border: none; background: transparent; color: inherit; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 0 0 2px; }
 .grp-shift-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 2px 8px; border-radius: var(--radius-full); background: var(--bg-tertiary); color: var(--text-secondary); font-weight: 500; }
 
+.grp-people { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 12px; }
+.grp-person { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 2px; border-left: 3px solid var(--color-success); }
+.grp-person.short { border-left-color: var(--color-danger); }
+.grp-person-name { font-weight: 600; display: flex; align-items: center; gap: 6px; }
+
 /* Timeline */
 .grp-timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .grp-timeline li { display: flex; gap: 10px; font-size: 13px; }

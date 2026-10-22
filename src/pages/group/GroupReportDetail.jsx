@@ -8,6 +8,7 @@ import {
 import { groupService } from '../../services';
 import { naira, fmtDate, fmtDateTime, STATUS_META, fuelLabel } from './groupUtils';
 import { ApprovalPipeline } from './GroupReports';
+import { attendantBreakdown } from './attendantBreakdown';
 import './Group.css';
 
 export default function GroupReportDetail() {
@@ -47,6 +48,12 @@ export default function GroupReportDetail() {
   const short = t.variance < -1000;
   const isFinalStep = report.status === 'pending_owner';
   const gapLines = (report.pumps || []).filter((p) => Math.abs(p.meterGap || 0) >= 1);
+  const people = attendantBreakdown({
+    pumps: (report.pumps || []).map((p) => ({ ...p, nozzle: p.nozzle || p.pump })),
+    expenses: report.expenses || [],
+    credit: report.collections?.credit || 0,
+    totalVariance: t.variance || 0,
+  });
 
   return (
     <div className="grp-page fade-in">
@@ -67,7 +74,9 @@ export default function GroupReportDetail() {
             {(report.shift?.name || report.attendantName || report.onDuty?.length > 0) && (
               <div className="grp-row" style={{ marginTop: 8, gap: 8 }}>
                 {report.shift?.name && <span className="grp-shift-chip"><RiTimeLine /> {report.shift.name} shift{report.shift.start ? ` · ${report.shift.start}–${report.shift.end}` : ''}</span>}
-                {report.attendantName && <span className="grp-shift-chip"><RiUserLine /> On duty: {report.attendantName}</span>}
+                {(report.attendants?.length ? report.attendants : [report.attendantName].filter(Boolean)).length > 0 && (
+                  <span className="grp-shift-chip"><RiUserLine /> On duty: {(report.attendants?.length ? report.attendants : [report.attendantName]).join(', ')}</span>
+                )}
                 {report.onDuty?.length > 0 && <span className="grp-shift-chip">Also on duty: {report.onDuty.join(', ')}</span>}
               </div>
             )}
@@ -101,7 +110,7 @@ export default function GroupReportDetail() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Nozzle</th><th>Product</th><th style={{ textAlign: 'right' }}>Opening</th><th style={{ textAlign: 'right' }}>Closing</th>
+                  <th>Nozzle</th><th>Attendant</th><th>Product</th><th style={{ textAlign: 'right' }}>Opening</th><th style={{ textAlign: 'right' }}>Closing</th>
                   <th style={{ textAlign: 'right' }}>Test</th><th style={{ textAlign: 'right' }}>Litres</th><th style={{ textAlign: 'right' }}>Amount</th>
                   <th style={{ textAlign: 'right' }}>Cash</th><th style={{ textAlign: 'right' }}>POS</th><th style={{ textAlign: 'right' }}>Transfer</th><th style={{ textAlign: 'right' }}>Short / over</th>
                 </tr>
@@ -113,6 +122,7 @@ export default function GroupReportDetail() {
                   return (
                     <tr key={i}>
                       <td><strong className="grp-mono">{p.nozzle || p.pump}</strong>{p.nozzle && <div className="muted" style={{ fontSize: 11 }}>{p.pump}</div>}</td>
+                      <td style={{ fontWeight: 600 }}>{p.attendant || '—'}</td>
                       <td>{fuelLabel(p.product)}</td>
                       <td className="grp-num" style={{ textAlign: 'right' }}>
                         <span className={gap ? 'grp-neg' : ''}>{p.openingMeter.toLocaleString()}</span>
@@ -133,6 +143,23 @@ export default function GroupReportDetail() {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {people.length > 0 && (
+        <div className="card card-pad">
+          <div className="grp-card-title"><RiUserLine /> Who handled what</div>
+          <div className="grp-people">
+            {people.map((a) => (
+              <div key={a.name} className={`grp-person ${a.variance <= -1000 ? 'short' : ''}`}>
+                <div className="grp-person-name"><RiUserLine /> {a.name}</div>
+                <div className="muted">{a.nozzles.join(', ')} · {a.litres.toLocaleString()} L · {naira(a.sales)}</div>
+                <div className={a.variance <= -1000 ? 'grp-neg' : 'grp-pos'} style={{ fontWeight: 600 }}>
+                  {Math.abs(a.variance) < 1000 ? 'Balanced' : a.variance < 0 ? `Short ${naira(Math.abs(a.variance))}` : `Over ${naira(a.variance)}`}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -187,7 +214,7 @@ export default function GroupReportDetail() {
             <>
               <div className="grp-card-title" style={{ marginTop: 16 }}>Expenses</div>
               {report.expenses.map((e, i) => (
-                <div key={i} className="grp-row" style={{ fontSize: 13, padding: '4px 0' }}><span>{e.description}</span><span className="grp-spacer" /><span className="grp-num">{naira(e.amount)}</span></div>
+                <div key={i} className="grp-row" style={{ fontSize: 13, padding: '4px 0' }}><span>{e.description}{e.paidBy && <span className="muted"> · paid by {e.paidBy}</span>}</span><span className="grp-spacer" /><span className="grp-num">{naira(e.amount)}</span></div>
               ))}
             </>
           )}

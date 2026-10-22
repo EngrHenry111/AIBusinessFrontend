@@ -229,7 +229,7 @@ export default function GroupCommand() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Attendant</th><th>Branch</th><th style={{ textAlign: 'right' }}>Shifts</th><th style={{ textAlign: 'right' }}>Sales handled</th>
+                  <th>Attendant</th><th>Branch</th><th>Nozzles</th><th style={{ textAlign: 'right' }}>Shifts</th><th style={{ textAlign: 'right' }}>Sales handled</th>
                   <th style={{ textAlign: 'right' }}>Short shifts</th><th style={{ textAlign: 'right' }}>Net short / over</th><th style={{ textAlign: 'right' }}>Meter gaps</th>
                 </tr>
               </thead>
@@ -238,6 +238,7 @@ export default function GroupCommand() {
                   <tr key={`${a.name}|${a.branch}`}>
                     <td style={{ fontWeight: 600 }}>{a.name}</td>
                     <td className="muted">{a.branch}</td>
+                    <td className="grp-mono" style={{ fontSize: 12 }}>{a.nozzles?.length ? a.nozzles.join(', ') : '—'}</td>
                     <td className="grp-num" style={{ textAlign: 'right' }}>{a.shifts}</td>
                     <td className="grp-num" style={{ textAlign: 'right' }}>{nairaShort(a.sales)}</td>
                     <td className="grp-num" style={{ textAlign: 'right' }}>

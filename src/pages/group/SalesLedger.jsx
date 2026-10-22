@@ -35,7 +35,7 @@ export default function SalesLedger() {
     if (!data?.entries.length) return;
     const rows = data.entries.map((e) => ({
       'Ledger No': e.ledgerNumber, Date: e.reportDate.slice(0, 10), Branch: e.branchName, Department: e.department,
-      Shift: e.shift?.name ? `${e.shift.name} ${e.shift.start || ''}-${e.shift.end || ''}` : '', 'On duty': e.attendantName || '',
+      Shift: e.shift?.name ? `${e.shift.name} ${e.shift.start || ''}-${e.shift.end || ''}` : '', 'On duty': (e.attendants?.length ? e.attendants : [e.attendantName].filter(Boolean)).join('; '),
       'Also on duty': (e.onDuty || []).join('; '), 'Submitted by': e.preparedByName || '',
       Reference: e.referenceNumber, 'Litres': e.totals.litres || '', 'Sales (NGN)': e.totals.expectedSales,
       'Collected (NGN)': e.totals.collected, 'Expenses (NGN)': e.totals.expenses, 'Variance (NGN)': e.totals.variance,
@@ -136,7 +136,7 @@ export default function SalesLedger() {
                       <tr key={e._id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/group/reports/${e._id}`)}>
                         <td className="grp-mono">{e.ledgerNumber}</td>
                         <td style={{ whiteSpace: 'nowrap' }}>{fmtDate(e.reportDate)}</td>
-                        <td>{e.branchName}<div className="muted" style={{ fontSize: 12 }}>{e.department}{e.shift?.name ? ` · ${e.shift.name}` : ''}{e.attendantName ? ` · ${e.attendantName}` : ''}</div></td>
+                        <td>{e.branchName}<div className="muted" style={{ fontSize: 12 }}>{e.department}{e.shift?.name ? ` · ${e.shift.name}` : ''}{(e.attendants?.length || e.attendantName) ? ` · ${(e.attendants?.length ? e.attendants : [e.attendantName]).join(', ')}` : ''}</div></td>
                         <td className="grp-num" style={{ textAlign: 'right' }}>{naira(e.totals.expectedSales)}</td>
                         <td className={`grp-num ${e.totals.variance < -1000 ? 'grp-neg' : ''}`} style={{ textAlign: 'right' }}>{Math.abs(e.totals.variance) < 1000 ? '—' : naira(e.totals.variance)}</td>
                         <td style={{ fontSize: 12 }}>

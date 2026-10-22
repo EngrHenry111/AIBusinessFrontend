@@ -180,7 +180,7 @@ export default function GroupReports() {
                           {r.department}{r.shift?.name ? ` · ${r.shift.name}${r.shift.start ? ` ${r.shift.start}–${r.shift.end}` : ''}` : ''}
                         </div>
                         <div className="muted" style={{ fontSize: 12 }}>
-                          {r.attendantName ? <>On duty: <strong style={{ color: 'var(--text-secondary)' }}>{r.attendantName}</strong>{r.onDuty?.length ? ` +${r.onDuty.length}` : ''} · </> : null}
+                          {(r.attendants?.length || r.attendantName) ? <>On duty: <strong style={{ color: 'var(--text-secondary)' }}>{(r.attendants?.length ? r.attendants : [r.attendantName]).join(', ')}</strong>{r.onDuty?.length ? ` +${r.onDuty.length}` : ''} · </> : null}
                           by {r.preparedByName || '—'}
                         </div>
                         {r.totals?.meterGapLitres >= 1 && <div className="grp-neg" style={{ fontSize: 11 }}>Meter gap {Math.round(r.totals.meterGapLitres).toLocaleString()} L</div>}

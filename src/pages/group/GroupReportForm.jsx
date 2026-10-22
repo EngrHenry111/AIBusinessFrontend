@@ -7,6 +7,7 @@ import {
 } from 'react-icons/ri';
 import { groupService } from '../../services';
 import { naira, todayYmd, FUEL_LABELS } from './groupUtils';
+import { attendantBreakdown } from './attendantBreakdown';
 import './Group.css';
 
 const num = (v) => (v === '' || v == null ? 0 : Number(v) || 0);
@@ -17,12 +18,12 @@ const usesPumps = (branch, dept) => branch?.businessLine === 'filling_station' &
 // One editable row per nozzle. Opening is prefilled from the previous shift's
 // closing on the same nozzle; `prev` keeps that value so we can flag edits.
 const nozzleRow = (n, price, prev) => ({
-  pump: n.pump, nozzle: n.code, product: n.product,
+  pump: n.pump, nozzle: n.code, product: n.product, attendant: '',
   openingMeter: prev?.closing ?? '', closingMeter: '', pumpTest: '', pricePerLitre: price ?? '',
   cash: '', pos: '', transfer: '', prev: prev || null,
 });
 const manualRow = (i, price = '') => ({
-  pump: `Pump ${i + 1}`, nozzle: '', product: 'PMS', openingMeter: '', closingMeter: '', pumpTest: '', pricePerLitre: price,
+  pump: `Pump ${i + 1}`, nozzle: '', product: 'PMS', attendant: '', openingMeter: '', closingMeter: '', pumpTest: '', pricePerLitre: price,
   cash: '', pos: '', transfer: '', prev: null,
 });
 
@@ -164,13 +165,14 @@ export default function GroupReportForm() {
 
   async function save(submit) {
     if (!form.branchId || !form.department) { toast.error('Choose the branch and department'); return; }
-    if (mode === 'pumps' && branch?.businessLine === 'filling_station' && !form.attendantName.trim()) {
-      toast.error('Enter the attendant who was on duty for this shift'); return;
+    if (mode === 'pumps') {
+      const unnamed = form.pumps.filter((p) => p.closingMeter !== '' && p.openingMeter !== '' && !String(p.attendant || '').trim() && !form.attendantName.trim());
+      if (unnamed.length) { toast.error(`Enter who handled ${unnamed.map((p) => p.nozzle || p.pump).join(', ')}`); return; }
     }
     if (mode === 'pumps' && !form.shift.name) { toast.error('Choose the shift'); return; }
     const pumps = mode === 'pumps'
       ? form.pumps.filter((p) => p.closingMeter !== '' && p.openingMeter !== '').map((p) => ({
-        pump: p.pump, nozzle: p.nozzle || '', product: p.product,
+        pump: p.pump, nozzle: p.nozzle || '', product: p.product, attendant: String(p.attendant || '').trim(),
         openingMeter: num(p.openingMeter), closingMeter: num(p.closingMeter), pumpTest: num(p.pumpTest),
         pricePerLitre: num(p.pricePerLitre), cash: num(p.cash), pos: num(p.pos), transfer: num(p.transfer),
       }))
@@ -202,7 +204,7 @@ export default function GroupReportForm() {
       shift: form.shift.name ? form.shift : undefined,
       attendantName: form.attendantName,
       onDuty: form.onDuty.filter((n) => n.trim() && n.trim() !== form.attendantName.trim()),
-      expenses: form.expenses.filter((e) => e.description.trim() && e.amount !== '').map((e) => ({ description: e.description.trim(), amount: num(e.amount) })),
+      expenses: form.expenses.filter((e) => e.description.trim() && e.amount !== '').map((e) => ({ description: e.description.trim(), amount: num(e.amount), paidBy: e.paidBy || '' })),
       transfers: form.transfers.filter((t) => t.amount !== '').map((t) => ({ ...t, amount: num(t.amount) })),
       collections: Object.fromEntries(Object.entries(form.collections).map(([k, v]) => [k, num(v)])),
       notes: form.notes, submit,
@@ -229,6 +231,19 @@ export default function GroupReportForm() {
   }
 
   const verdict = Math.abs(calc.variance) < 1000 ? 'ok' : calc.variance < 0 ? 'short' : 'over';
+  // Per-person result for this sheet: who handled which nozzles and whether they balanced.
+  const people = mode === 'pumps'
+    ? attendantBreakdown({
+      pumps: form.pumps.map((p, i) => (p.closingMeter === '' ? null : {
+        attendant: p.attendant, nozzle: p.nozzle || p.pump, amount: calc.rows[i]?.amount || 0, litres: calc.rows[i]?.litres || 0,
+        variance: calc.rows[i]?.variance || 0, cash: num(p.cash), pos: num(p.pos), transfer: num(p.transfer),
+      })).filter(Boolean),
+      expenses: form.expenses.map((e) => ({ amount: num(e.amount), paidBy: e.paidBy })),
+      credit: num(form.collections.credit),
+      fallback: form.attendantName,
+      totalVariance: calc.variance,
+    })
+    : [];
   const perNozzleMode = mode === 'pumps';
   const transferMismatch = form.transfers.length > 0 && Math.abs(calc.itemisedTransfers - calc.transfer) >= 1;
 
@@ -285,11 +300,12 @@ export default function GroupReportForm() {
             </div>
             <div className="form-group">
               <label className="form-label">
-                <RiUserLine style={{ verticalAlign: '-2px' }} /> {perNozzleMode ? 'Attendant on duty' : 'Sales person on duty'}
+                <RiUserLine style={{ verticalAlign: '-2px' }} /> {perNozzleMode ? 'Default attendant' : 'Sales person on duty'}
                 {!perNozzleMode && <span className="muted"> (optional)</span>}
+                {perNozzleMode && <span className="muted"> (fills any nozzle left blank below)</span>}
               </label>
               <input className="form-input" list="grp-attendants" value={form.attendantName}
-                placeholder={perNozzleMode ? 'Who sold on these nozzles?' : 'Who made these sales?'}
+                placeholder={perNozzleMode ? 'Optional if every nozzle has a name' : 'Who made these sales?'}
                 onChange={(e) => set('attendantName', e.target.value)} />
               <datalist id="grp-attendants">{dutyNames.map((n) => <option key={n} value={n} />)}</datalist>
             </div>
@@ -358,7 +374,7 @@ export default function GroupReportForm() {
             <table className="grp-lines">
               <thead>
                 <tr>
-                  <th>Nozzle</th><th>Product</th><th>Opening</th><th>Closing</th><th title="Fuel dispensed into a measuring can to check the pump, then poured back into the tank. It went through the meter but was not sold.">
+                  <th>Nozzle</th><th>Attendant</th><th>Product</th><th>Opening</th><th>Closing</th><th title="Fuel dispensed into a measuring can to check the pump, then poured back into the tank. It went through the meter but was not sold.">
                     Pump test (L)
                     <div className="grp-th-hint">Fuel tested and poured back into tank. Leave empty if no test.</div>
                   </th>
@@ -377,6 +393,11 @@ export default function GroupReportForm() {
                         {p.nozzle
                           ? <div><strong className="grp-mono">{p.nozzle}</strong><div className="muted" style={{ fontSize: 11 }}>{p.pump}</div></div>
                           : <input className="form-input" value={p.pump} onChange={(e) => setLine('pumps', i, 'pump', e.target.value)} style={{ width: 90 }} />}
+                      </td>
+                      <td>
+                        <input className="form-input" list="grp-attendants" value={p.attendant || ''} style={{ width: 140 }}
+                          placeholder={form.attendantName || 'Who handled it?'}
+                          onChange={(e) => setLine('pumps', i, 'attendant', e.target.value)} />
                       </td>
                       <td>
                         <select className="form-select" value={p.product} onChange={(e) => setLine('pumps', i, 'product', e.target.value)}>
@@ -417,6 +438,19 @@ export default function GroupReportForm() {
           </div>
           {!hasLayout && (
             <button className="btn btn-secondary btn-sm" style={{ marginTop: 8 }} onClick={() => addLine('pumps', manualRow(form.pumps.length, priceFor('PMS')))}><RiAddLine /> Add pump</button>
+          )}
+          {people.length > 0 && (
+            <div className="grp-people">
+              {people.map((a) => (
+                <div key={a.name} className={`grp-person ${a.variance <= -1000 ? 'short' : ''}`}>
+                  <div className="grp-person-name"><RiUserLine /> {a.name}</div>
+                  <div className="muted">{a.nozzles.join(', ') || 'No nozzle code'} · {a.litres.toLocaleString()} L · {naira(a.sales)}</div>
+                  <div className={a.variance <= -1000 ? 'grp-neg' : 'grp-pos'} style={{ fontWeight: 600 }}>
+                    {Math.abs(a.variance) < 1000 ? 'Balanced' : a.variance < 0 ? `Short ${naira(Math.abs(a.variance))}` : `Over ${naira(a.variance)}`}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
           <p className="muted" style={{ fontSize: 12, marginBottom: 0 }}>
             Litres sold = closing − opening − pump test. Pump test is only for fuel used to check a pump and poured back into the tank, so the attendant isn't charged for it. Leave a nozzle's closing empty if it wasn't used this shift.
@@ -512,6 +546,12 @@ export default function GroupReportForm() {
             <div key={i} className="grp-row" style={{ marginBottom: 8, flexWrap: 'nowrap' }}>
               <input className="form-input" placeholder="e.g. Generator diesel" value={e.description} onChange={(ev) => setLine('expenses', i, 'description', ev.target.value)} />
               <input type="number" inputMode="decimal" className="form-input" placeholder="₦" value={e.amount} onChange={(ev) => setLine('expenses', i, 'amount', ev.target.value)} style={{ width: 140 }} />
+              {perNozzleMode && people.length > 0 && (
+                <select className="form-select" value={e.paidBy || ''} onChange={(ev) => setLine('expenses', i, 'paidBy', ev.target.value)} style={{ width: 160 }} title="Whose cash paid for this?">
+                  <option value="">Paid by… (shared)</option>
+                  {people.map((a) => <option key={a.name} value={a.name}>{a.name}</option>)}
+                </select>
+              )}
               <button className="btn btn-ghost btn-icon btn-sm" onClick={() => removeLine('expenses', i)} aria-label="Remove expense"><RiDeleteBinLine /></button>
             </div>
           ))}
