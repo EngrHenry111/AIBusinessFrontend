@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { INDUSTRIES } from '../../constants/industries';
 import { RiRobot2Line, RiEyeLine, RiEyeOffLine } from 'react-icons/ri';
 import './Auth.css';
 
@@ -82,18 +83,7 @@ export default function Register() {
                 onChange={e => f('industry', e.target.value)}
               >
                 <option value="">Select your industry</option>
-                <option value="technology">Technology</option>
-                <option value="finance">Finance & Banking</option>
-                <option value="healthcare">Healthcare</option>
-                <option value="retail">Retail & E-commerce</option>
-                <option value="manufacturing">Manufacturing</option>
-                <option value="consulting">Consulting</option>
-                <option value="legal">Legal Services / Law Firm</option>
-                <option value="education">Education</option>
-                <option value="government">Government</option>
-                <option value="logistics">Logistics</option>
-                <option value="agriculture">Agriculture</option>
-                <option value="other">Other</option>
+                {INDUSTRIES.map((i) => <option key={i.value} value={i.value}>{i.label}</option>)}
               </select>
             </div>
             <div className="form-group">

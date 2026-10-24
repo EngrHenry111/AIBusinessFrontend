@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { INDUSTRIES } from '../../constants/industries';
 import { userService, companyService } from '../../services';
 import {
   RiUserLine, RiBuildingLine, RiRobot2Line, RiLockLine,
@@ -364,15 +365,7 @@ export default function Settings() {
                   <select className="form-input form-select" value={companyForm.industry}
                     onChange={e=>setCompanyForm(p=>({...p,industry:e.target.value}))}>
                     <option value="">Select industry</option>
-                    <option value="technology">Technology</option>
-                    <option value="finance">Finance</option>
-                    <option value="healthcare">Healthcare</option>
-                    <option value="retail">Retail</option>
-                    <option value="manufacturing">Manufacturing</option>
-                    <option value="consulting">Consulting</option>
-                    <option value="legal">Legal Services / Law Firm</option>
-                    <option value="education">Education</option>
-                    <option value="other">Other</option>
+                    {INDUSTRIES.map((i) => <option key={i.value} value={i.value}>{i.label}</option>)}
                   </select>
                 </div>
 
