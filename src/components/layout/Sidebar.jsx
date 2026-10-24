@@ -13,9 +13,10 @@ import {
   RiGroupLine, RiScales3Line, RiCalendarEventLine, RiGraduationCapLine, RiUserAddLine,
   RiCalendarCheckLine, RiFileList3Line, RiBook2Line, RiTimeLine, RiUserSettingsLine, RiPieChartLine,
   RiBuilding2Line, RiRadarLine, RiFileCheckLine, RiClipboardLine, RiArchiveLine, RiHandCoinLine, RiLineChartLine, RiBankCard2Line,
-  RiArrowDownSLine,
+  RiArrowDownSLine, RiHospitalLine, RiUserHeartLine, RiListOrdered, RiTestTubeLine, RiCapsuleLine, RiHotelBedLine,
 } from 'react-icons/ri';
 import useSchoolMe from '../../pages/school/useSchoolMe';
+import useHospitalMe from '../../pages/hospital/useHospitalMe';
 import { useGroupAccess } from '../../pages/group/GroupGate';
 import './Sidebar.css';
 
@@ -51,6 +52,20 @@ const NAV_ITEMS = [
   { label: 'Timetable', icon: RiTimeLine, path: '/school/timetable', schoolOnly: true },
   { label: 'School Staff', icon: RiUserSettingsLine, path: '/school/staff', schoolOnly: true, schoolRoles: ['admin'] },
   { label: 'Term Report', icon: RiPieChartLine, path: '/school/report', schoolOnly: true, schoolManagerOnly: true },
+  // Hospital management — shown to companies whose industry is "healthcare".
+  // hospitalRoles: which hospital roles see the item (admin always does).
+  { type: 'divider', label: 'Hospital', healthOnly: true },
+  { label: 'Hospital Overview', icon: RiHospitalLine, path: '/hospital', healthOnly: true },
+  { label: 'Patients', icon: RiUserHeartLine, path: '/hospital/patients', healthOnly: true },
+  { label: 'Queue', icon: RiListOrdered, path: '/hospital/queue', healthOnly: true, hospitalRoles: ['doctor', 'nurse', 'records', 'cashier'] },
+  { label: 'Appointments', icon: RiCalendarLine, path: '/hospital/appointments', healthOnly: true, hospitalRoles: ['doctor', 'nurse', 'records', 'cashier'] },
+  { label: 'Laboratory', icon: RiTestTubeLine, path: '/hospital/lab', healthOnly: true, hospitalRoles: ['doctor', 'nurse', 'lab'] },
+  { label: 'Pharmacy', icon: RiCapsuleLine, path: '/hospital/pharmacy', healthOnly: true, hospitalRoles: ['doctor', 'nurse', 'pharmacist'] },
+  { label: 'Wards', icon: RiHotelBedLine, path: '/hospital/wards', healthOnly: true, hospitalRoles: ['doctor', 'nurse', 'records', 'cashier'] },
+  { label: 'Hospital Billing', icon: RiMoneyDollarCircleLine, path: '/hospital/billing', healthOnly: true, hospitalRoles: ['cashier'] },
+  { label: 'Hospital Staff', icon: RiUserSettingsLine, path: '/hospital/staff', healthOnly: true, hospitalRoles: [] },
+  { label: 'Hospital Settings', icon: RiSettings4Line, path: '/hospital/settings', healthOnly: true, hospitalRoles: [] },
+  { label: 'Hospital Report', icon: RiPieChartLine, path: '/hospital/report', healthOnly: true, hospitalManagerOnly: true },
   { type: 'divider', label: 'Business' },
   { label: 'Leads', icon: RiUserLine, path: '/leads' },
   { label: 'Customers', icon: RiUserStarLine, path: '/customers' },
@@ -83,16 +98,17 @@ const NAV_ITEMS = [
 ];
 
 const OPEN_SECTION_KEY = 'sidebar.openSection';
-const EXACT_PATHS = ['/matters', '/school', '/group'];
+const EXACT_PATHS = ['/matters', '/school', '/group', '/hospital'];
 
 // The section whose item best matches the current URL (longest path wins,
-// so /group/reports beats /group).
+// so /group/reports beats /group, and /hospital/visits/123 falls back to
+// /hospital's section).
 function sectionForPath(sections, pathname) {
   let best = null;
   let bestLen = -1;
   for (const s of sections) {
     for (const item of s.items) {
-      const hit = pathname === item.path || (!EXACT_PATHS.includes(item.path) && pathname.startsWith(`${item.path}/`));
+      const hit = pathname === item.path || pathname.startsWith(`${item.path}/`);
       if (hit && item.path.length > bestLen) { best = s.label; bestLen = item.path.length; }
     }
   }
@@ -102,6 +118,7 @@ function sectionForPath(sections, pathname) {
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const { user, company, logout } = useAuth();
   const schoolMe = useSchoolMe(company?.industry === 'education');
+  const hospitalMe = useHospitalMe(company?.industry === 'healthcare');
   const location = useLocation();
   const [waNeedsHuman, setWaNeedsHuman] = useState(0);
   const [widgetNeedsHuman, setWidgetNeedsHuman] = useState(0);
@@ -253,6 +270,9 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     if (item.schoolOnly && company?.industry !== 'education') return false;
     if (item.schoolRoles && schoolMe && !item.schoolRoles.includes(schoolMe.role)) return false;
     if (item.schoolManagerOnly && schoolMe && !schoolMe.manager) return false;
+    if (item.healthOnly && company?.industry !== 'healthcare') return false;
+    if (item.hospitalRoles && hospitalMe && hospitalMe.role !== 'admin' && !item.hospitalRoles.includes(hospitalMe.role)) return false;
+    if (item.hospitalManagerOnly && hospitalMe && !hospitalMe.manager) return false;
     return true;
   };
 

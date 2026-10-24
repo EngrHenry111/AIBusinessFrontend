@@ -1,0 +1,44 @@
+/* Hospital pages build on the school module's layout classes (School.css:
+   sc-stats, sc-tabs, sc-doc…). These are the hospital-only additions. */
+
+.hp-alert { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #fee2e2; color: #991b1b; font-size: 12.5px; font-weight: 600; }
+[data-theme='dark'] .hp-alert { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
+
+.hp-patient-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 14px 16px; margin-bottom: 16px; }
+.hp-patient-bar h2 { margin: 0; font-size: 19px; }
+.hp-patient-bar .cell-sub { display: inline; }
+
+.hp-queue-no { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 34px; padding: 0 6px; border-radius: 8px; background: var(--bg-tertiary); font-weight: 700; font-size: 15px; color: var(--text-primary); }
+.hp-queue-no.emergency { background: #fee2e2; color: #991b1b; }
+.hp-queue-no.urgent { background: #fef3c7; color: #92400e; }
+
+.hp-vitals { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.hp-vital { padding: 8px 10px; border-radius: var(--radius-md); background: var(--bg-tertiary); }
+.hp-vital span { display: block; font-size: 11.5px; color: var(--text-muted); }
+.hp-vital b { font-size: 16px; color: var(--text-primary); }
+.hp-vital.abnormal b { color: #b91c1c; }
+
+.hp-flag { font-weight: 700; margin-left: 4px; }
+.hp-flag.H, .hp-flag.L { color: #b91c1c; }
+
+.hp-beds { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.hp-bed { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-card); text-align: left; font: inherit; color: inherit; cursor: pointer; min-height: 84px; }
+.hp-bed:hover { border-color: var(--color-brand); }
+.hp-bed .label { font-weight: 700; font-size: 13.5px; }
+.hp-bed.occupied { border-left: 4px solid #dc2626; }
+.hp-bed.available { border-left: 4px solid #16a34a; }
+.hp-bed.cleaning { border-left: 4px solid #d97706; }
+.hp-bed.maintenance { border-left: 4px solid #94a3b8; opacity: 0.8; }
+
+.hp-chart { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.hp-chart li { padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-tertiary); }
+.hp-chart .meta { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+
+.hp-diag-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.hp-order-list { display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto; }
+.hp-rx-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px auto; gap: 8px; align-items: end; }
+
+@media (max-width: 700px) {
+  .hp-rx-row { grid-template-columns: 1fr 1fr; }
+  .hp-rx-row > :first-child { grid-column: 1 / -1; }
+}

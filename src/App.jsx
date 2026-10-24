@@ -97,6 +97,23 @@ const SchoolStaffPage = lazy(() => import('./pages/school/SchoolStaff'));
 const SchoolTermReport = lazy(() => import('./pages/school/TermReport'));
 const SchoolPublicApply = lazy(() => import('./pages/school/PublicApply'));
 const SchoolPublicPay = lazy(() => import('./pages/school/PublicPay'));
+const HospitalDashboard = lazy(() => import('./pages/hospital/HospitalDashboard'));
+const HospitalPatients = lazy(() => import('./pages/hospital/Patients'));
+const HospitalPatientDetail = lazy(() => import('./pages/hospital/PatientDetail'));
+const HospitalQueue = lazy(() => import('./pages/hospital/Queue'));
+const HospitalVisit = lazy(() => import('./pages/hospital/VisitDetail'));
+const HospitalAppointments = lazy(() => import('./pages/hospital/Appointments'));
+const HospitalLab = lazy(() => import('./pages/hospital/Lab'));
+const HospitalLabRequest = lazy(() => import('./pages/hospital/LabRequest'));
+const HospitalPharmacy = lazy(() => import('./pages/hospital/Pharmacy'));
+const HospitalWards = lazy(() => import('./pages/hospital/Wards'));
+const HospitalAdmission = lazy(() => import('./pages/hospital/AdmissionDetail'));
+const HospitalBilling = lazy(() => import('./pages/hospital/Billing'));
+const HospitalBill = lazy(() => import('./pages/hospital/BillDetail'));
+const HospitalReceipt = lazy(() => import('./pages/hospital/HospitalReceipt'));
+const HospitalStaffPage = lazy(() => import('./pages/hospital/HospitalStaff'));
+const HospitalSettingsPage = lazy(() => import('./pages/hospital/HospitalSettings'));
+const HospitalReport = lazy(() => import('./pages/hospital/HospitalReport'));
 const Procurement = lazy(() => import('./pages/procurement/Procurement'));
 const RequisitionForm = lazy(() => import('./pages/procurement/RequisitionForm'));
 const RequisitionDetail = lazy(() => import('./pages/procurement/RequisitionDetail'));
@@ -263,6 +280,23 @@ function AppRoutes() {
                 <Route path="school/timetable" element={<SchoolTimetable />} />
                 <Route path="school/staff" element={<SchoolStaffPage />} />
                 <Route path="school/report" element={<SchoolTermReport />} />
+                <Route path="hospital" element={<HospitalDashboard />} />
+                <Route path="hospital/patients" element={<HospitalPatients />} />
+                <Route path="hospital/patients/:id" element={<HospitalPatientDetail />} />
+                <Route path="hospital/queue" element={<HospitalQueue />} />
+                <Route path="hospital/visits/:id" element={<HospitalVisit />} />
+                <Route path="hospital/appointments" element={<HospitalAppointments />} />
+                <Route path="hospital/lab" element={<HospitalLab />} />
+                <Route path="hospital/lab/:id" element={<HospitalLabRequest />} />
+                <Route path="hospital/pharmacy" element={<HospitalPharmacy />} />
+                <Route path="hospital/wards" element={<HospitalWards />} />
+                <Route path="hospital/admissions/:id" element={<HospitalAdmission />} />
+                <Route path="hospital/billing" element={<HospitalBilling />} />
+                <Route path="hospital/bills/:id" element={<HospitalBill />} />
+                <Route path="hospital/receipts/:id" element={<HospitalReceipt />} />
+                <Route path="hospital/staff" element={<HospitalStaffPage />} />
+                <Route path="hospital/settings" element={<HospitalSettingsPage />} />
+                <Route path="hospital/report" element={<HospitalReport />} />
                 <Route path="matters/:id" element={<MatterDetail />} />
                 <Route path="procurement" element={<Procurement />} />
                 <Route path="procurement/new" element={<RequisitionForm />} />
