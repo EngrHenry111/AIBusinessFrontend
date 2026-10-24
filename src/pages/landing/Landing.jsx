@@ -361,15 +361,17 @@ export default function Landing() {
     return () => io.disconnect();
   }, []);
 
-  // Schema.org structured data (SoftwareApplication + Organization) for rich results
+  // Schema.org SoftwareApplication for rich results. The Organization/WebSite
+  // brand entity lives in index.html so non-JS crawlers see it too.
   useEffect(() => {
     const graph = [
       {
         '@context': 'https://schema.org',
         '@type': 'SoftwareApplication',
         name: 'BizlyAI',
+        alternateName: ['Bizly AI', 'Bizly', 'BislyAI'],
         applicationCategory: 'BusinessApplication',
-        operatingSystem: 'Web',
+        operatingSystem: 'Web, Android, iOS',
         url: 'https://bislyai.com',
         description: 'AI-powered business management platform for Nigerian businesses, with a built-in online store, delivery tracking, and e-procurement for enterprise.',
         offers: {
@@ -384,22 +386,8 @@ export default function Landing() {
           ratingValue: '4.8',
           reviewCount: '47',
         },
+        publisher: { '@id': 'https://bislyai.com/#organization' },
         author: { '@type': 'Organization', name: 'EngrHenryTech', url: 'https://bislyai.com' },
-      },
-      {
-        '@context': 'https://schema.org',
-        '@type': 'Organization',
-        name: 'BizlyAI',
-        url: 'https://bislyai.com',
-        logo: 'https://bislyai.com/favicon.svg',
-        contactPoint: {
-          '@type': 'ContactPoint',
-          telephone: '+234-902-836-1165',
-          contactType: 'customer service',
-          areaServed: 'NG',
-          availableLanguage: 'English',
-        },
-        sameAs: ['https://twitter.com/bislyai', 'https://linkedin.com/company/bislyai'],
       },
     ];
     const nodes = graph.map((data) => {
@@ -416,7 +404,7 @@ export default function Landing() {
   // SPA section-aware <title> for crawlers that execute JS
   useEffect(() => {
     const original = document.title;
-    const DEFAULT_TITLE = 'BizlyAI — AI Business Software Nigeria';
+    const DEFAULT_TITLE = 'BizlyAI (Bizly AI) — AI Business Management Software for Nigeria';
     const SECTION_TITLES = {
       features: 'BizlyAI Features — 15+ Business Modules',
       pricing: 'BizlyAI Pricing — From ₦4,900/month',
