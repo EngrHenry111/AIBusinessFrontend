@@ -367,6 +367,7 @@ export default function Settings() {
                     <option value="">Select industry</option>
                     {INDUSTRIES.map((i) => <option key={i.value} value={i.value}>{i.label}</option>)}
                   </select>
+                  <span className="form-hint">Sets which tools the menu shows first. Healthcare adds the Hospital section, Education the School section, Legal the Legal Practice section. Other tools stay under More tools.</span>
                 </div>
 
                 <div className="form-grid-2">

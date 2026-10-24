@@ -302,3 +302,7 @@
 
 /* Icon-only sidebar: sections stay expanded, separated by a thin rule. */
 .sidebar.collapsed .nav-divider { padding: 0; margin: 8px 6px; border-top: 1px solid var(--border); }
+
+/* "More tools" — the Business tools this industry rarely uses. */
+.nav-more { width: 100%; border: 0; background: transparent; font: inherit; font-size: 13px; color: var(--text-muted); cursor: pointer; text-align: left; }
+.nav-more:hover { color: var(--text-primary); }

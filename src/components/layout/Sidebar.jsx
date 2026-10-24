@@ -13,10 +13,11 @@ import {
   RiGroupLine, RiScales3Line, RiCalendarEventLine, RiGraduationCapLine, RiUserAddLine,
   RiCalendarCheckLine, RiFileList3Line, RiBook2Line, RiTimeLine, RiUserSettingsLine, RiPieChartLine,
   RiBuilding2Line, RiRadarLine, RiFileCheckLine, RiClipboardLine, RiArchiveLine, RiHandCoinLine, RiLineChartLine, RiBankCard2Line,
-  RiArrowDownSLine, RiHospitalLine, RiUserHeartLine, RiListOrdered, RiTestTubeLine, RiCapsuleLine, RiHotelBedLine,
+  RiArrowDownSLine, RiMoreLine, RiHospitalLine, RiUserHeartLine, RiListOrdered, RiTestTubeLine, RiCapsuleLine, RiHotelBedLine,
 } from 'react-icons/ri';
 import useSchoolMe from '../../pages/school/useSchoolMe';
 import useHospitalMe from '../../pages/hospital/useHospitalMe';
+import { INDUSTRY_TOOLS } from '../../constants/industries';
 import { useGroupAccess } from '../../pages/group/GroupGate';
 import './Sidebar.css';
 
@@ -98,6 +99,7 @@ const NAV_ITEMS = [
 ];
 
 const OPEN_SECTION_KEY = 'sidebar.openSection';
+const MORE_TOOLS_KEY = 'sidebar.moreTools';
 const EXACT_PATHS = ['/matters', '/school', '/group', '/hospital'];
 
 // The section whose item best matches the current URL (longest path wins,
@@ -132,6 +134,15 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const [openSection, setOpenSection] = useState(() => {
     try { return localStorage.getItem(OPEN_SECTION_KEY); } catch { return null; }
   });
+  const [showMore, setShowMore] = useState(() => {
+    try { return localStorage.getItem(MORE_TOOLS_KEY) === '1'; } catch { return false; }
+  });
+  const toggleMore = () => {
+    setShowMore((v) => {
+      try { localStorage.setItem(MORE_TOOLS_KEY, v ? '0' : '1'); } catch { /* ignore */ }
+      return !v;
+    });
+  };
   const toggleSection = (label) => {
     const next = openSection === label ? null : label;
     setOpenSection(next);
@@ -302,6 +313,19 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     return badges.includes('Enterprise') && badges.every((b) => b === 'Enterprise') ? 'Enterprise' : null;
   };
 
+  // Business tools this industry uses most come first, in its order; the
+  // rest sit under "More tools". A tool the user is on, or one with work
+  // waiting (a count), is never tucked away.
+  const industryTools = INDUSTRY_TOOLS[company?.industry];
+  const splitByIndustry = (section) => {
+    if (section.label !== 'Business' || !industryTools) return { main: section.items, more: [] };
+    const rank = new Map(industryTools.map((path, i) => [path, i]));
+    const keep = (it) => rank.has(it.path) || typeof badgeFor(it) === 'number'
+      || location.pathname === it.path || location.pathname.startsWith(`${it.path}/`);
+    const main = section.items.filter(keep).sort((a, b) => (rank.get(a.path) ?? 99) - (rank.get(b.path) ?? 99));
+    return { main, more: section.items.filter((it) => !keep(it)) };
+  };
+
   const renderItem = (item) => {
     const Icon = item.icon;
     const badge = badgeFor(item);
@@ -372,7 +396,21 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
                 {!open && badge ? <span className={`nav-badge ${badge === 'Enterprise' ? 'nav-badge-plan' : ''}`}>{badge}</span> : null}
                 <RiArrowDownSLine className="nav-section-chevron" />
               </button>
-              {open && <div className="nav-section-items">{section.items.map(renderItem)}</div>}
+              {open && (() => {
+                const { main, more } = splitByIndustry(section);
+                return (
+                  <div className="nav-section-items">
+                    {main.map(renderItem)}
+                    {more.length > 0 && showMore && more.map(renderItem)}
+                    {more.length > 0 && (
+                      <button type="button" className="nav-item nav-more" aria-expanded={showMore} onClick={toggleMore}>
+                        <RiMoreLine className="nav-icon" />
+                        <span className="nav-label">{showMore ? 'Fewer tools' : `More tools (${more.length})`}</span>
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}
