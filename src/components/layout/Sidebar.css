@@ -253,3 +253,52 @@
 /* Plan-locked items (e.g. Group Operations on non-Enterprise plans) — a label, not an alert. */
 .nav-badge.nav-badge-plan { background: rgba(16,185,129,0.14); color: #059669; }
 [data-theme='dark'] .nav-badge.nav-badge-plan { background: rgba(16,185,129,0.22); color: #6ee7b7; }
+
+/* Collapsible sections — the heading opens/closes its items. */
+.nav-section { display: flex; flex-direction: column; gap: 2px; }
+
+.nav-section-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 10px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+.nav-section-toggle > span:first-child { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.nav-section-toggle:hover { background: var(--bg-hover); color: var(--text-primary); }
+.nav-section-toggle:focus-visible { outline: 2px solid var(--color-brand); outline-offset: -2px; }
+.nav-section.open .nav-section-toggle { color: var(--text-primary); }
+.nav-section-toggle .nav-badge { margin-left: 0; letter-spacing: 0; text-transform: none; }
+
+.nav-section-chevron { font-size: 16px; flex-shrink: 0; transition: transform var(--transition); }
+.nav-section.open .nav-section-chevron { transform: rotate(180deg); }
+
+.nav-section-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 6px;
+  animation: nav-section-in 160ms ease-out;
+}
+@keyframes nav-section-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .nav-section-items { animation: none; }
+  .nav-section-chevron { transition: none; }
+}
+
+/* Icon-only sidebar: sections stay expanded, separated by a thin rule. */
+.sidebar.collapsed .nav-divider { padding: 0; margin: 8px 6px; border-top: 1px solid var(--border); }

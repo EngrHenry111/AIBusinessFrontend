@@ -13,6 +13,7 @@ import {
   RiGroupLine, RiScales3Line, RiCalendarEventLine, RiGraduationCapLine, RiUserAddLine,
   RiCalendarCheckLine, RiFileList3Line, RiBook2Line, RiTimeLine, RiUserSettingsLine, RiPieChartLine,
   RiBuilding2Line, RiRadarLine, RiFileCheckLine, RiClipboardLine, RiArchiveLine, RiHandCoinLine, RiLineChartLine, RiBankCard2Line,
+  RiArrowDownSLine,
 } from 'react-icons/ri';
 import useSchoolMe from '../../pages/school/useSchoolMe';
 import { useGroupAccess } from '../../pages/group/GroupGate';
@@ -81,6 +82,23 @@ const NAV_ITEMS = [
   { label: 'Super Admin', icon: RiShieldLine, path: '/admin', adminOnly: true },
 ];
 
+const OPEN_SECTION_KEY = 'sidebar.openSection';
+const EXACT_PATHS = ['/matters', '/school', '/group'];
+
+// The section whose item best matches the current URL (longest path wins,
+// so /group/reports beats /group).
+function sectionForPath(sections, pathname) {
+  let best = null;
+  let bestLen = -1;
+  for (const s of sections) {
+    for (const item of s.items) {
+      const hit = pathname === item.path || (!EXACT_PATHS.includes(item.path) && pathname.startsWith(`${item.path}/`));
+      if (hit && item.path.length > bestLen) { best = s.label; bestLen = item.path.length; }
+    }
+  }
+  return best;
+}
+
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const { user, company, logout } = useAuth();
   const schoolMe = useSchoolMe(company?.industry === 'education');
@@ -94,6 +112,14 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const [groupAwaiting, setGroupAwaiting] = useState(0);
   const groupAccess = useGroupAccess();
   const groupLocked = groupAccess && !groupAccess.allowed;
+  const [openSection, setOpenSection] = useState(() => {
+    try { return localStorage.getItem(OPEN_SECTION_KEY); } catch { return null; }
+  });
+  const toggleSection = (label) => {
+    const next = openSection === label ? null : label;
+    setOpenSection(next);
+    try { if (next) localStorage.setItem(OPEN_SECTION_KEY, next); else localStorage.removeItem(OPEN_SECTION_KEY); } catch { /* ignore */ }
+  };
 
   // Poll for branch reports waiting on this user's approval (only when the plan includes it)
   useEffect(() => {
@@ -219,6 +245,66 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     return item.badge;
   };
 
+  const visible = (item) => {
+    if (item.adminOnly && user?.role !== 'super_admin') return false;
+    if (item.roles && !item.roles.includes(user?.role)) return false;
+    if (item.businessPlanOnly && !isBusinessPlan && user?.role !== 'super_admin') return false;
+    if (item.legalOnly && company?.industry !== 'legal') return false;
+    if (item.schoolOnly && company?.industry !== 'education') return false;
+    if (item.schoolRoles && schoolMe && !item.schoolRoles.includes(schoolMe.role)) return false;
+    if (item.schoolManagerOnly && schoolMe && !schoolMe.manager) return false;
+    return true;
+  };
+
+  // Split the flat list into the always-visible top items and the sections
+  // that follow each divider; sections with nothing visible are dropped.
+  const top = [];
+  const allSections = [];
+  for (const item of NAV_ITEMS) {
+    if (!visible(item)) continue;
+    if (item.type === 'divider') allSections.push({ label: item.label, items: [] });
+    else if (allSections.length) allSections[allSections.length - 1].items.push(item);
+    else top.push(item);
+  }
+  const sections = allSections.filter((s) => s.items.length);
+
+  // Opening a page (link, bookmark, back button) opens its section.
+  const activeSection = sectionForPath(sections, location.pathname);
+  useEffect(() => {
+    if (activeSection) setOpenSection(activeSection);
+  }, [activeSection]);
+
+  // Sum of a closed section's counts, so waiting work isn't hidden.
+  const sectionBadge = (section) => {
+    const badges = section.items.map(badgeFor).filter(Boolean);
+    const total = badges.filter((b) => typeof b === 'number').reduce((a, b) => a + b, 0);
+    if (total) return total;
+    return badges.includes('Enterprise') && badges.every((b) => b === 'Enterprise') ? 'Enterprise' : null;
+  };
+
+  const renderItem = (item) => {
+    const Icon = item.icon;
+    const badge = badgeFor(item);
+    return (
+      <NavLink
+        key={item.path}
+        end={EXACT_PATHS.includes(item.path)}
+        to={item.path}
+        className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+        onClick={() => onClose && onClose()}
+        title={collapsed ? item.label : undefined}
+      >
+        <Icon className="nav-icon" />
+        {!collapsed && <span className="nav-label">{item.label}</span>}
+        {badge ? (
+          <span className={`nav-badge ${collapsed ? 'nav-badge-dot' : ''} ${badge === 'Enterprise' ? 'nav-badge-plan' : ''}`}>
+            {collapsed ? '' : badge}
+          </span>
+        ) : null}
+      </NavLink>
+    );
+  };
+
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
       {/* Header */}
@@ -239,41 +325,35 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
         </button>
       </div>
 
-      {/* Navigation */}
+      {/* Navigation — top items always shown; each section opens and closes
+          from its heading, one at a time, so the menu stays short. */}
       <nav className="sidebar-nav">
-        {NAV_ITEMS.map((item, idx) => {
-          if (item.adminOnly && user?.role !== 'super_admin') return null;
-          if (item.roles && !item.roles.includes(user?.role)) return null;
-          if (item.businessPlanOnly && !isBusinessPlan && user?.role !== 'super_admin') return null;
-          if (item.legalOnly && company?.industry !== 'legal') return null;
-          if (item.schoolOnly && company?.industry !== 'education') return null;
-          if (item.schoolRoles && schoolMe && !item.schoolRoles.includes(schoolMe.role)) return null;
-          if (item.schoolManagerOnly && schoolMe && !schoolMe.manager) return null;
-          if (item.type === 'divider') {
+        {top.map(renderItem)}
+        {sections.map((section) => {
+          if (collapsed) {
             return (
-              <div key={idx} className="nav-divider">
-                {!collapsed && <span>{item.label}</span>}
+              <div key={section.label}>
+                <div className="nav-divider" />
+                {section.items.map(renderItem)}
               </div>
             );
           }
-          const Icon = item.icon;
+          const open = openSection === section.label;
+          const badge = sectionBadge(section);
           return (
-            <NavLink
-              key={item.path}
-              end={item.path === '/matters' || item.path === '/school' || item.path === '/group'}
-              to={item.path}
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-              onClick={() => onClose && onClose()}
-              title={collapsed ? item.label : undefined}
-            >
-              <Icon className="nav-icon" />
-              {!collapsed && <span className="nav-label">{item.label}</span>}
-              {badgeFor(item) ? (
-                <span className={`nav-badge ${collapsed ? 'nav-badge-dot' : ''} ${badgeFor(item) === 'Enterprise' ? 'nav-badge-plan' : ''}`}>
-                  {collapsed ? '' : badgeFor(item)}
-                </span>
-              ) : null}
-            </NavLink>
+            <div key={section.label} className={`nav-section ${open ? 'open' : ''}`}>
+              <button
+                type="button"
+                className="nav-section-toggle"
+                aria-expanded={open}
+                onClick={() => toggleSection(section.label)}
+              >
+                <span>{section.label}</span>
+                {!open && badge ? <span className={`nav-badge ${badge === 'Enterprise' ? 'nav-badge-plan' : ''}`}>{badge}</span> : null}
+                <RiArrowDownSLine className="nav-section-chevron" />
+              </button>
+              {open && <div className="nav-section-items">{section.items.map(renderItem)}</div>}
+            </div>
           );
         })}
       </nav>
