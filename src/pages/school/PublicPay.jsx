@@ -79,10 +79,10 @@ function SignIn({ slug, notice, onSignedIn }) {
   return (
     <form onSubmit={submit}>
       <h2 style={{ marginTop: 0 }}>Parent portal</h2>
-      <p className="cell-sub">Pay school fees and see report cards and attendance. Sign in with any of your children's admission numbers and the phone number or email you gave the school — you'll see all your children.</p>
+      <p className="cell-sub">Pay school fees and see report cards and attendance. Sign in with any of your children's admission or reg numbers and the phone number or email you gave the school — you'll see all your children.</p>
       {notice && <div className="sc-note warn" style={{ marginTop: 12 }}>{notice}</div>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
-        <div className="form-group"><label className="form-label">Admission number</label><input className="form-input" required autoComplete="off" placeholder="e.g. STU/2026/0001" value={creds.admissionNumber} onChange={(e) => setCreds({ ...creds, admissionNumber: e.target.value })} /></div>
+        <div className="form-group"><label className="form-label">Admission or reg number</label><input className="form-input" required autoComplete="off" placeholder="e.g. STU/2026/0001" value={creds.admissionNumber} onChange={(e) => setCreds({ ...creds, admissionNumber: e.target.value })} /></div>
         <div className="form-group"><label className="form-label">Parent's phone number or email</label><input className="form-input" required value={creds.contact} onChange={(e) => setCreds({ ...creds, contact: e.target.value })} /></div>
       </div>
       {err && <div className="sc-note warn" style={{ marginTop: 16 }}>{err}</div>}

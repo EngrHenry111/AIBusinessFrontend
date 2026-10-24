@@ -39,7 +39,7 @@ export default function StudentDetail() {
   }, ['payment', 'fees', 'students', 'attendance']);
 
   if (!data) return <div className="sc-loading"><RiLoader4Line className="spin" /> Loading…</div>;
-  const { student, bills, payments, attendance, outstanding, settings, application, feesHidden } = data;
+  const { student, bills, payments, attendance, outstanding, settings, application, feesHidden, regHistory = [] } = data;
   const activeTab = tab || (feesHidden ? 'profile' : 'fees');
   const attTotal = Object.values(attendance).reduce((s, n) => s + n, 0);
   const attended = (attendance.present || 0) + (attendance.late || 0);
@@ -58,7 +58,7 @@ export default function StudentDetail() {
           <div className="sc-avatar">{student.photo ? <img src={student.photo} alt="" /> : `${student.firstName?.[0] || ''}${student.lastName?.[0] || ''}`}</div>
           <div>
             <h1 style={{ margin: 0 }}>{fullName(student)}</h1>
-            <p style={{ margin: 0 }}>{student.admissionNumber} · {student.classId?.name || 'No class'} · <span className={`badge badge-${STUDENT_STATUS[student.status]?.badge}`}>{STUDENT_STATUS[student.status]?.label}</span></p>
+            <p style={{ margin: 0 }}>{student.regNumber ? `Reg ${student.regNumber}` : student.admissionNumber} · {student.classId?.name || 'No class'} · <span className={`badge badge-${STUDENT_STATUS[student.status]?.badge}`}>{STUDENT_STATUS[student.status]?.label}</span></p>
           </div>
         </div>
         <div className="sc-actions">
@@ -184,6 +184,7 @@ export default function StudentDetail() {
           <div className="card card-pad">
             <div className="sc-card-title">Student</div>
             {[
+              ['Reg no.', student.regNumber && `${student.regNumber} (${student.regSession})`],
               ['Admission no.', student.admissionNumber], ['Class', student.classId?.name], ['Gender', student.gender && (student.gender === 'male' ? 'Male' : 'Female')],
               ['Date of birth', student.dateOfBirth && fmtDate(student.dateOfBirth)], ['Admitted', fmtDate(student.admittedAt)],
               ['Application', application && `${application.applicationNumber} (${application.source === 'online' ? 'online' : 'walk-in'})`],
@@ -191,6 +192,12 @@ export default function StudentDetail() {
               ['Previous school', student.previousSchool], ['Address', student.address], ['Medical notes', student.medicalNotes],
               ['Left', student.leftAt && fmtDate(student.leftAt)],
             ].filter(([, v]) => v).map(([k, v]) => <div className="sc-kv" key={k}><span>{k}</span><div>{v}</div></div>)}
+            {regHistory.length > 0 && (
+              <>
+                <div className="sc-card-title" style={{ marginTop: 16 }}>Reg numbers by session</div>
+                {regHistory.map((r) => <div className="sc-kv" key={r.session}><span>{r.session}</span><div>{r.regNumber}<span className="cell-sub">{r.classId?.name || r.levelCode}</span></div></div>)}
+              </>
+            )}
           </div>
           <div className="card card-pad">
             <div className="sc-card-title">Parent / guardian</div>

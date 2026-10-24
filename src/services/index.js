@@ -180,6 +180,10 @@ export const schoolService = {
   updateStudent: (id, data) => api.put(`/school/students/${id}`, data),
   deleteStudent: (id) => api.delete(`/school/students/${id}`),
 
+  getRegNumbers: (params) => api.get('/school/reg-numbers', { params }),
+  issueRegNumbers: () => api.post('/school/reg-numbers/issue'),
+  renumberRegNumbers: (levelCode) => api.post('/school/reg-numbers/renumber', { levelCode }),
+
   getApplications: (params) => api.get('/school/admissions', { params }),
   createApplication: (data) => api.post('/school/admissions', data),
   getApplication: (id) => api.get(`/school/admissions/${id}`),

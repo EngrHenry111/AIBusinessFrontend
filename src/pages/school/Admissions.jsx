@@ -194,7 +194,7 @@ function ApplicationDrawer({ id, classes, onClose, onEdit, onChanged }) {
               setBusy(true);
               try {
                 const { data } = await schoolService.enroll(app._id, { classId: enrollClass, admissionNumber: admissionNumber || undefined });
-                toast.success(`Enrolled — admission no. ${data.data.student.admissionNumber}`);
+                toast.success(`Enrolled: admission no. ${data.data.student.admissionNumber}${data.data.student.regNumber ? `, reg no. ${data.data.student.regNumber}` : ''}`);
                 onChanged();
                 navigate(`/school/students/${data.data.student._id}`);
               } catch (e) { toast.error(errMsg(e)); setBusy(false); }

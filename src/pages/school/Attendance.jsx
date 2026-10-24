@@ -89,7 +89,7 @@ function Register({ classId, date }) {
               {data.students.map((s, i) => (
                 <tr key={s._id}>
                   <td className="cell-sub">{i + 1}</td>
-                  <td><span className="sc-strong">{s.name}</span><span className="cell-sub">{s.admissionNumber}</span></td>
+                  <td><span className="sc-strong">{s.name}</span><span className="cell-sub">{s.regNumber || s.admissionNumber}</span></td>
                   <td>
                     <div className="sc-att" role="radiogroup" aria-label={`Attendance for ${s.name}`}>
                       {Object.entries(ATTENDANCE).map(([k, v]) => (
@@ -123,7 +123,7 @@ function Report({ classId }) {
           <tbody>
             {data.students.map((s) => (
               <tr key={s._id}>
-                <td><Link to={`/school/students/${s._id}`} className="sc-strong">{s.name}</Link><span className="cell-sub">{s.admissionNumber}</span></td>
+                <td><Link to={`/school/students/${s._id}`} className="sc-strong">{s.name}</Link><span className="cell-sub">{s.regNumber || s.admissionNumber}</span></td>
                 <td className="num">{s.present}</td><td className="num">{s.late}</td>
                 <td className="num">{s.absent > 0 ? <span className="sc-owing">{s.absent}</span> : 0}</td>
                 <td className="num">{s.excused}</td>

@@ -282,7 +282,7 @@ function Bills({ period, classes, tick }) {
             <tbody>
               {rows.map((b) => (
                 <tr key={b._id}>
-                  <td><Link to={`/school/students/${b.studentId?._id}`} className="sc-strong">{fullName(b.studentId)}</Link><span className="cell-sub">{b.studentId?.admissionNumber} · {b.classId?.name || '—'}</span></td>
+                  <td><Link to={`/school/students/${b.studentId?._id}`} className="sc-strong">{fullName(b.studentId)}</Link><span className="cell-sub">{b.studentId?.regNumber || b.studentId?.admissionNumber} · {b.classId?.name || '—'}</span></td>
                   <td>{b.title}<span className="cell-sub">{b.billNumber}{b.discount > 0 && ` · −${money(b.discount)}`}</span></td>
                   <td className="num">{money(b.total)}</td>
                   <td className="num">{money(b.amountPaid)}</td>
@@ -409,7 +409,7 @@ function Debtors({ period, classes, tick }) {
         <span style={{ marginLeft: 'auto' }}>Total owed: <b className="sc-owing">{money(total)}</b></span>
         <button className="btn btn-primary btn-sm" disabled={!rows?.length} onClick={() => setRemind({ classId })}><RiNotification3Line /> Remind {classId ? 'this class' : 'all'}</button>
         <button className="btn btn-secondary btn-sm" disabled={!rows?.length} onClick={() => downloadCsv(rows.map((r) => ({
-          admissionNumber: r.student.admissionNumber, student: fullName(r.student), class: r.className || '', billed: r.total, paid: r.paid, owing: r.balance,
+          regNumber: r.student.regNumber || '', admissionNumber: r.student.admissionNumber, student: fullName(r.student), class: r.className || '', billed: r.total, paid: r.paid, owing: r.balance,
           guardian: r.student.guardian?.name || '', phone: r.student.guardian?.phone || '', email: r.student.guardian?.email || '',
         })), `debtors-${period.session.replace('/', '-')}-${period.term}.csv`)}><RiDownload2Line /> Export</button>
       </div>

@@ -17,6 +17,7 @@ export default function ReportCardDoc({ data, comments = data.comments }) {
       <p className="sc-doc-title">Student report card — {TERMS[data.term]}, {data.session}</p>
       <div className="sc-doc-meta">
         <div><span>Name:</span> <b>{student.name}</b></div>
+        {student.regNumber && <div><span>Reg no.:</span> {student.regNumber}</div>}
         <div><span>Admission no.:</span> {student.admissionNumber}</div>
         <div><span>Class:</span> {data.class.name}</div>
         <div><span>Gender:</span> {student.gender ? (student.gender === 'male' ? 'Male' : 'Female') : '—'}</div>

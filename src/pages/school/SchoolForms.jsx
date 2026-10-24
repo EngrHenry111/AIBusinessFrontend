@@ -98,7 +98,7 @@ export function StudentFormModal({ student, classes, onClose, onSaved }) {
     try {
       const payload = { ...form, classId: form.classId || null, dateOfBirth: form.dateOfBirth || null };
       const { data } = editing ? await schoolService.updateStudent(student._id, payload) : await schoolService.createStudent(payload);
-      toast.success(editing ? 'Student updated' : `Student added — ${data.data.admissionNumber}`);
+      toast.success(editing ? 'Student updated' : `Student added: ${data.data.regNumber || data.data.admissionNumber}`);
       onSaved(data.data);
     } catch (err) { toast.error(errMsg(err, 'Could not save student')); }
     finally { setSaving(false); }
@@ -290,7 +290,7 @@ export function RecordPaymentModal({ bill: initialBill, student: initialStudent,
       {!student && !initialBill ? (
         <>
           <Field label="Student">
-            <div className="sc-search"><RiSearchLine /><input autoFocus placeholder="Name or admission number…" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+            <div className="sc-search"><RiSearchLine /><input autoFocus placeholder="Name, reg no. or admission no.…" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
           </Field>
           <ul className="sc-list" style={{ marginTop: 8 }}>
             {results.map((s) => (

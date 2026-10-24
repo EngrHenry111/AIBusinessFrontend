@@ -115,7 +115,7 @@ function ScoreEntry({ cls, period, settings }) {
                 const total = (Number(r.ca) || 0) + (Number(r.exam) || 0);
                 return (
                   <tr key={s._id}>
-                    <td><span className="sc-strong">{s.name}</span><span className="cell-sub">{s.admissionNumber}</span></td>
+                    <td><span className="sc-strong">{s.name}</span><span className="cell-sub">{s.regNumber || s.admissionNumber}</span></td>
                     <td className="num"><input className={`form-input sc-score-input ${bad(r.ca, caMax) ? 'bad' : ''}`} type="number" min="0" max={caMax} step="0.5" value={r.ca} onChange={(e) => set(s._id, 'ca', e.target.value)} aria-label={`CA for ${s.name}`} /></td>
                     <td className="num"><input className={`form-input sc-score-input ${bad(r.exam, examMax) ? 'bad' : ''}`} type="number" min="0" max={examMax} step="0.5" value={r.exam} onChange={(e) => set(s._id, 'exam', e.target.value)} aria-label={`Exam for ${s.name}`} /></td>
                     <td className="num sc-strong">{has ? total : '—'}</td>
@@ -162,7 +162,7 @@ function Broadsheet({ classId, period }) {
   if (!data) return <div className="sc-loading"><RiLoader4Line className="spin" /></div>;
 
   const exportCsv = () => {
-    const csv = Papa.unparse(data.rows.map((r) => ({ position: r.position || '', admissionNumber: r.admissionNumber, student: r.name, ...Object.fromEntries(data.subjects.map((s) => [s, r.scores[s] ?? ''])), total: r.total ?? '', average: r.average ?? '' })));
+    const csv = Papa.unparse(data.rows.map((r) => ({ position: r.position || '', regNumber: r.regNumber || '', admissionNumber: r.admissionNumber, student: r.name, ...Object.fromEntries(data.subjects.map((s) => [s, r.scores[s] ?? ''])), total: r.total ?? '', average: r.average ?? '' })));
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = `broadsheet-${data.class.name}-${period.term}.csv`;
@@ -191,7 +191,7 @@ function Broadsheet({ classId, period }) {
             {data.rows.map((r) => (
               <tr key={r._id}>
                 <td className="sc-strong">{r.position || '—'}</td>
-                <td><span className="sc-strong">{r.name}</span><span className="cell-sub">{r.admissionNumber}</span></td>
+                <td><span className="sc-strong">{r.name}</span><span className="cell-sub">{r.regNumber || r.admissionNumber}</span></td>
                 {data.subjects.map((s) => <td key={s} className="num">{r.scores[s] ?? '—'}</td>)}
                 <td className="num">{r.total ?? '—'}</td>
                 <td className="num sc-strong">{r.average ?? '—'}</td>

@@ -13,9 +13,13 @@ export default function SchoolSettings() {
   const { company } = useAuth();
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [savedSession, setSavedSession] = useState(null);
 
   useEffect(() => {
-    schoolService.getSettings().then(({ data }) => setForm({ ...data.data, termStart: toInputDate(data.data.termStart), termEnd: toInputDate(data.data.termEnd), nextTermBegins: toInputDate(data.data.nextTermBegins) }))
+    schoolService.getSettings().then(({ data }) => {
+      setSavedSession(data.data.currentSession);
+      setForm({ ...data.data, termStart: toInputDate(data.data.termStart), termEnd: toInputDate(data.data.termEnd), nextTermBegins: toInputDate(data.data.nextTermBegins) });
+    })
       .catch((e) => toast.error(errMsg(e)));
   }, []);
   if (!form) return <div className="sc-loading"><RiLoader4Line className="spin" /></div>;
@@ -24,6 +28,7 @@ export default function SchoolSettings() {
 
   async function save(e) {
     e.preventDefault();
+    if (form.currentSession !== savedSession && !window.confirm(`Start session ${form.currentSession}? Every student in a class gets a new class reg number for ${form.currentSession}, counted from 001 in each class level. ${savedSession} numbers stay on old report cards.`)) return;
     setSaving(true);
     try {
       const { data } = await schoolService.updateSettings({
@@ -32,6 +37,7 @@ export default function SchoolSettings() {
         gradingScale: form.gradingScale.map((g) => ({ ...g, min: Number(g.min) })),
       });
       setForm({ ...data.data, termStart: toInputDate(data.data.termStart), termEnd: toInputDate(data.data.termEnd), nextTermBegins: toInputDate(data.data.nextTermBegins) });
+      setSavedSession(data.data.currentSession);
       toast.success('School settings saved');
     } catch (err) { toast.error(errMsg(err)); } finally { setSaving(false); }
   }
@@ -103,6 +109,8 @@ export default function SchoolSettings() {
           </div>
         </div>
 
+        <RegNumbersCard form={form} set={set} />
+
         <BankAccountsCard form={form} set={set} paymentsReady={paymentsReady} />
 
         <div className="card card-pad">
@@ -144,6 +152,93 @@ export default function SchoolSettings() {
 }
 
 // Every student their own account number; transfers matched automatically.
+const DEFAULT_REG_FORMAT = '{PREFIX}/{LEVEL}/{SESSION}/{SERIAL}';
+const REG_FORMATS = [DEFAULT_REG_FORMAT, '{PREFIX}/{SESSION}/{LEVEL}/{SERIAL}', '{LEVEL}/{START}/{SERIAL}', '{PREFIX}-{LEVEL}-{SERIAL}'];
+const previewReg = (format, prefix, session, level = 'JSS1', serial = 7) => (format || DEFAULT_REG_FORMAT)
+  .replace(/\{PREFIX\}/g, prefix || 'STU').replace(/\{LEVEL\}/g, level)
+  .replace(/\{SESSION\}/g, String(session || '').replace('/', '-')).replace(/\{START\}/g, String(session || '').slice(0, 4))
+  .replace(/\{SERIAL\}/g, String(serial).padStart(3, '0'));
+
+// Class register numbers: counted per class level per session (all arms of
+// JSS 1 share 001…N), separate from the permanent admission number.
+function RegNumbersCard({ form, set }) {
+  const { user } = useAuth();
+  const manager = ['manager', 'company_owner', 'super_admin'].includes(user?.role);
+  const [summary, setSummary] = useState(null);
+  const [busy, setBusy] = useState(null);
+  const load = () => schoolService.getRegNumbers().then(({ data }) => setSummary(data.data)).catch(() => {});
+  useEffect(() => { load(); }, []);
+  useSchoolLive(load, ['students', 'classes', 'settings']);
+  const format = form.regNumberFormat || DEFAULT_REG_FORMAT;
+  const [customMode, setCustomMode] = useState(false);
+  const custom = customMode || !REG_FORMATS.includes(format);
+
+  async function issue() {
+    setBusy('issue');
+    try {
+      const { data } = await schoolService.issueRegNumbers();
+      toast.success(data.data.issued ? `${data.data.issued} reg number(s) issued` : 'Everyone already has a reg number');
+      load();
+    } catch (e) { toast.error(errMsg(e)); } finally { setBusy(null); }
+  }
+  async function renumber(level) {
+    if (!window.confirm(`Renumber ${level.levelCode} (${level.classes.join(', ')}) from 001 in alphabetical order? Numbers already printed for ${summary.session} will change.`)) return;
+    setBusy(level.levelCode);
+    try {
+      const { data } = await schoolService.renumberRegNumbers(level.levelCode);
+      toast.success(`${level.levelCode} renumbered: ${data.data.count} students`);
+      load();
+    } catch (e) { toast.error(errMsg(e)); } finally { setBusy(null); }
+  }
+
+  return (
+    <div className="card card-pad">
+      <div className="sc-card-title">Class reg numbers</div>
+      <p className="cell-sub" style={{ marginTop: 0 }}>Each class level is counted on its own every session. All arms of a level share one count, so a JSS 1 of 120 students runs 001–120 and JSS 2 starts again at 001. New sessions are numbered alphabetically. Students who join later take the next number. The admission number never changes, and parents can use either number.</p>
+      <Field label="Format">
+        <select className="form-input form-select" value={custom ? 'custom' : format} onChange={(e) => { setCustomMode(e.target.value === 'custom'); if (e.target.value !== 'custom') set('regNumberFormat', e.target.value); }}>
+          {REG_FORMATS.map((f) => <option key={f} value={f}>{previewReg(f, form.admissionNumberPrefix, form.currentSession)}</option>)}
+          <option value="custom">Custom…</option>
+        </select>
+      </Field>
+      {custom && (
+        <Field label="Custom format" hint="({PREFIX} {LEVEL} {SESSION} {START} {SERIAL})">
+          <input className="form-input" maxLength={60} value={format} onChange={(e) => set('regNumberFormat', e.target.value)} />
+        </Field>
+      )}
+      <p className="cell-sub">Example: <b>{previewReg(format, form.admissionNumberPrefix, form.currentSession)}</b>. Changing the format or prefix rewords this session's numbers but keeps each student's position.</p>
+
+      {summary && (
+        <>
+          {summary.missing > 0 && (
+            <div className="sc-note warn" style={{ margin: '12px 0' }}>
+              {summary.missing} student(s) have no reg number for {summary.session} yet.{' '}
+              <button type="button" className="btn btn-secondary btn-sm" disabled={busy === 'issue'} onClick={issue}>{busy === 'issue' ? 'Issuing…' : 'Issue numbers'}</button>
+            </div>
+          )}
+          <div className="table-wrapper">
+            <table className="table">
+              <thead><tr><th>Level</th><th>Classes</th><th className="num">Students</th><th className="num">Numbers</th>{manager && <th />}</tr></thead>
+              <tbody>
+                {summary.levels.map((l) => (
+                  <tr key={l.levelCode}>
+                    <td><span className="sc-strong">{l.levelCode}</span><span className="cell-sub">{l.sample}</span></td>
+                    <td>{l.classes.join(', ')}</td>
+                    <td className="num">{l.students}</td>
+                    <td className="num">{l.highest ? `001–${String(l.highest).padStart(3, '0')}` : '—'}{l.hasGaps && <span className="cell-sub">gaps from moves</span>}</td>
+                    {manager && <td className="num"><button type="button" className="btn btn-ghost btn-sm" disabled={!l.students || busy === l.levelCode} onClick={() => renumber(l)}>{busy === l.levelCode ? 'Working…' : 'Renumber'}</button></td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="cell-sub">Levels come from class names (JSS 1A and JSS 1B are both JSS1). You can change a class's level on the Classes page.</p>
+        </>
+      )}
+    </div>
+  );
+}
+
 function BankAccountsCard({ form, set, paymentsReady }) {
   const ba = form.bankAccounts || {};
   const setBa = (k, v) => set('bankAccounts', { ...ba, [k]: v });

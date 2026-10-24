@@ -46,7 +46,7 @@ export default function Students() {
     try {
       const { data } = await schoolService.getStudents({ classId: classId || undefined, status, limit: 500 });
       const csv = Papa.unparse(data.data.map((s) => ({
-        admissionNumber: s.admissionNumber, lastName: s.lastName, firstName: s.firstName, otherNames: s.otherNames || '',
+        regNumber: s.regNumber || '', admissionNumber: s.admissionNumber, lastName: s.lastName, firstName: s.firstName, otherNames: s.otherNames || '',
         gender: s.gender || '', className: s.classId?.name || '', status: s.status,
         guardianName: s.guardian?.name || '', guardianPhone: s.guardian?.phone || '', guardianEmail: s.guardian?.email || '',
         balanceOwed: s.balance,
@@ -75,7 +75,7 @@ export default function Students() {
 
       <div className="card">
         <div className="sc-filters">
-          <div className="sc-search"><RiSearchLine /><input placeholder="Search name, admission number, parent or phone…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} /></div>
+          <div className="sc-search"><RiSearchLine /><input placeholder="Search name, reg no., admission no., parent or phone…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} /></div>
           <select className="form-input form-select" value={classId} onChange={(e) => setFilter('classId', e.target.value)} aria-label="Class">
             <option value="">All classes</option>
             {classes.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
@@ -96,11 +96,12 @@ export default function Students() {
           <>
             <div className="table-wrapper">
               <table className="table">
-                <thead><tr><th>Student</th><th>Class</th><th>Parent / guardian</th>{showFees && <th className="num">Fees owed</th>}<th>Status</th></tr></thead>
+                <thead><tr><th>Student</th><th>Reg no.</th><th>Class</th><th>Parent / guardian</th>{showFees && <th className="num">Fees owed</th>}<th>Status</th></tr></thead>
                 <tbody>
                   {students.map((s) => (
                     <tr key={s._id} className="sc-row" onClick={() => navigate(`/school/students/${s._id}`)}>
-                      <td><div className="sc-strong">{s.fullName}</div><span className="cell-sub">{s.admissionNumber}{s.gender && ` · ${s.gender === 'male' ? 'M' : 'F'}`}</span></td>
+                      <td><div className="sc-strong">{s.fullName}</div><span className="cell-sub">Adm. {s.admissionNumber}{s.gender && ` · ${s.gender === 'male' ? 'M' : 'F'}`}</span></td>
+                      <td>{s.regNumber || <span className="cell-sub">—</span>}</td>
                       <td>{s.classId?.name || <span className="cell-sub">—</span>}</td>
                       <td>{s.guardian?.name || '—'}<span className="cell-sub">{s.guardian?.phone}</span></td>
                       {showFees && <td className="num">{s.balance > 0 ? <span className="sc-owing">{money(s.balance)}</span> : <span className="cell-sub">—</span>}</td>}
@@ -192,7 +193,19 @@ function PromoteModal({ classes, onClose, onDone }) {
   const [toClassId, setTo] = useState('');
   const [graduate, setGraduate] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [session, setSession] = useState(null);
+  const [newSessionStarted, setNewSessionStarted] = useState(false);
   const from = classes.find((c) => c._id === fromClassId);
+
+  // If the session was switched recently, the school is promoting after the
+  // switch, so the new class's reg numbers should be issued now.
+  useEffect(() => {
+    schoolService.getSettings().then(({ data }) => {
+      setSession(data.data.currentSession);
+      const changed = data.data.sessionChangedAt && Date.now() - new Date(data.data.sessionChangedAt).getTime() < 60 * 24 * 60 * 60 * 1000;
+      setNewSessionStarted(Boolean(changed));
+    }).catch(() => {});
+  }, []);
 
   // Suggest the next class up by level.
   useEffect(() => {
@@ -207,7 +220,7 @@ function PromoteModal({ classes, onClose, onDone }) {
     if (!window.confirm(`${from.studentCount} active student(s) in ${from.name} — ${target}?`)) return;
     setBusy(true);
     try {
-      const { data } = await schoolService.promote({ fromClassId, toClassId: graduate ? undefined : toClassId, graduate });
+      const { data } = await schoolService.promote({ fromClassId, toClassId: graduate ? undefined : toClassId, graduate, newSessionStarted });
       toast.success(`${data.data.moved} student(s) ${graduate ? 'graduated' : 'promoted'}`);
       onDone();
     } catch (err) { toast.error(errMsg(err, 'Promotion failed')); }
@@ -233,6 +246,13 @@ function PromoteModal({ classes, onClose, onDone }) {
               {classes.filter((c) => c._id !== fromClassId).map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
             </select>
           </Field>
+        )}
+        {session && (
+          <label className="sc-check">
+            <input type="checkbox" checked={newSessionStarted} onChange={(e) => setNewSessionStarted(e.target.checked)} />
+            <span>The current session ({session}) is the new session. Issue new class reg numbers now.
+              <span className="cell-sub">Leave unticked if you are promoting before switching the session in Settings. The numbers are issued when you switch.</span></span>
+          </label>
         )}
       </div>
     </Modal>

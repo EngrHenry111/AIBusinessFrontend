@@ -57,7 +57,7 @@ export default function SchoolClasses() {
               <tbody>
                 {classes.map((c) => (
                   <tr key={c._id}>
-                    <td><Link to={`/school/students?classId=${c._id}`} className="sc-strong">{c.name}</Link><span className="cell-sub">{[c.section, `Level ${c.level}`].filter(Boolean).join(' · ')}{!c.active && ' · inactive'}</span></td>
+                    <td><Link to={`/school/students?classId=${c._id}`} className="sc-strong">{c.name}</Link><span className="cell-sub">{[c.section, `Level ${c.level}`, c.regLevel && `Reg ${c.regLevel}`].filter(Boolean).join(' · ')}{!c.active && ' · inactive'}</span></td>
                     <td>
                       {c.classTeacher?.name ? <span>{c.classTeacher.name} <span className="badge badge-neutral">class teacher</span></span> : <span className="cell-sub" style={{ marginTop: 0 }}>No class teacher</span>}
                       {c.subjects?.length > 0 && (
@@ -93,9 +93,16 @@ export default function SchoolClasses() {
   );
 }
 
+// Mirrors utils/schoolRegNumbers.js: "JSS 1A" → JSS1, "Primary 4 Gold" → PRIMARY4.
+const deriveLevelCode = (name) => {
+  const flat = String(name || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const m = flat.match(/^(.*\d)[A-Z]*$/);
+  return ((m ? m[1] : flat) || 'CLASS').slice(0, 12);
+};
+
 function ClassModal({ cls, team, nextLevel, onClose, onSaved }) {
   const [form, setForm] = useState({
-    name: cls?.name || '', level: cls?.level ?? nextLevel, section: cls?.section || '',
+    name: cls?.name || '', level: cls?.level ?? nextLevel, levelCode: cls?.levelCode || '', section: cls?.section || '',
     classTeacher: cls?.classTeacher?._id || '', capacity: cls?.capacity ?? '', active: cls?.active ?? true,
     subjects: (cls?.subjects || []).join('\n'),
   });
@@ -122,7 +129,13 @@ function ClassModal({ cls, team, nextLevel, onClose, onSaved }) {
           <Field label="Section"><input className="form-input" placeholder="Junior Secondary" value={form.section} onChange={(e) => set('section', e.target.value)} /></Field>
           <Field label="Level" hint="(for promotion order)"><input className="form-input" type="number" value={form.level} onChange={(e) => set('level', e.target.value)} /></Field>
           <Field label="Capacity"><input className="form-input" type="number" min="0" value={form.capacity} onChange={(e) => set('capacity', e.target.value)} /></Field>
+          <Field label="Reg no. level" span hint={`(blank = ${deriveLevelCode(form.name)}; classes with the same level share one count)`}>
+            <input className="form-input" maxLength={12} placeholder={deriveLevelCode(form.name)} value={form.levelCode} onChange={(e) => set('levelCode', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} />
+          </Field>
         </div>
+        {cls && (form.levelCode || deriveLevelCode(form.name)) !== cls.regLevel && cls.studentCount > 0 && (
+          <div className="sc-note warn">Saving moves this class from the {cls.regLevel} count to {form.levelCode || deriveLevelCode(form.name)}. Both levels are renumbered from 001 for this session.</div>
+        )}
         <Field label="Class teacher">
           <select className="form-input form-select" value={form.classTeacher} onChange={(e) => set('classTeacher', e.target.value)}>
             <option value="">— None —</option>
