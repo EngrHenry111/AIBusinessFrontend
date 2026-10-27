@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { referralService, paymentSettingsService } from '../../services';
 import {
   RiGiftLine, RiFileCopyLine, RiWhatsappLine, RiLoader4Line, RiBankLine,
@@ -229,7 +230,7 @@ export default function Referrals() {
           <li>You get {pct}% of every payment they make, monthly or yearly, for as long as they stay subscribed.</li>
           <li>Each earning unlocks {data.holdDays} days after their payment. Withdraw to your bank from {naira(data.minWithdrawal)}, or pay for a month of your own plan with any balance.</li>
         </ol>
-        <p className="rf-fine">Referring your own business, or accounts you control, is not allowed, and earnings from it are reversed.</p>
+        <p className="rf-fine">Referring your own business, or accounts you control, is not allowed, and earnings from it are reversed. Full rules: <Link to="/terms">Terms, section 8</Link>.</p>
       </section>
 
       {showWithdraw && <WithdrawModal data={data} onClose={() => setShowWithdraw(false)} onDone={() => { setShowWithdraw(false); load(); }} />}

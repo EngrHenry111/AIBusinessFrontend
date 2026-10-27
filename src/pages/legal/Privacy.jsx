@@ -118,7 +118,7 @@ export default function Privacy() {
           <ul>
             <li>Access and update your account information from your settings.</li>
             <li>Export or request a copy of your workspace data.</li>
-            <li>Delete documents, records or your entire workspace. After account cancellation, data is retained for 30 days and then permanently deleted, unless a longer period is required by law.</li>
+            <li>Delete documents, records or your entire workspace. When a paid plan ends, your data is kept so you can renew and continue; you can ask us to delete your workspace at any time. A workspace that has been locked and unused for 12 months may be deleted after we email the owner at least 30 days beforehand, unless a longer period is required by law.</li>
             <li>Object to or withdraw consent for non-essential communications.</li>
           </ul>
           <p>
