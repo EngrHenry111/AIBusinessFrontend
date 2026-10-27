@@ -6,7 +6,7 @@ import {
   RiCheckLine, RiLoader4Line, RiShieldCheckLine, RiTimeLine, RiArrowUpLine,
   RiMoneyDollarCircleLine, RiAlertLine, RiBankCardLine, RiRefreshLine,
   RiCloseCircleLine, RiCheckboxCircleLine, RiRepeatLine, RiWhatsappLine,
-  RiVipCrownLine,
+  RiVipCrownLine, RiBankLine, RiPlayCircleLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './Billing.css';
@@ -56,6 +56,10 @@ export default function Billing() {
   const [paying, setPaying] = useState(null);
   const [cancelling, setCancelling] = useState(false);
   const [billingCycle, setBillingCycle] = useState('monthly');
+  // card: Paystack charges a saved card each period. transfer: the owner
+  // pays each period by bank transfer/USSD and gets reminders.
+  const [payMethod, setPayMethod] = useState('card');
+  const [resuming, setResuming] = useState(false);
   const [activeTab, setActiveTab] = useState('plans');
   const [entQuote, setEntQuote] = useState(null);
 
@@ -63,6 +67,11 @@ export default function Billing() {
   const status = subscription?.status || company?.subscription?.status || 'active';
   const isSubscribed = Boolean(subscription?.subscribed);
   const isPaidPlan = currentPlan !== 'trial' && currentPlan !== 'enterprise';
+  const paysByTransfer = subscription?.paymentMethod === 'transfer';
+  const canResume = Boolean(subscription?.canResume);
+  // Cancelled with no paid days left, expired, or a failed renewal: the
+  // current plan has to be paid for again before it can be used.
+  const planEnded = ['expired', 'past_due'].includes(status) || (status === 'cancelled' && !canResume);
 
   useEffect(() => {
     loadData();
@@ -86,14 +95,17 @@ export default function Billing() {
       setSubscription(subRes.data.data || null);
       paymentService.enterpriseQuote().then(({ data: q }) => setEntQuote(q.data)).catch(() => {});
       if (subRes.data.data?.billingCycle) setBillingCycle(subRes.data.data.billingCycle);
+      if (subRes.data.data?.paymentMethod) setPayMethod(subRes.data.data.paymentMethod);
     } catch { toast.error('Failed to load billing data'); }
     finally { setLoading(false); }
   }
 
-  async function handleSubscribe(planId) {
+  async function handleSubscribe(planId, method = payMethod) {
     setPaying(planId);
     try {
-      const { data } = await paymentService.subscribe(planId, billingCycle);
+      const { data } = method === 'transfer'
+        ? await paymentService.initialize(planId, billingCycle, 'transfer')
+        : await paymentService.subscribe(planId, billingCycle);
       window.location.href = data.data.authorizationUrl;
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not start the subscription');
@@ -106,7 +118,7 @@ export default function Billing() {
   async function payEnterprise() {
     setPaying('enterprise');
     try {
-      const { data } = await paymentService.initialize('enterprise', billingCycle);
+      const { data } = await paymentService.initialize('enterprise', billingCycle, payMethod === 'transfer' ? 'transfer' : undefined);
       window.location.href = data.data.authorizationUrl;
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not start the payment');
@@ -125,8 +137,24 @@ export default function Billing() {
     }
   }
 
+  async function handleResume() {
+    setResuming(true);
+    try {
+      await paymentService.resume();
+      toast.success(paysByTransfer ? 'Subscription resumed. We will remind you before the next payment.' : 'Subscription resumed. Your card renews it on the next payment date.');
+      loadData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not resume');
+    } finally {
+      setResuming(false);
+    }
+  }
+
   async function handleCancel() {
-    if (!confirm(`Cancel your ${currentPlan} subscription?\n\nYou keep full access until ${fmtDate(subscription?.currentPeriodEnd || company?.subscription?.currentPeriodEnd)}. It will not renew after that.`)) return;
+    const until = fmtDate(subscription?.currentPeriodEnd || company?.subscription?.currentPeriodEnd);
+    if (!confirm(paysByTransfer
+      ? `Cancel your ${currentPlan} subscription?\n\nYou keep full access until ${until}. We will stop sending payment reminders. You can resume before then, or subscribe again any time.`
+      : `Cancel your ${currentPlan} subscription?\n\nYour card will not be charged again. You keep full access until ${until}, and can resume before then or subscribe again any time.`)) return;
     setCancelling(true);
     try {
       await paymentService.cancelSubscription();
@@ -166,7 +194,12 @@ export default function Billing() {
             </div>
             {nextPayment && (
               <div className="cp-expiry">
-                <RiTimeLine /> {status === 'cancelled' ? 'Access until' : 'Next payment'} {fmtDate(nextPayment)}
+                <RiTimeLine /> {planEnded ? 'Ended' : status === 'cancelled' ? 'Access until' : paysByTransfer ? 'Paid until' : 'Next payment'} {fmtDate(nextPayment)}
+              </div>
+            )}
+            {isPaidPlan && subscription?.paymentMethod && !planEnded && (
+              <div className="cp-expiry">
+                {paysByTransfer ? <><RiBankLine /> Pays by bank transfer</> : <><RiBankCardLine /> Card, renews automatically</>}
               </div>
             )}
           </div>
@@ -175,21 +208,31 @@ export default function Billing() {
           {currentPlan === 'trial' && (
             <div className="trial-notice"><RiAlertLine /> Free trial — subscribe to unlock all features</div>
           )}
-          {isPaidPlan && status === 'active' && (
+          {isPaidPlan && status === 'active' && paysByTransfer && userIsOwner && (
+            <button className="btn btn-primary" onClick={() => handleSubscribe(currentPlan, 'transfer')} disabled={paying === currentPlan}>
+              {paying === currentPlan ? <RiLoader4Line className="spin" /> : <RiBankLine />} Pay next {billingCycle === 'annual' ? 'year' : 'month'}
+            </button>
+          )}
+          {isPaidPlan && status === 'active' && userIsOwner && (
             <button className="btn btn-secondary" onClick={handleCancel} disabled={cancelling}>
               {cancelling ? <RiLoader4Line className="spin" /> : <RiCloseCircleLine />} Cancel Subscription
             </button>
           )}
-          {isPaidPlan && status === 'cancelled' && (
+          {isPaidPlan && canResume && userIsOwner && (
+            <button className="btn btn-primary" onClick={handleResume} disabled={resuming}>
+              {resuming ? <RiLoader4Line className="spin" /> : <RiPlayCircleLine />} Resume subscription
+            </button>
+          )}
+          {isPaidPlan && planEnded && userIsOwner && (
             <button className="btn btn-primary" onClick={() => handleSubscribe(currentPlan)} disabled={paying === currentPlan}>
-              {paying === currentPlan ? <RiLoader4Line className="spin" /> : <RiRepeatLine />} Resubscribe
+              {paying === currentPlan ? <RiLoader4Line className="spin" /> : <RiRepeatLine />} Renew {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
             </button>
           )}
         </div>
       </div>
 
       {/* Subscription info card */}
-      {isSubscribed && (
+      {isSubscribed && !paysByTransfer && !planEnded && (
         <div className="card sub-info-card">
           <div className="sub-info-head">
             <h3><RiRepeatLine /> Subscription</h3>
@@ -216,23 +259,32 @@ export default function Billing() {
       )}
 
       {/* Cancel section */}
-      {isPaidPlan && status === 'active' && (
+      {isPaidPlan && status === 'active' && userIsOwner && (
         <div className="card cancel-section">
           <div>
             <strong>Cancel subscription</strong>
-            <p>You will keep access until <strong>{fmtDate(nextPayment)}</strong>. It won't renew after that, and you can resubscribe anytime.</p>
+            <p>You will keep access until <strong>{fmtDate(nextPayment)}</strong>. {paysByTransfer ? 'We will stop the payment reminders.' : 'Your card will not be charged again.'} You can resume before then, or subscribe again any time.</p>
           </div>
           <button className="btn btn-danger" onClick={handleCancel} disabled={cancelling}>
             {cancelling ? <RiLoader4Line className="spin" /> : <RiCloseCircleLine />} Cancel
           </button>
         </div>
       )}
-      {isPaidPlan && status === 'cancelled' && (
+      {isPaidPlan && canResume && (
         <div className="card cancel-confirmed">
           <RiCheckboxCircleLine />
           <div>
             <strong>Subscription cancelled</strong>
-            <p>Your {currentPlan} plan stays active until <strong>{fmtDate(nextPayment)}</strong>. No further charges will be made.</p>
+            <p>Your {currentPlan} plan stays active until <strong>{fmtDate(nextPayment)}</strong>. {paysByTransfer ? 'No reminders will be sent.' : 'Your card will not be charged.'} Changed your mind? Resume now and nothing is charged today.</p>
+          </div>
+        </div>
+      )}
+      {isPaidPlan && planEnded && (
+        <div className="card cancel-confirmed">
+          <RiAlertLine />
+          <div>
+            <strong>Your {currentPlan} plan has ended</strong>
+            <p>Your data is safe. Pay for a new {billingCycle === 'annual' ? 'year' : 'month'} below (card or bank transfer) to pick up where you left off.</p>
           </div>
         </div>
       )}
@@ -251,6 +303,14 @@ export default function Billing() {
               Annual <span className="save-badge">Save up to 20%</span>
             </button>
           </div>
+          <div className="cycle-toggle" role="radiogroup" aria-label="How do you want to pay?">
+            <button className={`cycle-btn ${payMethod === 'card' ? 'active' : ''}`} role="radio" aria-checked={payMethod === 'card'} onClick={() => setPayMethod('card')}>
+              <RiBankCardLine style={{ verticalAlign: '-2px' }} /> Card, renews automatically
+            </button>
+            <button className={`cycle-btn ${payMethod === 'transfer' ? 'active' : ''}`} role="radio" aria-checked={payMethod === 'transfer'} onClick={() => setPayMethod('transfer')}>
+              <RiBankLine style={{ verticalAlign: '-2px' }} /> Bank transfer, pay each {billingCycle === 'annual' ? 'year' : 'month'}
+            </button>
+          </div>
 
           {loading ? (
             <div className="billing-loading"><RiLoader4Line className="spin" /> Loading plans...</div>
@@ -263,7 +323,9 @@ export default function Billing() {
                   real Paystack plan code behind it, so a normal subscribe
                   attempt would just fail at checkout). */}
               {plans.filter((plan) => plan.id !== 'enterprise').map((plan) => {
-                const isCurrent = currentPlan === plan.id;
+                const isCurrent = currentPlan === plan.id && !planEnded;
+                // Transfer payers top up the current plan from its card.
+                const canTopUp = isCurrent && payMethod === 'transfer' && paysByTransfer;
                 const price = billingCycle === 'annual' ? plan.annualDisplay : plan.monthlyDisplay;
                 const color = PLAN_COLORS[plan.id] || '#6366f1';
                 const features = PLAN_FEATURES[plan.id] || [];
@@ -281,7 +343,7 @@ export default function Billing() {
                           {price}<span className="plan-period">/{billingCycle === 'annual' ? 'yr' : 'mo'}</span>
                         </div>
                         <div className="plan-billed-note">
-                          Billed {billingCycle}, cancel anytime
+                          {payMethod === 'transfer' ? `Pay each ${billingCycle === 'annual' ? 'year' : 'month'} by transfer, no card needed` : `Billed ${billingCycle}, cancel anytime`}
                         </div>
                         {billingCycle === 'annual' && plan.savings > 0 && (
                           <div className="plan-savings">Save {plan.savings}% vs monthly</div>
@@ -294,14 +356,16 @@ export default function Billing() {
                     </ul>
 
                     <button
-                      className={`btn ${isCurrent ? 'btn-secondary' : 'btn-primary'} plan-btn`}
-                      style={!isCurrent ? { background: color, borderColor: color } : {}}
-                      onClick={() => !isCurrent && handleSubscribe(plan.id)}
-                      disabled={isCurrent || paying === plan.id}
+                      className={`btn ${isCurrent && !canTopUp ? 'btn-secondary' : 'btn-primary'} plan-btn`}
+                      style={!isCurrent || canTopUp ? { background: color, borderColor: color } : {}}
+                      onClick={() => (!isCurrent || canTopUp) && handleSubscribe(plan.id)}
+                      disabled={(isCurrent && !canTopUp) || paying === plan.id || !userIsOwner}
                     >
                       {paying === plan.id ? <RiLoader4Line className="spin" />
-                        : isCurrent ? (isSubscribed ? 'Manage Subscription' : 'Current Plan')
-                        : <><RiArrowUpLine /> Subscribe to {plan.name}</>}
+                        : canTopUp ? <><RiBankLine /> Pay next {billingCycle === 'annual' ? 'year' : 'month'}</>
+                        : isCurrent ? 'Current Plan'
+                        : currentPlan === plan.id ? <><RiRepeatLine /> Renew {plan.name}</>
+                        : <>{payMethod === 'transfer' ? <RiBankLine /> : <RiArrowUpLine />} {payMethod === 'transfer' ? `Pay for ${plan.name} by transfer` : `Subscribe to ${plan.name}`}</>}
                     </button>
                   </div>
                 );
@@ -357,7 +421,9 @@ export default function Billing() {
 
           <div className="payment-security">
             <RiShieldCheckLine style={{ color: '#10b981' }} />
-            <span>Recurring billing is handled securely by <strong>Paystack</strong>. Your card is charged automatically each {billingCycle === 'annual' ? 'year' : 'month'} until you cancel.</span>
+            <span>{payMethod === 'transfer'
+              ? <>Payments are handled securely by <strong>Paystack</strong>. At checkout you get an account number to transfer to (or pay by USSD). Nothing is charged automatically: we email you 7 days and 1 day before your plan ends, and paying early adds to the time you have left.</>
+              : <>Recurring billing is handled securely by <strong>Paystack</strong>. Your card is charged automatically each {billingCycle === 'annual' ? 'year' : 'month'} until you cancel.</>}</span>
           </div>
         </>
       )}

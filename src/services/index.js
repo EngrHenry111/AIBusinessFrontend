@@ -688,12 +688,13 @@ export const departmentService = {
 // ─── Payments ─────────────────────────────────────────────────────────────────
 export const paymentService = {
   getPlans: () => api.get('/payments/plans'),
-  initialize: (plan, billingCycle) => api.post('/payments/initialize', { plan, billingCycle }),
+  initialize: (plan, billingCycle, method) => api.post('/payments/initialize', { plan, billingCycle, method }),
   verify: (reference) => api.get(`/payments/verify/${reference}`),
   getHistory: () => api.get('/payments/history'),
   cancel: () => api.post('/payments/cancel'),
   subscribe: (plan, billingCycle) => api.post('/payments/subscribe', { plan, billingCycle }),
   cancelSubscription: () => api.post('/payments/cancel-subscription'),
+  resume: () => api.post('/payments/resume'),
   getSubscription: () => api.get('/payments/subscription'),
   enterpriseQuote: () => api.get('/payments/enterprise-quote'),
 };
