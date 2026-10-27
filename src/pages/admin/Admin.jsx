@@ -9,7 +9,7 @@ import {
   RiMoneyDollarCircleLine, RiPulseLine, RiRefreshLine, RiMailSendLine,
   RiDatabase2Line, RiServerLine, RiCpuLine, RiTimeLine, RiEyeLine,
   RiSearchEyeLine, RiStore2Line, RiStarFill, RiStarLine, RiExternalLinkLine,
-  RiShoppingBag3Line,
+  RiShoppingBag3Line, RiGiftLine, RiAlertLine,
 } from 'react-icons/ri';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip,
@@ -29,6 +29,7 @@ const TABS = [
   { id: 'users', label: 'Users', icon: RiUserLine },
   { id: 'revenue', label: 'Revenue', icon: RiMoneyDollarCircleLine },
   { id: 'marketplace', label: 'Marketplace', icon: RiStore2Line },
+  { id: 'referrals', label: 'Referrals', icon: RiGiftLine },
   { id: 'system', label: 'System', icon: RiPulseLine },
 ];
 const STORE_URL = (slug) => `https://bislyai.com/store/${slug}`;
@@ -95,6 +96,7 @@ export default function Admin() {
       {tab === 'users' && <UsersTab />}
       {tab === 'revenue' && <RevenueTab />}
       {tab === 'marketplace' && <MarketplaceTab />}
+      {tab === 'referrals' && <ReferralsTab />}
       {tab === 'system' && <SystemTab />}
     </div>
   );
@@ -860,6 +862,201 @@ function MarketplaceTab() {
           </table>
         </div>
       </div>
+    </>
+  );
+}
+
+/* ───────────────────────── Referrals ───────────────────────── */
+const PAYOUT_STATUS = { requested: 'warning', paid: 'success', rejected: 'danger' };
+
+function ReferralsTab() {
+  const [status, setStatus] = useState('requested');
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(null);
+  const [open, setOpen] = useState(null); // referrer whose earnings are shown
+  const [earnings, setEarnings] = useState([]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: res } = await adminService.getReferrals(status ? { status } : {});
+      setData(res.data);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not load referrals');
+    } finally {
+      setLoading(false);
+    }
+  }, [status]);
+  useEffect(() => { load(); }, [load]);
+
+  const loadEarnings = async (companyId) => {
+    if (open === companyId) { setOpen(null); return; }
+    try {
+      const { data: res } = await adminService.getReferralEarnings(companyId);
+      setEarnings(res.data);
+      setOpen(companyId);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not load earnings');
+    }
+  };
+
+  const settle = async (p, action) => {
+    const bank = `${p.bank?.accountName}, ${p.bank?.bankName} ${p.bank?.accountNumber}`;
+    let note;
+    if (action === 'paid') {
+      if (!window.confirm(`Confirm you have sent ${fmtMoney(p.amount)} to ${bank}?`)) return;
+    } else {
+      note = window.prompt('Reason for rejecting (the owner sees this). The money goes back to their balance.');
+      if (note === null) return;
+    }
+    setBusy(p._id);
+    try {
+      await adminService.settleReferralPayout(p._id, action, note);
+      toast.success(action === 'paid' ? 'Marked as paid' : 'Rejected; balance returned');
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const reverse = async (e) => {
+    const reason = window.prompt(`Reverse this ${fmtMoney(e.amount)} earning? Give a reason (e.g. refund, self-referral).`);
+    if (reason === null) return;
+    try {
+      await adminService.reverseReferralEarning(e._id, reason);
+      toast.success('Earning reversed');
+      setEarnings((list) => list.map((x) => (x._id === e._id ? { ...x, status: 'reversed', reversedReason: reason } : x)));
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed');
+    }
+  };
+
+  if (loading && !data) return <Spinner />;
+  if (!data) return <div className="admin-empty">No data available</div>;
+
+  const cards = [
+    { label: 'Referred Companies', value: fmtNum(data.referredCompanies), icon: RiBuilding2Line, color: '#6366f1' },
+    { label: 'Revenue From Referrals', value: fmtMoney(data.referredRevenue), icon: RiMoneyDollarCircleLine, color: '#10b981', sub: `${fmtNum(data.payments)} payments` },
+    { label: 'Earned By Referrers', value: fmtMoney(data.earned), icon: RiGiftLine, color: '#8b5cf6' },
+    { label: 'Cash Paid Out', value: fmtMoney(data.cashPaid), icon: RiCheckLine, color: '#10b981' },
+    { label: 'Waiting To Be Paid', value: fmtMoney(data.cashWaiting), icon: RiTimeLine, color: '#f59e0b' },
+    { label: 'Used On Plans', value: fmtMoney(data.creditUsed), icon: RiArrowUpLine, color: '#64748b' },
+  ];
+
+  return (
+    <>
+      <div className="admin-toolbar">
+        <div>
+          <select className="form-input form-select admin-select" style={{ maxWidth: 240 }} value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="requested">Waiting withdrawals</option>
+            <option value="paid">Paid withdrawals</option>
+            <option value="rejected">Rejected withdrawals</option>
+            <option value="">All withdrawals</option>
+          </select>
+        </div>
+        <button className="btn btn-secondary btn-sm" onClick={load}><RiRefreshLine /> Refresh</button>
+      </div>
+
+      <div className="admin-stats-grid">
+        {cards.map((c) => {
+          const Icon = c.icon;
+          return (
+            <div key={c.label} className="admin-stat card">
+              <div className="as-icon" style={{ background: `${c.color}18`, color: c.color }}><Icon /></div>
+              <div className="as-value">{c.value}</div>
+              <div className="as-label">{c.label}</div>
+              {c.sub && <div className="as-sub">{c.sub}</div>}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card">
+        <div className="card-header-row"><h3>Withdrawals</h3></div>
+        <div className="table-wrapper">
+          <table className="table">
+            <thead><tr><th>Requested</th><th>Company</th><th>Pay to</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {data.withdrawals.map((p) => (
+                <tr key={p._id}>
+                  <td>{fmtDateTime(p.createdAt)}</td>
+                  <td>
+                    <strong>{p.companyName}</strong>
+                    {p.flagged && <div className="admin-flag"><RiAlertLine /> Same account as a store this company referred</div>}
+                  </td>
+                  <td>{p.bank?.accountName}<div className="muted">{p.bank?.bankName} · {p.bank?.accountNumber}</div></td>
+                  <td><strong>{fmtMoney(p.amount)}</strong></td>
+                  <td>
+                    <span className={`badge badge-${PAYOUT_STATUS[p.status]}`}>{cap(p.status)}</span>
+                    {p.note && <div className="muted">{p.note}</div>}
+                  </td>
+                  <td>
+                    {p.status === 'requested' ? (
+                      <div className="admin-actions">
+                        <button className="btn btn-primary btn-sm" disabled={busy === p._id} onClick={() => settle(p, 'paid')}><RiCheckLine /> Mark paid</button>
+                        <button className="btn btn-ghost btn-sm" disabled={busy === p._id} onClick={() => settle(p, 'reject')}><RiCloseLine /> Reject</button>
+                      </div>
+                    ) : <span className="muted">{fmtDate(p.processedAt)}</span>}
+                  </td>
+                </tr>
+              ))}
+              {!data.withdrawals.length && <tr><td colSpan={6} className="muted">No withdrawals here</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header-row"><h3>Top Referrers</h3></div>
+        <div className="table-wrapper">
+          <table className="table compact">
+            <thead><tr><th>Company</th><th>Referrals who paid</th><th>Their payments</th><th>Earned</th><th /></tr></thead>
+            <tbody>
+              {data.top.map((t) => (
+                <tr key={t._id}>
+                  <td><strong>{t.companyName}</strong></td>
+                  <td>{fmtNum(t.companies)}</td>
+                  <td>{fmtMoney(t.revenue)}</td>
+                  <td>{fmtMoney(t.earned)}</td>
+                  <td><button className="link-btn" onClick={() => loadEarnings(t._id)}>{open === t._id ? 'Hide' : 'Earnings'}</button></td>
+                </tr>
+              ))}
+              {!data.top.length && <tr><td colSpan={5} className="muted">No referral earnings yet</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {open && (
+        <div className="card">
+          <div className="card-header-row"><h3>Earnings of {data.top.find((t) => t._id === open)?.companyName}</h3></div>
+          <div className="table-wrapper">
+            <table className="table compact">
+              <thead><tr><th>Date</th><th>From</th><th>Payment</th><th>Earned</th><th>Reference</th><th /></tr></thead>
+              <tbody>
+                {earnings.map((e) => (
+                  <tr key={e._id}>
+                    <td>{fmtDate(e.createdAt)}</td>
+                    <td>{e.referredCompanyId?.companyName || '—'}</td>
+                    <td>{fmtMoney(e.paymentAmount)}</td>
+                    <td>{fmtMoney(e.amount)}</td>
+                    <td className="muted">{e.paymentReference}</td>
+                    <td>
+                      {e.status === 'reversed'
+                        ? <span className="badge badge-danger" title={e.reversedReason}>Reversed</span>
+                        : <button className="link-btn" onClick={() => reverse(e)}>Reverse</button>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </>
   );
 }

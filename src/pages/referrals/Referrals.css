@@ -1,0 +1,66 @@
+.rf-page { display: flex; flex-direction: column; gap: var(--space-5); }
+.rf-page .page-header { margin-bottom: 0; }
+.rf-page .page-header h1 { display: flex; align-items: center; gap: 8px; }
+.rf-page .page-header h1 svg { color: var(--color-brand); }
+.rf-loading { display: flex; justify-content: center; padding: 80px 0; font-size: 28px; color: var(--text-muted); }
+
+.rf-share { padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); }
+.rf-share h3 { font-size: 16px; font-weight: 600; }
+.rf-share-text p { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+.rf-link-row { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.rf-link { flex: 1 1 280px; font-family: var(--font-mono); font-size: 13px; }
+.rf-link-row .btn { display: inline-flex; align-items: center; gap: 6px; }
+.rf-wa { color: #128c7e; }
+.rf-code { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+.rf-code strong { font-family: var(--font-mono); color: var(--text-primary); letter-spacing: 0.04em; }
+
+.rf-stats { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: var(--space-4); }
+.rf-stat { display: flex; flex-direction: column; gap: 6px; }
+.rf-stat-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+.rf-stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+.rf-of { font-size: 14px; font-weight: 500; color: var(--text-muted); }
+.rf-stat-sub { font-size: 12px; color: var(--text-muted); }
+.rf-stat-main { border-color: var(--color-brand); }
+.rf-stat-main .rf-stat-value { color: var(--color-brand); font-size: 28px; }
+.rf-stat-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: 4px; }
+.rf-stat-actions .btn { display: inline-flex; align-items: center; gap: 6px; }
+
+.rf-claim { padding: var(--space-4) var(--space-5); display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.rf-claim-icon { font-size: 24px; color: var(--color-brand); flex-shrink: 0; }
+.rf-claim-text { flex: 1 1 260px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.rf-claim-text span { font-size: 13px; color: var(--text-secondary); }
+.rf-claim .form-input { width: 180px; }
+.rf-note { font-size: 13px; color: var(--text-secondary); margin-top: calc(-1 * var(--space-2)); }
+
+.rf-section { padding: var(--space-5) 0 var(--space-2); }
+.rf-section h3 { font-size: 16px; font-weight: 600; padding: 0 var(--space-6) var(--space-3); }
+.rf-empty { padding: var(--space-4) var(--space-6) var(--space-5); color: var(--text-muted); font-size: 14px; }
+.rf-num { text-align: right !important; white-space: nowrap; }
+.rf-page .cell-sub { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.rf-how { padding: var(--space-5) var(--space-6); }
+.rf-how h3 { padding: 0 0 var(--space-3); }
+.rf-how ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--text-secondary); }
+.rf-fine { margin-top: var(--space-3); font-size: 12px; color: var(--text-muted); }
+
+.rf-modal { width: min(460px, calc(100vw - 32px)); }
+.rf-modal-body { display: flex; flex-direction: column; gap: var(--space-4); }
+.rf-modal-lead { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+.rf-modal-footer { display: flex; justify-content: flex-end; gap: var(--space-2); }
+.rf-modal-footer .btn { display: inline-flex; align-items: center; gap: 6px; }
+.rf-modal-balance { font-size: 13px; color: var(--text-secondary); }
+.rf-modal-balance.short { color: var(--color-danger); }
+.rf-plan-pick { display: flex; flex-direction: column; gap: var(--space-2); }
+.rf-plan-opt { display: flex; align-items: center; gap: var(--space-3); padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; font-size: 14px; }
+.rf-plan-opt span { flex: 1; }
+.rf-plan-opt.active { border-color: var(--color-brand); background: var(--color-brand-light); }
+
+@media (max-width: 960px) {
+  .rf-stats { grid-template-columns: 1fr 1fr; }
+  .rf-stat-main { grid-column: 1 / -1; }
+}
+@media (max-width: 520px) {
+  .rf-stats { grid-template-columns: 1fr; }
+  .rf-share { padding: var(--space-4); }
+  .rf-claim .form-input { width: 100%; }
+}

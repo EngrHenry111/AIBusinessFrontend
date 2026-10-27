@@ -699,6 +699,14 @@ export const paymentService = {
   enterpriseQuote: () => api.get('/payments/enterprise-quote'),
 };
 
+// ─── Referrals ────────────────────────────────────────────────────────────────
+export const referralService = {
+  get: () => api.get('/referrals'),
+  claim: (code) => api.post('/referrals/claim', { code }),
+  useBalance: (plan) => api.post('/referrals/use-balance', { plan }),
+  withdraw: (data) => api.post('/referrals/withdraw', data),
+};
+
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
 export const whatsappService = {
   getStatus: () => api.get('/whatsapp/status'),
@@ -776,6 +784,10 @@ export const adminService = {
   suspendStore: (id) => api.patch(`/admin/stores/${id}/suspend`),
   // Wide-window backfill can take a while (many Paystack pages) — give it
   // more room than the shared 60s default instead of failing a slow-but-fine run.
+  getReferrals: (params) => api.get('/admin/referrals', { params }),
+  getReferralEarnings: (companyId) => api.get(`/admin/referrals/${companyId}/earnings`),
+  settleReferralPayout: (id, action, note) => api.patch(`/admin/referrals/payouts/${id}`, { action, note }),
+  reverseReferralEarning: (id, reason) => api.patch(`/admin/referrals/earnings/${id}/reverse`, { reason }),
   reconcileOrders: (days) => api.post('/admin/reconcile-orders', null, { params: { days }, timeout: 120000 }),
 };
 

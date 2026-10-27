@@ -12,6 +12,7 @@ import {
   RiAwardLine, RiTruckLine, RiTeamLine, RiVipCrownLine,
 } from 'react-icons/ri';
 import useSeo from '../../hooks/useSeo';
+import { rememberReferralCode } from '../../constants/referral';
 import './Landing.css';
 
 const SUPPORT_EMAIL = 'support@bislyai.com';
@@ -329,6 +330,12 @@ export default function Landing() {
   const [openFaq, setOpenFaq] = useState(0);
 
   useSeo({ path: '/' }); // canonical + og:url only — title is managed below
+
+  // bislyai.com/?ref=CODE — keep the referral code for when they sign up.
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref');
+    if (ref) rememberReferralCode(ref);
+  }, []);
 
   const scrollTo = useCallback((id) => {
     setMenuOpen(false);

@@ -1,16 +1,22 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { INDUSTRIES } from '../../constants/industries';
+import { rememberReferralCode, peekReferralCode, takeReferralCode } from '../../constants/referral';
 import { RiRobot2Line, RiEyeLine, RiEyeOffLine } from 'react-icons/ri';
 import './Auth.css';
 
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [form, setForm] = useState({
-    name: '', email: '', password: '', companyName: '', industry: '', phone: ''
+    name: '', email: '', password: '', companyName: '', industry: '', phone: '',
+    ref: params.get('ref') || peekReferralCode(),
   });
+
+  // Keep the code even if they leave and sign up with Google instead.
+  useEffect(() => { if (params.get('ref')) rememberReferralCode(params.get('ref')); }, [params]);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -21,6 +27,7 @@ export default function Register() {
     setLoading(true);
     try {
       await register(form);
+      takeReferralCode();
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
@@ -94,6 +101,16 @@ export default function Register() {
                 placeholder="e.g. 08012345678"
                 value={form.phone}
                 onChange={e => f('phone', e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Referral Code <span className="form-hint">(optional)</span></label>
+              <input
+                className="form-input"
+                placeholder="e.g. GRACE7K2A"
+                value={form.ref}
+                onChange={e => f('ref', e.target.value.toUpperCase())}
+                maxLength={20}
               />
             </div>
           </div>

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Navigate, useLocation, useNavigate as useNavigate_ } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { referralService } from '../../services';
+import { takeReferralCode } from '../../constants/referral';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import GracePeriodBanner from '../subscription/GracePeriodBanner';
@@ -8,13 +10,21 @@ import EmailVerificationBanner from '../EmailVerificationBanner';
 import './AppLayout.css';
 
 // Pages accessible even when subscription is expired
-const ALLOWED_EXPIRED = ['/billing', '/settings', '/messages'];
+const ALLOWED_EXPIRED = ['/billing', '/referrals', '/settings', '/messages'];
 
 export default function AppLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { subscriptionState, user } = useAuth();
   const location = useLocation();
+
+  // Came in through someone's referral link but signed up another way
+  // (Google): add the code now. Refusals (own code, too late) are silent.
+  useEffect(() => {
+    if (user?.role !== 'company_owner') return;
+    const code = takeReferralCode();
+    if (code) referralService.claim(code).catch(() => {});
+  }, [user?.role]);
 
   // Close the mobile drawer whenever the route changes
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);

@@ -127,3 +127,8 @@
 /* ── Broadcast ────────────────────────────────────────────────────────────── */
 .broadcast-form { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-3); max-width: 560px; }
 .broadcast-form .btn { align-self: flex-start; }
+
+/* Referrals */
+.admin-flag { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 12px; color: var(--color-warning); }
+.admin-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.admin-actions .btn { display: inline-flex; align-items: center; gap: 4px; }

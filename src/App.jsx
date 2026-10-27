@@ -130,6 +130,7 @@ const GroupCreditDetail = lazy(() => import('./pages/group/CreditCustomer'));
 const GroupProfit = lazy(() => import('./pages/group/Profit'));
 const GroupPos = lazy(() => import('./pages/group/PosSettlement'));
 const Billing = lazy(() => import('./pages/billing/Billing'));
+const Referrals = lazy(() => import('./pages/referrals/Referrals'));
 const Messages = lazy(() => import('./pages/messages/Messages'));
 const Admin = lazy(() => import('./pages/admin/Admin'));
 const Search = lazy(() => import('./pages/search/Search'));
@@ -328,6 +329,7 @@ function AppRoutes() {
                 <Route path="payroll" element={<Payroll />} />
                 <Route path="payroll/:id" element={<PayrollDetail />} />
                 <Route path="billing" element={<Billing />} />
+                <Route path="referrals" element={<Referrals />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="admin" element={<Admin />} />
                 <Route path="search" element={<Search />} />
