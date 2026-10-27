@@ -40,6 +40,7 @@ export const documentService = {
   }),
   delete: (id) => api.delete(`/documents/${id}`),
   reembed: (id) => api.post(`/documents/${id}/reembed`),
+  setCustomerFacing: (id, customerFacing) => api.patch(`/documents/${id}/customer-facing`, { customerFacing }),
 };
 
 // ─── Knowledge Bases ──────────────────────────────────────────────────────────

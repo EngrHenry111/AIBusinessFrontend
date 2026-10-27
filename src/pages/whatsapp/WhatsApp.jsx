@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { whatsappService } from '../../services';
-import { SOCKET_ORIGIN } from '../../services/api';
-import { io } from 'socket.io-client';
+import { connectSocket } from '../../services/socket';
 import {
   RiWhatsappLine, RiSearchLine, RiSendPlane2Line, RiLoader4Line,
   RiRobot2Line, RiUser3Line, RiCustomerService2Line, RiCheckDoubleLine,
@@ -11,7 +10,6 @@ import {
 import toast from 'react-hot-toast';
 import './WhatsApp.css';
 
-const SOCKET_URL = SOCKET_ORIGIN;
 
 const FILTERS = [
   { id: 'all', label: 'All' },
@@ -105,9 +103,7 @@ export default function WhatsApp() {
   // Socket
   useEffect(() => {
     if (!companyId) return;
-    const socket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
-    });
+    const socket = connectSocket();
     socketRef.current = socket;
     socket.on('connect', () => {
       socket.emit('whatsapp:join', companyId);

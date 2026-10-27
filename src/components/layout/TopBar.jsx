@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { notificationService } from '../../services';
-import { SOCKET_ORIGIN } from '../../services/api';
-import { io } from 'socket.io-client';
+import { connectSocket } from '../../services/socket';
 import toast from 'react-hot-toast';
 import {
   RiSearchLine, RiSunLine, RiMoonLine, RiNotification3Line,
@@ -61,7 +60,7 @@ export default function TopBar({ onMenuToggle, mobileOpen = false }) {
   useEffect(() => {
     const companyId = company?.id || company?._id;
     if (!companyId) return;
-    const socket = io(SOCKET_ORIGIN, { transports: ['websocket', 'polling'] });
+    const socket = connectSocket();
     socket.on('connect', () => socket.emit('join_company', companyId));
     socket.on('order:new', (p) => {
       toast.success(p.message || 'New order received');

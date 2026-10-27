@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { orderService, productService, deliveryService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
-import { SOCKET_ORIGIN } from '../../services/api';
-import { io } from 'socket.io-client';
+import { connectSocket } from '../../services/socket';
 import {
   RiAddLine, RiShoppingBagLine, RiDeleteBinLine, RiSearchLine,
   RiArrowDownSLine, RiArrowUpSLine, RiTruckLine, RiCheckLine,
@@ -62,7 +61,7 @@ export default function Orders() {
   useEffect(() => {
     const companyId = company?.id || company?._id;
     if (!companyId) return;
-    const socket = io(SOCKET_ORIGIN, { transports: ['websocket', 'polling'] });
+    const socket = connectSocket();
     socket.on('connect', () => socket.emit('join_company', companyId));
     socket.on('order:new', (p) => {
       toast.success(p.message || 'New order received', { icon: '🛒' });

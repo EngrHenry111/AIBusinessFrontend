@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { messageService } from '../../services';
-import { SOCKET_ORIGIN } from '../../services/api';
-import { io } from 'socket.io-client';
+import { connectSocket } from '../../services/socket';
 import {
   RiSendPlane2Line, RiSearchLine, RiTeamLine,
   RiCircleFill, RiDeleteBinLine, RiRobot2Line,
@@ -11,7 +10,6 @@ import {
 import toast from 'react-hot-toast';
 import './Messages.css';
 
-const SOCKET_URL = SOCKET_ORIGIN;
 
 export default function Messages() {
   const { user } = useAuth();
@@ -32,9 +30,7 @@ export default function Messages() {
 
   // Setup Socket.io
   useEffect(() => {
-    const socket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
-    });
+    const socket = connectSocket();
 
     socketRef.current = socket;
 

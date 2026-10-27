@@ -24,9 +24,9 @@ export const API_BASE = API_ORIGIN ? `${API_ORIGIN}/api/v1` : '/api/v1';
 
 // Socket.io needs a real absolute origin to connect to — it can't ride the
 // same-origin /api rewrite above (that's an HTTP proxy rule, not a WebSocket
-// one) — so it's resolved independently of API_BASE. These connections carry
-// no auth cookie anyway (company/user membership is asserted via plain
-// socket events like join_company), so being cross-site here is harmless.
+// one) — so it's resolved independently of API_BASE. The auth cookie can't
+// travel there, so signed-in pages connect through connectSocket()
+// (services/socket.js), which sends a short-lived socket token instead.
 export const SOCKET_ORIGIN = (import.meta.env.VITE_SOCKET_URL || API_ORIGIN || 'https://businessai-backend-6g8l.onrender.com').trim().replace(/\/+$/, '');
 
 // Surface the resolved URL so a misconfigured deploy is obvious in the console.

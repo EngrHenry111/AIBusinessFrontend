@@ -3,8 +3,9 @@ import { documentService, knowledgeBaseService } from '../../services';
 import {
   RiUploadLine, RiFilePdfLine, RiFileWordLine, RiFileTextLine,
   RiDeleteBinLine, RiSearchLine, RiCheckLine, RiLoader4Line,
-  RiAlertLine, RiAddLine, RiFolderLine, RiEyeLine, RiRefreshLine
+  RiAlertLine, RiAddLine, RiFolderLine, RiEyeLine, RiRefreshLine, RiGlobalLine, RiLockLine
 } from 'react-icons/ri';
+import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { SkeletonCard } from '../../components/ui/Skeleton';
 import './Knowledge.css';
@@ -23,6 +24,8 @@ const STATUS_CONFIG = {
 
 export default function Knowledge() {
   const [documents, setDocuments] = useState([]);
+  const { user } = useAuth();
+  const canManage = ['company_owner', 'manager', 'super_admin'].includes(user?.role);
   const [knowledgeBases, setKnowledgeBases] = useState([]);
   const [selectedKB, setSelectedKB] = useState('all');
   const [search, setSearch] = useState('');
@@ -112,6 +115,18 @@ export default function Knowledge() {
       setDocuments(prev => prev.filter(d => d._id !== id));
       toast.success('Document deleted');
     } catch { toast.error('Failed to delete document'); }
+  };
+
+  const toggleCustomerFacing = async (doc) => {
+    const next = !doc.customerFacing;
+    if (next && !confirm(`Let your website chat and WhatsApp bot answer customers using "${doc.name}"? Anything in this file may be quoted to the public.`)) return;
+    try {
+      await documentService.setCustomerFacing(doc._id, next);
+      setDocuments(prev => prev.map(d => d._id === doc._id ? { ...d, customerFacing: next } : d));
+      toast.success(next ? 'Customers can now get answers from this document' : 'Document is internal only');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not change this document');
+    }
   };
 
   const handleReembed = async (doc) => {
@@ -280,12 +295,23 @@ export default function Knowledge() {
                         {doc.wordCount > 0 && <span>· {doc.wordCount.toLocaleString()} words</span>}
                         {doc.knowledgeBaseId?.name && <span>· {doc.knowledgeBaseId.name}</span>}
                       </div>
+                      <div className={`doc-visibility ${doc.customerFacing ? 'public' : ''}`}>
+                        {doc.customerFacing
+                          ? <><RiGlobalLine /> Customer-facing: website chat and WhatsApp can answer from it</>
+                          : <><RiLockLine /> Internal: only your team&apos;s AI Assistant uses it</>}
+                      </div>
                     </div>
                     <div className={`doc-status badge badge-${status.color}`}>
                       <StatusIcon className={['uploading','extracting','chunking','embedding','indexing','processing'].includes(doc.status) ? 'spin' : ''} />
                       {status.label}
                     </div>
                     <div className="doc-actions">
+                      {canManage && (
+                        <button className="btn btn-ghost btn-sm doc-visibility-btn" onClick={() => toggleCustomerFacing(doc)}
+                          title={doc.customerFacing ? 'Make internal only' : 'Let customers get answers from it'}>
+                          {doc.customerFacing ? <><RiLockLine /> Make internal</> : <><RiGlobalLine /> Share with customers</>}
+                        </button>
+                      )}
                       {['ready', 'failed'].includes(doc.status) && (
                         <button className="btn btn-ghost btn-icon btn-sm"
                           title="Re-process document"
@@ -296,9 +322,11 @@ export default function Knowledge() {
                             : <RiRefreshLine />}
                         </button>
                       )}
-                      <button className="btn btn-ghost btn-icon btn-sm" title="Delete" onClick={() => handleDelete(doc._id, doc.name)}>
-                        <RiDeleteBinLine />
-                      </button>
+                      {canManage && (
+                        <button className="btn btn-ghost btn-icon btn-sm" title="Delete" onClick={() => handleDelete(doc._id, doc.name)}>
+                          <RiDeleteBinLine />
+                        </button>
+                      )}
                     </div>
                   </div>
                 );

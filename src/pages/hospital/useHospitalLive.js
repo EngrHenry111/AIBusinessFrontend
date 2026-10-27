@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { io } from 'socket.io-client';
-import { SOCKET_ORIGIN } from '../../services/api';
+import { connectSocket } from '../../services/socket';
 import { useAuth } from '../../context/AuthContext';
 
 // Calls `onUpdate(event)` whenever anything in the hospital changes — a
@@ -18,7 +17,7 @@ export default function useHospitalLive(onUpdate, kinds) {
     if (!companyId) return undefined;
     const wanted = kindsKey ? new Set(kindsKey.split(',')) : null;
     let timer;
-    const socket = io(SOCKET_ORIGIN, { transports: ['websocket', 'polling'] });
+    const socket = connectSocket();
     socket.on('connect', () => socket.emit('join_company', companyId));
     socket.on('hospital:update', (evt) => {
       if (wanted && !wanted.has(evt?.kind)) return;

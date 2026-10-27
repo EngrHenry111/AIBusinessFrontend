@@ -108,3 +108,9 @@
   .knowledge-layout { flex-direction: column; }
   .kb-sidebar { width: 100%; position: static; }
 }
+
+/* Customer-facing switch */
+.doc-visibility { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 12px; color: var(--text-muted); }
+.doc-visibility.public { color: var(--color-warning); }
+.doc-actions .doc-visibility-btn { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.doc-actions .doc-visibility-btn:hover { color: var(--color-brand); }
