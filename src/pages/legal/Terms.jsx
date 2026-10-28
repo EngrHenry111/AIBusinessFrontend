@@ -33,7 +33,7 @@ export default function Terms() {
 
       <main className="legal-container">
         <h1 className="legal-title">Terms of Service</h1>
-        <p className="legal-meta">Effective date: January 1, 2026 · Last updated: October 27, 2026</p>
+        <p className="legal-meta">Effective date: January 1, 2026 · Last updated: October 28, 2026</p>
 
         <p className="legal-intro">
           These Terms of Service (“Terms”) govern your access to and use of bislyai.com and the BizlyAI
@@ -182,7 +182,7 @@ export default function Terms() {
               made.
             </li>
             <li>
-              <strong>What you earn.</strong> You earn 5% of each successful subscription payment a
+              <strong>What you earn.</strong> You earn 10% of each successful subscription payment a
               referred business makes to BizlyAI (monthly, annual, card or transfer), for as long as it
               keeps paying. Nothing is earned during its free trial, and nothing is earned on payments it
               makes from its own referral balance, on store sales, or on other money that does not pay
