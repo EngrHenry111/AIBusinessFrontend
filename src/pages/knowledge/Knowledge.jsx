@@ -3,7 +3,7 @@ import { documentService, knowledgeBaseService } from '../../services';
 import {
   RiUploadLine, RiFilePdfLine, RiFileWordLine, RiFileTextLine,
   RiDeleteBinLine, RiSearchLine, RiCheckLine, RiLoader4Line,
-  RiAlertLine, RiAddLine, RiFolderLine, RiEyeLine, RiRefreshLine, RiGlobalLine, RiLockLine
+  RiAlertLine, RiAddLine, RiFolderLine, RiEyeLine, RiRefreshLine, RiGlobalLine, RiLockLine, RiShieldUserLine, RiTeamLine
 } from 'react-icons/ri';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -121,9 +121,20 @@ export default function Knowledge() {
     const next = !doc.customerFacing;
     if (next && !confirm(`Let your website chat and WhatsApp bot answer customers using "${doc.name}"? Anything in this file may be quoted to the public.`)) return;
     try {
-      await documentService.setCustomerFacing(doc._id, next);
-      setDocuments(prev => prev.map(d => d._id === doc._id ? { ...d, customerFacing: next } : d));
+      const { data } = await documentService.setCustomerFacing(doc._id, next);
+      setDocuments(prev => prev.map(d => d._id === doc._id ? { ...d, ...data.data } : d));
       toast.success(next ? 'Customers can now get answers from this document' : 'Document is internal only');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not change this document');
+    }
+  };
+
+  const toggleManagersOnly = async (doc) => {
+    const next = !doc.managersOnly;
+    try {
+      const { data } = await documentService.setManagersOnly(doc._id, next);
+      setDocuments(prev => prev.map(d => d._id === doc._id ? { ...d, ...data.data } : d));
+      toast.success(next ? 'Only managers and the owner can see this document now' : 'Your whole team can use this document');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not change this document');
     }
@@ -295,10 +306,12 @@ export default function Knowledge() {
                         {doc.wordCount > 0 && <span>· {doc.wordCount.toLocaleString()} words</span>}
                         {doc.knowledgeBaseId?.name && <span>· {doc.knowledgeBaseId.name}</span>}
                       </div>
-                      <div className={`doc-visibility ${doc.customerFacing ? 'public' : ''}`}>
+                      <div className={`doc-visibility ${doc.customerFacing ? 'public' : ''} ${doc.managersOnly ? 'restricted' : ''}`}>
                         {doc.customerFacing
                           ? <><RiGlobalLine /> Customer-facing: website chat and WhatsApp can answer from it</>
-                          : <><RiLockLine /> Internal: only your team&apos;s AI Assistant uses it</>}
+                          : doc.managersOnly
+                            ? <><RiShieldUserLine /> Managers only: hidden from employees and their AI Assistant</>
+                            : <><RiLockLine /> Internal: only your team&apos;s AI Assistant uses it</>}
                       </div>
                     </div>
                     <div className={`doc-status badge badge-${status.color}`}>
@@ -310,6 +323,12 @@ export default function Knowledge() {
                         <button className="btn btn-ghost btn-sm doc-visibility-btn" onClick={() => toggleCustomerFacing(doc)}
                           title={doc.customerFacing ? 'Make internal only' : 'Let customers get answers from it'}>
                           {doc.customerFacing ? <><RiLockLine /> Make internal</> : <><RiGlobalLine /> Share with customers</>}
+                        </button>
+                      )}
+                      {canManage && (
+                        <button className="btn btn-ghost btn-sm doc-visibility-btn" onClick={() => toggleManagersOnly(doc)}
+                          title={doc.managersOnly ? 'Let all employees use it' : 'Hide it from employees'}>
+                          {doc.managersOnly ? <><RiTeamLine /> Whole team</> : <><RiShieldUserLine /> Managers only</>}
                         </button>
                       )}
                       {['ready', 'failed'].includes(doc.status) && (

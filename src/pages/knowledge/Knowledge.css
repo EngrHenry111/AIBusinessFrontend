@@ -112,5 +112,6 @@
 /* Customer-facing switch */
 .doc-visibility { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 12px; color: var(--text-muted); }
 .doc-visibility.public { color: var(--color-warning); }
+.doc-visibility.restricted { color: var(--color-brand); }
 .doc-actions .doc-visibility-btn { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 .doc-actions .doc-visibility-btn:hover { color: var(--color-brand); }

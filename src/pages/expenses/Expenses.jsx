@@ -6,6 +6,7 @@ import {
   RiDeleteBinLine, RiFileTextLine, RiPieChartLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
+import { openFile } from '../../services/files';
 import ExpenseForm from './ExpenseForm';
 import { EXPENSE_CATEGORIES, CATEGORY_MAP, PAYMENT_METHODS, naira } from './categories';
 import './Expenses.css';
@@ -158,7 +159,7 @@ export default function Expenses() {
                       <td className="amount">{e.currency === 'NGN' ? naira(e.amount) : `${e.currency} ${Number(e.amount).toLocaleString()}`}</td>
                       <td className="hide-sm">
                         {e.receipt
-                          ? <a href={e.receipt} target="_blank" rel="noreferrer" className="btn btn-ghost btn-icon btn-sm" title="View receipt"><RiFileTextLine /></a>
+                          ? <button type="button" onClick={() => openFile(e.receipt)} className="btn btn-ghost btn-icon btn-sm" title="View receipt"><RiFileTextLine /></button>
                           : <span className="exp-vendor">—</span>}
                       </td>
                       <td className="hide-sm exp-vendor">{e.createdBy?.name || '—'}</td>

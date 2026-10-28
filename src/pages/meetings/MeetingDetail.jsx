@@ -7,6 +7,7 @@ import {
   RiCircleLine, RiSaveLine, RiSparklingLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
+import { openFile } from '../../services/files';
 import './Meeting.css';
 import './MeetingDetail.css';
 
@@ -537,12 +538,12 @@ function AttachmentsTab({ meeting, onChange }) {
           <tbody>
             {meeting.attachments.map(a => (
               <tr key={a._id}>
-                <td><a href={a.url} target="_blank" rel="noreferrer"><RiFileTextLine /> {a.name}</a></td>
+                <td><a href={a.url} onClick={(e) => { e.preventDefault(); openFile(a.url); }}><RiFileTextLine /> {a.name}</a></td>
                 <td style={{ textTransform: 'capitalize' }}>{a.category}</td>
                 <td>{fmtD(a.uploadedAt)}</td>
                 <td>
                   <div className="actions">
-                    <a className="btn btn-ghost btn-icon btn-sm" href={a.url} target="_blank" rel="noreferrer"><RiDownloadLine /></a>
+                    <button type="button" className="btn btn-ghost btn-icon btn-sm" onClick={() => openFile(a.url)}><RiDownloadLine /></button>
                     <button className="btn btn-ghost btn-icon btn-sm" onClick={() => remove(a)}><RiDeleteBinLine /></button>
                   </div>
                 </td>

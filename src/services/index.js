@@ -41,6 +41,7 @@ export const documentService = {
   delete: (id) => api.delete(`/documents/${id}`),
   reembed: (id) => api.post(`/documents/${id}/reembed`),
   setCustomerFacing: (id, customerFacing) => api.patch(`/documents/${id}/customer-facing`, { customerFacing }),
+  setManagersOnly: (id, managersOnly) => api.patch(`/documents/${id}/access`, { managersOnly }),
 };
 
 // ─── Knowledge Bases ──────────────────────────────────────────────────────────
@@ -492,7 +493,9 @@ export const storefrontService = {
   getCategories: (slug) => axios.get(`${API_BASE}/store/${slug}/categories`),
   checkout: (slug, data) => axios.post(`${API_BASE}/store/${slug}/checkout`, data),
   verifyPayment: (slug, reference) => axios.get(`${API_BASE}/store/${slug}/verify/${reference}`),
-  getLoyaltyStatus: (slug, email) => axios.get(`${API_BASE}/store/${slug}/loyalty`, { params: { email } }),
+  getLoyaltyStatus: (slug) => axios.get(`${API_BASE}/store/${slug}/loyalty`),
+  sendLoyaltyCode: (slug, email) => axios.post(`${API_BASE}/store/${slug}/loyalty/code`, { email }),
+  verifyLoyaltyCode: (slug, email, code) => axios.post(`${API_BASE}/store/${slug}/loyalty/verify`, { email, code }),
   saveAbandonedCart: (slug, data) => axios.post(`${API_BASE}/store/${slug}/cart/save`, data),
   recoverCart: (slug, sessionId) => axios.get(`${API_BASE}/store/${slug}/cart/recover/${sessionId}`),
   getRecommendations: (slug, productId) => axios.get(`${API_BASE}/store/${slug}/products/${productId}/recommendations`),

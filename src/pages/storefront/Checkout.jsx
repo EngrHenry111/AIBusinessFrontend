@@ -44,8 +44,15 @@ export default function Checkout() {
   const [couponChecking, setCouponChecking] = useState(false);
   const [couponError, setCouponError] = useState('');
 
+  // Program info is public; the balance (and the token that lets checkout
+  // spend it) only comes back after the emailed code is confirmed.
+  const [program, setProgram] = useState(null);
   const [loyalty, setLoyalty] = useState(null);
   const [usePoints, setUsePoints] = useState(false);
+  const [pointsCode, setPointsCode] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [pointsBusy, setPointsBusy] = useState(false);
+  const [pointsError, setPointsError] = useState('');
 
   const [giftCardInput, setGiftCardInput] = useState('');
   const [giftCard, setGiftCard] = useState(null); // { code, balance }
@@ -78,15 +85,34 @@ export default function Checkout() {
   }, [cart, slug, navigate]);
 
   useEffect(() => {
-    if (!EMAIL_RE.test(form.email.trim())) { setLoyalty(null); setUsePoints(false); return; }
-    let alive = true;
-    const t = setTimeout(() => {
-      storefrontService.getLoyaltyStatus(slug, form.email.trim())
-        .then(({ data }) => { if (alive) setLoyalty(data.data); })
-        .catch(() => { if (alive) setLoyalty(null); });
-    }, 600);
-    return () => { alive = false; clearTimeout(t); };
-  }, [form.email, slug]);
+    storefrontService.getLoyaltyStatus(slug).then(({ data }) => setProgram(data.data)).catch(() => {});
+  }, [slug]);
+
+  // A confirmed balance belongs to one email — changing it starts over.
+  useEffect(() => {
+    setLoyalty(null); setUsePoints(false); setCodeSent(false); setPointsCode(''); setPointsError('');
+  }, [form.email]);
+
+  async function sendPointsCode() {
+    setPointsBusy(true); setPointsError('');
+    try {
+      await storefrontService.sendLoyaltyCode(slug, form.email.trim());
+      setCodeSent(true);
+    } catch (e) {
+      setPointsError(e.response?.data?.message || 'Could not send the code');
+    } finally { setPointsBusy(false); }
+  }
+
+  async function confirmPointsCode() {
+    if (!pointsCode.trim()) return;
+    setPointsBusy(true); setPointsError('');
+    try {
+      const { data } = await storefrontService.verifyLoyaltyCode(slug, form.email.trim(), pointsCode.trim());
+      setLoyalty(data.data);
+    } catch (e) {
+      setPointsError(e.response?.data?.message || 'That code did not work');
+    } finally { setPointsBusy(false); }
+  }
 
   // Save the cart as "abandoned" once the shopper has entered a valid email —
   // if they leave before paying, a reminder email can bring them back. Kept
@@ -191,6 +217,7 @@ export default function Checkout() {
         notes: form.notes,
         couponCode: coupon?.code,
         redeemPoints: usePoints && canRedeem ? loyalty.points : 0,
+        loyaltyToken: usePoints && canRedeem ? loyalty.loyaltyToken : undefined,
         giftCardCode: giftCard?.code,
         paymentMethod,
         cartSessionId: getCartSessionId(slug),
@@ -305,6 +332,32 @@ export default function Checkout() {
                 </div>
               </div>
             </div>
+
+            {program?.enabled && !loyalty && EMAIL_RE.test(form.email.trim()) && (
+              <div className="sf-panel sf-loyalty">
+                <div className="sf-loyalty-row">
+                  <RiCoinLine className="sf-loyalty-icon" />
+                  <div>
+                    <strong>Have loyalty points here?</strong>
+                    <p>{codeSent ? `If ${form.email.trim()} has points, we've emailed it a 6-digit code.` : 'We’ll email you a code to check and use them.'}</p>
+                  </div>
+                  {!codeSent && (
+                    <button className="sf-btn-ghost" style={{ width: 'auto' }} disabled={pointsBusy} onClick={sendPointsCode}>{pointsBusy ? 'Sending…' : 'Send code'}</button>
+                  )}
+                </div>
+                {codeSent && (
+                  <div className="co-coupon-row" style={{ marginTop: 10 }}>
+                    <input className="sf-field-input" inputMode="numeric" maxLength={6} value={pointsCode} onChange={(e) => setPointsCode(e.target.value.replace(/\D/g, ''))} placeholder="6-digit code" />
+                    <button className="sf-btn-ghost" disabled={pointsBusy} onClick={confirmPointsCode}>{pointsBusy ? 'Checking…' : 'Confirm'}</button>
+                  </div>
+                )}
+                {pointsError && <p className="co-error">{pointsError}</p>}
+              </div>
+            )}
+
+            {loyalty && !canRedeem && (
+              <p className="co-success">You have {loyalty.points.toLocaleString()} points — {loyalty.minimumRedemption.toLocaleString()} are needed before they can be used.</p>
+            )}
 
             {canRedeem && (
               <div className="sf-panel sf-loyalty">
