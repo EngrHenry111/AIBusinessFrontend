@@ -1,11 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Papa from 'papaparse';
+import { createPortal } from 'react-dom';
 import { leadService } from '../../services';
+import { useAuth } from '../../context/AuthContext';
+import { connectSocket } from '../../services/socket';
+import { MANUAL_SOURCES, SOURCE_LABELS, AUTO_SOURCES, sourceLabel, formatMoney } from '../../constants/leads';
 import {
   RiAddLine, RiSearchLine, RiRobot2Line, RiUserLine, RiMailLine, RiPhoneLine,
   RiDeleteBinLine, RiLoader4Line, RiUploadCloud2Line, RiCloseLine, RiArrowRightSLine,
-  RiArrowLeftSLine, RiCheckLine, RiArrowRightLine, RiFileTextLine,
+  RiArrowLeftSLine, RiCheckLine, RiArrowRightLine, RiFileTextLine, RiFlashlightLine, RiAlarmWarningLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import { SkeletonTable } from '../../components/ui/Skeleton';
@@ -24,11 +28,32 @@ export default function Leads() {
   const [showImport, setShowImport] = useState(false);
   const [analyzing, setAnalyzing] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', source: 'website', value: '', description: '' });
+  const [sourceFilter, setSourceFilter] = useState('');
+  const [showAutomation, setShowAutomation] = useState(false);
+  const { user, company } = useAuth();
+  const canManage = ['company_owner', 'manager', 'super_admin'].includes(user?.role);
 
   useEffect(() => { loadLeads(); }, [statusFilter]);
 
-  async function loadLeads() {
-    setLoading(true);
+  // Leads captured from chat, WhatsApp, the store or the business card show
+  // up here live. Bursts (several messages at once) are folded into one reload.
+  const reloadTimer = useRef(null);
+  useEffect(() => {
+    const companyId = company?.id || company?._id;
+    if (!companyId) return;
+    const socket = connectSocket();
+    socket.on('connect', () => socket.emit('join_company', companyId));
+    socket.on('leads:update', (p) => {
+      if (p?.created) toast.success('New lead captured automatically', { icon: '⚡' });
+      clearTimeout(reloadTimer.current);
+      reloadTimer.current = setTimeout(() => loadLeads({ quiet: true }), 800);
+    });
+    return () => { clearTimeout(reloadTimer.current); socket.disconnect(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [company?.id, company?._id]);
+
+  async function loadLeads({ quiet = false } = {}) {
+    if (!quiet) setLoading(true);
     try {
       const { data } = await leadService.getAll({ status: statusFilter || undefined, search: search || undefined });
       setLeads(data.data);
@@ -64,19 +89,28 @@ export default function Leads() {
     } catch { toast.error('Failed to delete'); }
   }
 
-  const filtered = leads.filter(l => !search || l.name.toLowerCase().includes(search.toLowerCase()) || l.email?.toLowerCase().includes(search.toLowerCase()));
+  const now = new Date();
+  const isDue = (l) => l.nextFollowUpAt && new Date(l.nextFollowUpAt) <= now && !['won', 'lost', 'converted'].includes(l.status);
+  const filtered = leads
+    .filter(l => !search || l.name.toLowerCase().includes(search.toLowerCase()) || l.email?.toLowerCase().includes(search.toLowerCase()) || l.phone?.includes(search))
+    .filter(l => !sourceFilter || (sourceFilter === 'auto' ? l.autoCaptured : sourceFilter === 'due' ? isDue(l) : l.source === sourceFilter));
+  const autoCount = leads.filter(l => l.autoCaptured).length;
+  const dueCount = leads.filter(isDue).length;
 
   return (
     <div className="leads-page fade-in">
       <div className="page-header">
         <div className="page-header-row">
-          <div><h1>Leads</h1><p>{leads.length} total leads</p></div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div><h1>Leads</h1><p>{leads.length} total leads{autoCount > 0 && ` · ${autoCount} captured automatically`}{dueCount > 0 && ` · ${dueCount} follow-up${dueCount === 1 ? '' : 's'} due`}</p></div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn btn-secondary" onClick={() => setShowAutomation(true)}><RiFlashlightLine /> Automation</button>
             <button className="btn btn-secondary" onClick={() => setShowImport(true)}><RiUploadCloud2Line /> Import CSV</button>
             <button className="btn btn-primary" onClick={() => setShowForm(v => !v)}><RiAddLine /> Add Lead</button>
           </div>
         </div>
       </div>
+
+      {showAutomation && <AutomationModal canManage={canManage} onClose={() => setShowAutomation(false)} />}
 
       {showImport && (
         <CsvImportModal
@@ -99,6 +133,12 @@ export default function Leads() {
             </button>
           ))}
         </div>
+        <select className="form-input form-select leads-source-filter" value={sourceFilter} onChange={e => setSourceFilter(e.target.value)}>
+          <option value="">All sources</option>
+          <option value="due">Follow-up due</option>
+          <option value="auto">Captured automatically</option>
+          {[...AUTO_SOURCES, ...MANUAL_SOURCES].map(s => <option key={s} value={s}>{SOURCE_LABELS[s]}</option>)}
+        </select>
       </div>
 
       {/* Add Lead Form */}
@@ -110,10 +150,10 @@ export default function Leads() {
               <div className="form-group"><label className="form-label">Name *</label><input className="form-input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required /></div>
               <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} /></div>
               <div className="form-group"><label className="form-label">Company</label><input className="form-input" value={form.company} onChange={e => setForm(p => ({ ...p, company: e.target.value }))} /></div>
-              <div className="form-group"><label className="form-label">Deal Value ($)</label><input className="form-input" type="number" value={form.value} onChange={e => setForm(p => ({ ...p, value: e.target.value }))} /></div>
+              <div className="form-group"><label className="form-label">Deal Value (₦)</label><input className="form-input" type="number" value={form.value} onChange={e => setForm(p => ({ ...p, value: e.target.value }))} /></div>
               <div className="form-group"><label className="form-label">Source</label>
                 <select className="form-input form-select" value={form.source} onChange={e => setForm(p => ({ ...p, source: e.target.value }))}>
-                  <option value="website">Website</option><option value="referral">Referral</option><option value="social">Social</option><option value="email">Email</option><option value="cold_call">Cold Call</option><option value="event">Event</option><option value="other">Other</option>
+                  {MANUAL_SOURCES.map(s => <option key={s} value={s}>{SOURCE_LABELS[s]}</option>)}
                 </select>
               </div>
               <div className="form-group"><label className="form-label">Phone</label><input className="form-input" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} /></div>
@@ -134,7 +174,7 @@ export default function Leads() {
         <div className="empty-state">
           <div className="empty-state-icon"><RiUserLine /></div>
           <h3>No leads found</h3>
-          <p>Add your first lead to start tracking your sales pipeline.</p>
+          <p>Add a lead, or let them come in by themselves from your website chat, WhatsApp, online store and business card.</p>
           <button className="btn btn-primary" onClick={() => setShowForm(true)}><RiAddLine /> Add Lead</button>
         </div>
       ) : (
@@ -152,7 +192,11 @@ export default function Leads() {
                 <div className="lead-avatar">{lead.name[0].toUpperCase()}</div>
                 <div className="lead-info">
                   <div className="lead-name">{lead.name}</div>
-                  <div className="lead-company">{lead.company || 'No company'}</div>
+                  <div className="lead-company">
+                    {lead.company || 'No company'}
+                    <span className={`lead-source ${lead.autoCaptured ? 'auto' : ''}`}>{lead.autoCaptured && <RiFlashlightLine />}{sourceLabel(lead.source)}</span>
+                    {isDue(lead) && <span className="lead-due"><RiAlarmWarningLine /> Follow up</span>}
+                  </div>
                   <div className="lead-contacts">
                     {lead.email && <span><RiMailLine />{lead.email}</span>}
                     {lead.phone && <span><RiPhoneLine />{lead.phone}</span>}
@@ -160,7 +204,7 @@ export default function Leads() {
                 </div>
                 <div className="lead-meta">
                   <span className={`badge badge-${STATUS_COLORS[lead.status] || 'neutral'}`}>{lead.status}</span>
-                  {lead.value > 0 && <span className="lead-value">${Number(lead.value).toLocaleString()}</span>}
+                  {lead.value > 0 && <span className="lead-value">{formatMoney(lead.value, lead.currency)}</span>}
                   {lead.score > 0 && <span className="lead-score">Score: {lead.score}</span>}
                 </div>
                 <div className="lead-actions" onClick={e => e.stopPropagation()}>
@@ -194,6 +238,64 @@ export default function Leads() {
         </div>
       )}
     </div>
+  );
+}
+
+/* ─── Automation settings ────────────────────────────────────────────────── */
+const AUTOMATION_ROWS = [
+  { key: 'chat', title: 'Website chat', text: 'A visitor who leaves an email in the chat widget, or types an email or phone number into a message.' },
+  { key: 'whatsapp', title: 'WhatsApp', text: 'Anyone who messages your connected WhatsApp number.' },
+  { key: 'store', title: 'Online store', text: 'Shoppers who start or complete checkout, or create an account on your store.' },
+  { key: 'card', title: 'Business card', text: 'Visitors who share their details on a team member’s digital business card (assigned to that member).' },
+  { key: 'aiScoring', title: 'AI scoring on arrival', text: 'Each new captured lead gets a score, a suggested next step and a follow-up email draft (up to 30 a day).' },
+];
+
+function AutomationModal({ canManage, onClose }) {
+  const [settings, setSettings] = useState(null);
+  const [saving, setSaving] = useState('');
+
+  useEffect(() => {
+    leadService.getCaptureSettings().then(({ data }) => setSettings(data.data)).catch(() => toast.error('Could not load automation settings'));
+  }, []);
+
+  async function toggle(key) {
+    const next = !settings[key];
+    setSaving(key);
+    try {
+      const { data } = await leadService.updateCaptureSettings({ [key]: next });
+      setSettings(data.data);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not save');
+    } finally { setSaving(''); }
+  }
+
+  return createPortal(
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}><RiFlashlightLine /> Lead automation</h2>
+          <button className="btn btn-ghost btn-icon" onClick={onClose}><RiCloseLine /></button>
+        </div>
+        <div className="modal-body">
+          <p className="automation-intro">New people are added to Leads by themselves. Someone who already exists (same email or phone number) is updated instead of being added twice. Every message, checkout and purchase lands on their timeline, a payment marks them <b>won</b>, and each new lead gets a follow-up date for the next day. Whoever owns the lead (or the business owner) is emailed when a follow-up is due.</p>
+          {!settings ? <div style={{ textAlign: 'center', padding: 20 }}><RiLoader4Line className="spin" /></div> : (
+            <div className="automation-list">
+              {AUTOMATION_ROWS.map((row) => (
+                <label key={row.key} className="automation-row">
+                  <div>
+                    <strong>{row.title}</strong>
+                    <p>{row.text}</p>
+                  </div>
+                  <input type="checkbox" className="automation-switch" checked={settings[row.key]} disabled={!canManage || saving === row.key} onChange={() => toggle(row.key)} />
+                </label>
+              ))}
+            </div>
+          )}
+          {!canManage && <p className="csv-hint">Only managers and the owner can change these.</p>}
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 }
 

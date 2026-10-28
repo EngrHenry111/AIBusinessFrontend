@@ -6,24 +6,26 @@ import {
   RiMailLine, RiPhoneLine, RiMapPinLine, RiBuilding2Line, RiUserAddLine, RiTimeLine,
   RiFileAddLine, RiCalendarEventLine, RiVideoAddLine, RiChat3Line, RiSendPlane2Line,
   RiFileList3Line, RiCalendarCheckLine, RiExchangeLine, RiFlashlightLine,
+  RiWhatsappLine, RiShoppingBag3Line, RiMessage3Line, RiRobot2Fill,
 } from 'react-icons/ri';
+import { SOURCE_LABELS, MANUAL_SOURCES, sourceLabel, formatMoney } from '../../constants/leads';
 import toast from 'react-hot-toast';
 import AIDraftEditor from '../../components/AIDraftEditor';
 import './LeadDetail.css';
 
 const STATUS_OPTIONS = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost', 'converted'];
 const STATUS_COLORS = { new: 'brand', contacted: 'info', qualified: 'warning', proposal: 'warning', negotiation: 'warning', won: 'success', lost: 'neutral', converted: 'success' };
-const SOURCES = ['website', 'referral', 'social', 'email', 'cold_call', 'event', 'other'];
 
 const scoreColor = (s) => (s >= 75 ? '#10b981' : s >= 50 ? '#f59e0b' : s >= 25 ? '#6366f1' : '#94a3b8');
-const money = (n, cur) => `${cur || 'USD'} ${Number(n || 0).toLocaleString()}`;
 const day = (d) => (d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—');
 const dayTime = (d) => (d ? new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—');
 
 const TL_ICON = {
   created: RiUserAddLine, note: RiChat3Line, invoice: RiFileList3Line,
   appointment: RiCalendarCheckLine, meeting: RiVideoAddLine, status_change: RiExchangeLine,
+  chat: RiMessage3Line, whatsapp: RiWhatsappLine, order: RiShoppingBag3Line, captured: RiRobot2Fill,
 };
+const toDateInput = (d) => (d ? new Date(d).toISOString().slice(0, 10) : '');
 
 export default function LeadDetail() {
   const { id } = useParams();
@@ -84,6 +86,7 @@ export default function LeadDetail() {
       name: lead.name || '', email: lead.email || '', phone: lead.phone || '',
       company: lead.company || '', position: lead.position || '', source: lead.source || 'other',
       value: lead.value || 0, description: lead.description || '',
+      nextFollowUpAt: toDateInput(lead.nextFollowUpAt),
     });
     setEditing(true);
   }
@@ -92,7 +95,9 @@ export default function LeadDetail() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await leadService.update(id, form);
+      // A follow-up date means 9am that day, local time.
+      const nextFollowUpAt = form.nextFollowUpAt ? new Date(`${form.nextFollowUpAt}T09:00:00`).toISOString() : null;
+      const res = await leadService.update(id, { ...form, nextFollowUpAt });
       setData((d) => ({ ...d, lead: { ...d.lead, ...res.data.data } }));
       setEditing(false);
       toast.success('Lead updated');
@@ -153,8 +158,10 @@ export default function LeadDetail() {
               <input className="form-input" type="number" value={form.value} onChange={(e) => setForm((p) => ({ ...p, value: e.target.value }))} /></div>
             <div className="form-group"><label className="form-label">Source</label>
               <select className="form-input form-select" value={form.source} onChange={(e) => setForm((p) => ({ ...p, source: e.target.value }))}>
-                {SOURCES.map((s) => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+                {[...new Set([...MANUAL_SOURCES, form.source])].map((s) => <option key={s} value={s}>{SOURCE_LABELS[s] || s}</option>)}
               </select></div>
+            <div className="form-group"><label className="form-label">Next follow-up</label>
+              <input className="form-input" type="date" value={form.nextFollowUpAt} onChange={(e) => setForm((p) => ({ ...p, nextFollowUpAt: e.target.value }))} /></div>
           </div>
           <div className="form-group" style={{ marginTop: 12 }}><label className="form-label">Description</label>
             <textarea className="form-input form-textarea" value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} /></div>
@@ -198,10 +205,12 @@ export default function LeadDetail() {
 
       {/* ── Info cards ── */}
       <div className="ld-info-row">
-        <div className="ld-info"><div className="ld-info-label">Lead Source</div><div className="ld-info-value">{(lead.source || 'other').replace('_', ' ')}</div></div>
+        <div className="ld-info"><div className="ld-info-label">Lead Source</div><div className="ld-info-value">{sourceLabel(lead.source)}{lead.autoCaptured && <span className="ld-auto-chip">Auto</span>}</div></div>
         <div className="ld-info"><div className="ld-info-label">Industry / Company</div><div className="ld-info-value">{lead.company || '—'}</div></div>
-        <div className="ld-info"><div className="ld-info-label">Deal Value</div><div className="ld-info-value">{money(lead.value, lead.currency)}</div></div>
-        <div className="ld-info"><div className="ld-info-label">Created</div><div className="ld-info-value">{day(lead.createdAt)}</div></div>
+        <div className="ld-info"><div className="ld-info-label">Deal Value</div><div className="ld-info-value">{formatMoney(lead.value, lead.currency)}</div></div>
+        <div className="ld-info"><div className="ld-info-label">Last Contact</div><div className="ld-info-value">{lead.lastContactedAt ? dayTime(lead.lastContactedAt) : 'Never'}</div></div>
+        <div className="ld-info"><div className="ld-info-label">Next Follow-up</div>
+          <div className={`ld-info-value ${lead.nextFollowUpAt && new Date(lead.nextFollowUpAt) <= new Date() && !['won', 'lost', 'converted'].includes(lead.status) ? 'ld-due' : ''}`}>{lead.nextFollowUpAt ? day(lead.nextFollowUpAt) : 'Not set'}</div></div>
       </div>
 
       {/* ── Tabs ── */}
@@ -348,7 +357,7 @@ export default function LeadDetail() {
                     {invoices.map((inv) => (
                       <tr key={inv._id}>
                         <td><strong>{inv.invoiceNumber}</strong></td>
-                        <td>{money(inv.total, inv.currency)}</td>
+                        <td>{formatMoney(inv.total, inv.currency)}</td>
                         <td><span className="badge badge-neutral">{inv.status}</span></td>
                         <td className="muted">{day(inv.createdAt)}</td>
                       </tr>

@@ -75,6 +75,8 @@ export const leadService = {
   analyze: (id) => api.post(`/leads/${id}/analyze`),
   addNote: (id, content) => api.post(`/leads/${id}/notes`, { content }),
   bulkImport: (leads) => api.post('/leads/import', { leads }),
+  getCaptureSettings: () => api.get('/leads/capture-settings'),
+  updateCaptureSettings: (data) => api.put('/leads/capture-settings', data),
 };
 
 // ─── Meetings ─────────────────────────────────────────────────────────────────
@@ -480,6 +482,7 @@ export const cardService = {
   // Public — no auth, called from the standalone /card/:username page.
   getPublicCard: (username) => axios.get(`${API_BASE}/card/${username}`),
   saveContact: (username) => axios.post(`${API_BASE}/card/${username}/save`),
+  connect: (username, data) => axios.post(`${API_BASE}/card/${username}/connect`, data),
   downloadVCardUrl: (username) => `${API_BASE}/card/${username}/vcard`,
   qrCodeUrl: (username) => `${API_BASE}/card/${username}/qrcode`,
 };

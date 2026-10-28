@@ -160,3 +160,27 @@
   .bc-card { padding: 22px 18px 20px; border-radius: 18px; }
   .bc-name { font-size: 20px; }
 }
+
+/* ── Share your details ──────────────────────────────────────────────── */
+.bc-stack { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: stretch; gap: 14px; }
+.bc-stack > .bc-card { max-width: none; }
+.bc-share-open {
+  width: 100%; padding: 13px 16px; border-radius: 14px; border: 1.5px dashed var(--bc-accent, #6366f1);
+  background: #fff; color: var(--bc-accent, #6366f1); font-weight: 600; font-size: 14px; cursor: pointer; font-family: inherit;
+}
+.bc-share {
+  background: #fff; border-radius: 18px; padding: 18px; box-shadow: 0 10px 30px -14px rgba(15, 23, 42, 0.2);
+  display: flex; flex-direction: column; gap: 9px; text-align: left;
+}
+.bc-share h3 { margin: 0 0 4px; font-size: 15px; color: #1e293b; }
+.bc-share input, .bc-share textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; font: inherit; font-size: 14px; color: #0f172a; background: #fff; resize: vertical;
+}
+.bc-share input:focus, .bc-share textarea:focus { outline: 2px solid var(--bc-accent, #6366f1); outline-offset: -1px; border-color: transparent; }
+.bc-share button {
+  padding: 11px; border: none; border-radius: 10px; background: var(--bc-accent, #6366f1); color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; font-family: inherit;
+}
+.bc-share button:disabled { opacity: .7; cursor: default; }
+.bc-share-error { margin: 0; color: #dc2626; font-size: 13px; }
+.bc-share-fine { margin: 0; color: #94a3b8; font-size: 12px; }
+.bc-share-done { text-align: center; color: #0f172a; font-weight: 600; font-size: 14px; }
