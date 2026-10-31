@@ -37,7 +37,7 @@ export default function Login() {
         {/* Brand */}
         <div className="auth-brand">
           <BrandMark className="auth-mark" />
-          <h1>EngrHenryTech BusinessAI</h1>
+          <h1>BizlyAI</h1>
           <p>Sign in to your workspace</p>
         </div>
 

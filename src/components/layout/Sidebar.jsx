@@ -359,7 +359,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
           <BrandMark className="brand-mark" size={36} />
           {!collapsed && (
             <div className="brand-text">
-              <span className="brand-name">BusinessAI</span>
+              <span className="brand-name">BizlyAI</span>
               {company && <span className="brand-company">{company.name}</span>}
             </div>
           )}

@@ -79,7 +79,7 @@ export default function Onboarding() {
         {step === 0 && (
           <div className="ob-content">
             <div className="ob-icon"><RiRobot2Line /></div>
-            <h1>Welcome to EngrHenryTech BusinessAI!</h1>
+            <h1>Welcome to BizlyAI!</h1>
             <p>Hello <strong>{user?.name}</strong>! Your workspace <strong>{company?.name || company?.companyName}</strong> is ready.</p>
             <p>Let's take 2 minutes to set everything up so you get the most out of the platform.</p>
             <div className="ob-features">

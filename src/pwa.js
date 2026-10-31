@@ -6,7 +6,7 @@
 // module load and handed to whoever subscribes later.
 
 const ROOT_MANIFEST = '/manifest.webmanifest';
-const ROOT_APP = { name: 'BizlyAI', themeColor: '#0E2A22', icon: '/icon-192.png' };
+const ROOT_APP = { name: 'BizlyAI', themeColor: '#0E2A22', icon: '/icon-192.png?v=2' };
 
 let deferredPrompt = null;
 let appInfo = ROOT_APP;
@@ -80,7 +80,7 @@ export function setAppManifest({ manifest, name, themeColor, icon }) {
   setHeadTag('link[rel="manifest"]', () => Object.assign(document.createElement('link'), { rel: 'manifest' }), 'href', href);
   setHeadTag('meta[name="theme-color"]', () => Object.assign(document.createElement('meta'), { name: 'theme-color' }), 'content', themeColor || ROOT_APP.themeColor);
   setHeadTag('meta[name="apple-mobile-web-app-title"]', () => Object.assign(document.createElement('meta'), { name: 'apple-mobile-web-app-title' }), 'content', name || ROOT_APP.name);
-  setHeadTag('link[rel="apple-touch-icon"]', () => Object.assign(document.createElement('link'), { rel: 'apple-touch-icon' }), 'href', icon || '/apple-touch-icon.png');
+  setHeadTag('link[rel="apple-touch-icon"]', () => Object.assign(document.createElement('link'), { rel: 'apple-touch-icon' }), 'href', icon || '/apple-touch-icon.png?v=2');
 
   // A captured prompt belongs to the manifest it was fired for — installing
   // it after switching would install the wrong app. Chrome re-evaluates the

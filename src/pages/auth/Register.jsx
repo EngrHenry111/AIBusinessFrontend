@@ -45,7 +45,7 @@ export default function Register() {
         <div className="auth-brand">
           <BrandMark className="auth-mark" />
           <h1>Get Started Free</h1>
-          <p>Create your EngrHenryTech BusinessAI workspace</p>
+          <p>Create your BizlyAI workspace</p>
         </div>
 
         {error && <div className="auth-error">{error}</div>}
