@@ -6,7 +6,7 @@
 // module load and handed to whoever subscribes later.
 
 const ROOT_MANIFEST = '/manifest.webmanifest';
-const ROOT_APP = { name: 'BizlyAI', themeColor: '#6366f1', icon: '/icon-192.png' };
+const ROOT_APP = { name: 'BizlyAI', themeColor: '#0E2A22', icon: '/icon-192.png' };
 
 let deferredPrompt = null;
 let appInfo = ROOT_APP;

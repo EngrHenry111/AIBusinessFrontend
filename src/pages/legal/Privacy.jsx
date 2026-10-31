@@ -1,20 +1,8 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { RiArrowLeftLine } from 'react-icons/ri';
+import BrandMark from '../../components/brand/BrandMark';
 import './Legal.css';
-
-const LegalMark = () => (
-  <svg viewBox="0 0 32 32" aria-hidden="true">
-    <defs>
-      <linearGradient id="lgMark" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#8b5cf6" />
-        <stop offset="1" stopColor="#6366f1" />
-      </linearGradient>
-    </defs>
-    <rect width="32" height="32" rx="9" fill="url(#lgMark)" />
-    <path d="M11 8h7.5a4.5 4.5 0 0 1 1.2 8.8A4.8 4.8 0 0 1 18.2 26H11V8Zm4 3.4v4.2h3.1a2.1 2.1 0 0 0 0-4.2H15Zm0 7.2v4.4h3.1a2.2 2.2 0 0 0 0-4.4H15Z" fill="#fff" />
-  </svg>
-);
 
 export default function Privacy() {
   useEffect(() => {
@@ -26,7 +14,7 @@ export default function Privacy() {
     <div className="legal-page">
       <header className="legal-nav">
         <div className="legal-nav-inner">
-          <Link to="/" className="legal-logo"><LegalMark /> Bizly<b>AI</b></Link>
+          <Link to="/" className="legal-logo"><BrandMark /> Bizly<b>AI</b></Link>
           <Link to="/" className="legal-back"><RiArrowLeftLine /> <span>Back to home</span></Link>
         </div>
       </header>

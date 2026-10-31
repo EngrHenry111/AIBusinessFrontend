@@ -37,18 +37,7 @@
   min-width: 0;
 }
 
-.brand-icon {
-  width: 36px;
-  height: 36px;
-  background: var(--color-brand);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 18px;
-  flex-shrink: 0;
-}
+.brand-mark { flex-shrink: 0; }
 
 .brand-text {
   display: flex;

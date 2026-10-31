@@ -13,6 +13,7 @@ import {
 } from 'react-icons/ri';
 import useSeo from '../../hooks/useSeo';
 import { rememberReferralCode } from '../../constants/referral';
+import BrandMark from '../../components/brand/BrandMark';
 import './Landing.css';
 
 const SUPPORT_EMAIL = 'support@bislyai.com';
@@ -181,145 +182,40 @@ const CONTACT_CARDS = [
 function Logo({ light = false }) {
   return (
     <span className={`lp-logo ${light ? 'light' : ''}`}>
-      <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
-        <defs>
-          <linearGradient id="lpLogoG" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#8b5cf6" />
-            <stop offset="1" stopColor="#6366f1" />
-          </linearGradient>
-        </defs>
-        <rect width="32" height="32" rx="9" fill="url(#lpLogoG)" />
-        <path d="M11 8h7.5a4.5 4.5 0 0 1 1.2 8.8A4.8 4.8 0 0 1 18.2 26H11V8Zm4 3.4v4.2h3.1a2.1 2.1 0 0 0 0-4.2H15Zm0 7.2v4.4h3.1a2.2 2.2 0 0 0 0-4.4H15Z" fill="#fff" />
-      </svg>
+      <BrandMark size={34} />
       <span>Bizly<b>AI</b></span>
     </span>
   );
 }
 
-/* ── Hero dashboard mockup (inline SVG — realistic app screenshot) ─────────── */
-function DashboardMockup() {
-  const nav = [
-    { label: 'Overview', active: true },
-    { label: 'AI Assistant' },
-    { label: 'Knowledge' },
-    { label: 'Leads' },
-    { label: 'Invoices' },
-  ];
-  const stats = [
-    { label: 'Revenue', value: '₦2.4M', tint: '#6366f1', delta: '+18%' },
-    { label: 'Active Leads', value: '47', tint: '#10b981', delta: '+6' },
-    { label: 'Appointments', value: '12', tint: '#f59e0b', delta: 'today' },
-  ];
-
+/* ── Hero chat card ───────────────────────────────────────────────────────── */
+function HeroChat() {
   return (
-    <svg className="lp-mockup" viewBox="0 0 640 452" role="img" aria-label="BizlyAI dashboard preview">
-      <defs>
-        <linearGradient id="lpm-brand" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#8b5cf6" />
-          <stop offset="1" stopColor="#6366f1" />
-        </linearGradient>
-        <filter id="lpm-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="20" stdDeviation="26" floodColor="#1e1b4b" floodOpacity="0.4" />
-        </filter>
-        <clipPath id="lpm-clip"><rect x="8" y="8" width="624" height="436" rx="16" /></clipPath>
-      </defs>
-
-      <g filter="url(#lpm-shadow)">
-        <rect x="8" y="8" width="624" height="436" rx="16" fill="#ffffff" />
-      </g>
-
-      <g clipPath="url(#lpm-clip)" fontFamily="Inter, system-ui, sans-serif">
-        {/* ── browser chrome ── */}
-        <rect x="8" y="8" width="624" height="42" fill="#f1f3f8" />
-        <circle cx="30" cy="29" r="4.5" fill="#f87171" />
-        <circle cx="46" cy="29" r="4.5" fill="#fbbf24" />
-        <circle cx="62" cy="29" r="4.5" fill="#34d399" />
-        <rect x="86" y="18" width="330" height="22" rx="11" fill="#ffffff" stroke="#e2e6ef" />
-        <circle cx="100" cy="29" r="3" fill="none" stroke="#10b981" strokeWidth="1.6" />
-        <text x="112" y="33" fontSize="11" fill="#64748b">bislyai.com/dashboard</text>
-
-        {/* ── sidebar ── */}
-        <rect x="8" y="50" width="150" height="402" fill="#0f172a" />
-        <rect x="24" y="68" width="20" height="20" rx="6" fill="url(#lpm-brand)" />
-        <text x="52" y="83" fontSize="13" fontWeight="700" fill="#ffffff">BizlyAI</text>
-        {nav.map((n, i) => {
-          const y = 112 + i * 34;
-          return (
-            <g key={n.label}>
-              {n.active && <rect x="14" y={y - 10} width="138" height="28" rx="8" fill="#6366f1" fillOpacity="0.22" />}
-              <circle cx="30" cy={y + 4} r="3.5" fill={n.active ? '#a5b4fc' : '#475569'} />
-              <text x="44" y={y + 8} fontSize="12" fontWeight={n.active ? 600 : 400} fill={n.active ? '#ffffff' : '#94a3b8'}>{n.label}</text>
-            </g>
-          );
-        })}
-        <rect x="14" y="404" width="130" height="34" rx="8" fill="#1e293b" />
-        <circle cx="33" cy="421" r="9" fill="url(#lpm-brand)" />
-        <text x="48" y="425" fontSize="10.5" fill="#cbd5e1">Henry · Owner</text>
-
-        {/* ── main content ── */}
-        <text x="176" y="80" fontSize="15" fontWeight="700" fill="#0f172a">Good morning, Henry</text>
-        <text x="176" y="98" fontSize="11" fill="#94a3b8">Here's what's happening today</text>
-
-        {stats.map((s, i) => {
-          const x = 176 + i * 154;
-          return (
-            <g key={s.label}>
-              <rect x={x} y="112" width="140" height="78" rx="12" fill="#ffffff" stroke="#e8e8f2" />
-              <rect x={x + 14} y="126" width="22" height="22" rx="6" fill={s.tint} fillOpacity="0.16" />
-              <circle cx={x + 25} cy={137} r="4" fill={s.tint} />
-              <text x={x + 14} y="166" fontSize="18" fontWeight="800" fill="#0f172a">{s.value}</text>
-              <text x={x + 14} y="181" fontSize="10" fill="#94a3b8">{s.label}</text>
-              <text x={x + 126} y="140" fontSize="9.5" fontWeight="700" fill="#10b981" textAnchor="end">{s.delta}</text>
-            </g>
-          );
-        })}
-
-        {/* ── AI chat card ── */}
-        <rect x="176" y="206" width="294" height="176" rx="12" fill="#faf9ff" stroke="#e9e5fb" />
-        <circle cx="196" cy="228" r="9" fill="url(#lpm-brand)" />
-        <path d="M191.5 228l3 3 5.5-6" stroke="#fff" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        <text x="214" y="232" fontSize="11.5" fontWeight="700" fill="#0f172a">AI Assistant</text>
-
-        {/* user bubble */}
-        <rect x="250" y="248" width="204" height="30" rx="10" fill="#6366f1" />
-        <text x="352" y="267" fontSize="10.5" fill="#ffffff" textAnchor="middle">What are our top products?</text>
-        {/* AI bubble */}
-        <rect x="192" y="288" width="262" height="82" rx="10" fill="#ffffff" stroke="#e9e5fb" />
-        <text x="206" y="308" fontSize="10.5" fill="#334155">Your top 3 sellers this month:</text>
-        <text x="206" y="324" fontSize="10.5" fontWeight="600" fill="#0f172a">Shea Butter Kit · Vitamin C Serum</text>
-        <text x="206" y="340" fontSize="10.5" fontWeight="600" fill="#0f172a">African Black Soap</text>
-        <text x="206" y="357" fontSize="9.5" fill="#94a3b8">— 62% of total sales · source: price-list-2026.pdf</text>
-
-        {/* ── knowledge / document card ── */}
-        <rect x="484" y="206" width="140" height="176" rx="12" fill="#ffffff" stroke="#e8e8f2" />
-        <text x="500" y="230" fontSize="11" fontWeight="700" fill="#0f172a">Knowledge</text>
-        {[
-          { name: 'price-list-2026.pdf', ready: true },
-          { name: 'return-policy.docx', ready: true },
-          { name: 'catalog-q1.pdf', ready: false },
-        ].map((d, i) => {
-          const y = 244 + i * 42;
-          return (
-            <g key={d.name}>
-              <rect x="498" y={y} width="112" height="32" rx="7" fill="#f8fafc" />
-              <rect x="506" y={y + 8} width="12" height="16" rx="2" fill="#c7d2fe" />
-              <text x="524" y={y + 15} fontSize="7.5" fill="#475569">{d.name.length > 15 ? d.name.slice(0, 14) + '…' : d.name}</text>
-              {d.ready ? (
-                <>
-                  <rect x="524" y={y + 19} width="34" height="9" rx="4.5" fill="#10b981" fillOpacity="0.16" />
-                  <text x="541" y={y + 26} fontSize="6.5" fontWeight="700" fill="#10b981" textAnchor="middle">READY</text>
-                </>
-              ) : (
-                <>
-                  <rect x="524" y={y + 19} width="46" height="9" rx="4.5" fill="#f59e0b" fillOpacity="0.16" />
-                  <text x="547" y={y + 26} fontSize="6.5" fontWeight="700" fill="#f59e0b" textAnchor="middle">INDEXING</text>
-                </>
-              )}
-            </g>
-          );
-        })}
-      </g>
-    </svg>
+    <div className="lp-chat" role="img" aria-label="BizlyAI AI Assistant answering a question about top products">
+      <div className="lp-chat-head">
+        <BrandMark size={38} />
+        <div>
+          <strong>AI Assistant</strong>
+          <span><i /> online</span>
+        </div>
+      </div>
+      <div className="lp-chat-body" aria-hidden="true">
+        <div className="lp-msg in"><div className="lp-bubble">What are our top products?</div></div>
+        <div className="lp-msg out">
+          <div className="lp-bubble">
+            Your top 3 sellers this month:
+            <strong>Shea Butter Kit · Vitamin C Serum</strong>
+            <strong>African Black Soap</strong>
+          </div>
+        </div>
+        <div className="lp-msg out">
+          <div className="lp-bubble">
+            62% of total sales
+            <span className="lp-msg-link"><RiFileList3Line /> price-list-2026.pdf <RiArrowRightLine /></span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -435,10 +331,10 @@ export default function Landing() {
   return (
     <div className="landing">
       {/* ── Navbar ─────────────────────────────────────────────── */}
-      <header className={`lp-nav ${scrolled ? 'scrolled' : ''}`}>
+      <header className={`lp-nav ${scrolled || menuOpen ? 'scrolled' : ''}`}>
         <div className="lp-container lp-nav-inner">
           <button className="lp-nav-brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <Logo />
+            <Logo light />
           </button>
 
           <nav className="lp-nav-links">
@@ -472,11 +368,12 @@ export default function Landing() {
 
       {/* ── Hero ───────────────────────────────────────────────── */}
       <section className="lp-hero">
+        <div className="lp-hero-grid" aria-hidden="true" />
         <div className="lp-hero-glow" aria-hidden="true" />
         <div className="lp-container lp-hero-inner">
           <div className="lp-hero-copy" data-reveal>
             <span className="lp-pill"><RiSparklingLine /> The AI operating system for your business</span>
-            <h1>Run Your Entire Business With AI</h1>
+            <h1>Run Your Entire Business <em>With AI</em></h1>
             <p>
               BizlyAI replaces 6 business tools with one AI-powered platform. Manage leads,
               invoices, appointments and orders, run your own online store, and track real
@@ -494,7 +391,15 @@ export default function Landing() {
           </div>
 
           <div className="lp-hero-visual" data-reveal>
-            <DashboardMockup />
+            <HeroChat />
+            <div className="lp-float lp-float-paid" aria-hidden="true">
+              <span className="lp-float-icon"><RiCheckLine /></span>
+              <div><small>Revenue · +18%</small><strong>₦2.4M</strong></div>
+            </div>
+            <div className="lp-float lp-float-lead" aria-hidden="true">
+              <span className="lp-float-icon"><RiUserSearchLine /></span>
+              <div><small>Active Leads · +6</small><strong>47</strong></div>
+            </div>
           </div>
         </div>
 
@@ -523,38 +428,11 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── SEO intro band ─────────────────────────────────────── */}
-      <section className="lp-section lp-seo" aria-label="About BizlyAI">
-        <div className="lp-container lp-seo-inner" data-reveal>
-          <h2>Business Management Software Built for Nigeria &amp; Africa</h2>
-          <p>
-            <strong>BizlyAI</strong> is an AI business platform for Nigerian businesses that brings your
-            whole operation into one place. Instead of paying for separate CRM software, invoice
-            software, inventory management software and expense tracking software, small businesses in
-            Lagos, Abuja, Port Harcourt and across Africa run everything on BizlyAI — from customer
-            records and Paystack invoices to stock levels, expenses and profit &amp; loss reports.
-          </p>
-          <p>
-            Our AI assistant for business answers customer questions from your own documents, a
-            WhatsApp business bot handles chats around the clock, and AI-drafted follow-ups keep your
-            leads warm. BizlyAI is designed for how African SMEs actually work: naira pricing,
-            mobile-first, offline-tolerant and quick to set up — start free, no card required.
-          </p>
-          <ul className="lp-seo-tags">
-            <li>CRM software Nigeria</li>
-            <li>Invoice software Nigeria</li>
-            <li>Inventory management software Nigeria</li>
-            <li>Expense tracking software Nigeria</li>
-            <li>WhatsApp business bot Nigeria</li>
-            <li>Small business software Africa</li>
-          </ul>
-        </div>
-      </section>
-
       {/* ── Features ───────────────────────────────────────────── */}
       <section id="features" className="lp-section">
         <div className="lp-container">
           <div className="lp-head" data-reveal>
+            <span className="lp-eyebrow">Features</span>
             <h2>Everything Your Business Needs</h2>
             <p>One login. One bill. Every tool your team reaches for, powered by AI.</p>
           </div>
@@ -562,9 +440,9 @@ export default function Landing() {
             {FEATURES.map((f, i) => {
               const Icon = f.icon;
               return (
-                <article key={f.title} className="lp-card lp-feature" data-reveal style={{ transitionDelay: `${(i % 3) * 60}ms` }}>
+                <article key={f.title} className="lp-card lp-feature" data-reveal style={{ '--d': `${(i % 3) * 60}ms` }}>
                   <span className="lp-feature-icon"><Icon /></span>
-                  <h3>{f.emoji} {f.title}</h3>
+                  <h3>{f.title}</h3>
                   <p>{f.text}</p>
                 </article>
               );
@@ -574,38 +452,39 @@ export default function Landing() {
       </section>
 
       {/* ── Commerce & Team ────────────────────────────────────── */}
-      <section id="commerce" className="lp-section">
-        <div className="lp-container">
-          <div className="lp-head" data-reveal>
+      <section id="commerce" className="lp-section lp-section-alt">
+        <div className="lp-container lp-split">
+          <div className="lp-split-head" data-reveal>
+            <span className="lp-eyebrow">Commerce</span>
             <h2>Sell Online, Get Paid, Get Delivered</h2>
             <p>A built-in store, real delivery tracking and the team tools to run it all — no extra plugins.</p>
           </div>
-          <div className="lp-grid lp-grid-4">
-            {COMMERCE_FEATURES.map((f, i) => {
-              const Icon = f.icon;
-              return (
-                <article key={f.title} className="lp-card lp-feature" data-reveal style={{ transitionDelay: `${(i % 4) * 60}ms` }}>
-                  <span className="lp-feature-icon"><Icon /></span>
-                  <h3>{f.emoji} {f.title}</h3>
+          <div className="lp-points">
+            {COMMERCE_FEATURES.map((f, i) => (
+              <article key={f.title} className="lp-point" data-reveal style={{ '--d': `${(i % 4) * 60}ms` }}>
+                <RiCheckLine />
+                <div>
+                  <strong>{f.title}</strong>
                   <p>{f.text}</p>
-                </article>
-              );
-            })}
+                </div>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ── How it works ───────────────────────────────────────── */}
-      <section id="how" className="lp-section lp-section-alt">
+      <section id="how" className="lp-section">
         <div className="lp-container">
           <div className="lp-head" data-reveal>
+            <span className="lp-eyebrow">How it works</span>
             <h2>Get Started in 3 Steps</h2>
             <p>Most teams are live the same day they sign up.</p>
           </div>
           <div className="lp-steps">
             {STEPS.map((s) => (
               <div key={s.n} className="lp-step" data-reveal>
-                <span className="lp-step-num">{s.n}</span>
+                <span className="lp-step-num">{String(s.n).padStart(2, '0')}</span>
                 <h3>{s.title}</h3>
                 <p>{s.text}</p>
               </div>
@@ -615,7 +494,7 @@ export default function Landing() {
       </section>
 
       {/* ── Pricing ────────────────────────────────────────────── */}
-      <section id="pricing" className="lp-section">
+      <section id="pricing" className="lp-section lp-section-alt">
         <div className="lp-container">
           <div className="lp-head" data-reveal>
             <h2>Simple, Transparent Pricing</h2>
@@ -660,7 +539,7 @@ export default function Landing() {
       </section>
 
       {/* ── Use cases ──────────────────────────────────────────── */}
-      <section className="lp-section lp-section-alt">
+      <section className="lp-section">
         <div className="lp-container">
           <div className="lp-head" data-reveal>
             <h2>Built for Nigerian &amp; African Businesses</h2>
@@ -682,7 +561,7 @@ export default function Landing() {
       </section>
 
       {/* ── Testimonials ───────────────────────────────────────── */}
-      <section id="testimonials" className="lp-section">
+      <section id="testimonials" className="lp-section lp-section-alt">
         <div className="lp-container">
           <div className="lp-head" data-reveal>
             <h2>Loved by growing teams</h2>
@@ -705,6 +584,34 @@ export default function Landing() {
               </article>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── SEO intro band ─────────────────────────────────────── */}
+      <section className="lp-section lp-seo" aria-label="About BizlyAI">
+        <div className="lp-container lp-seo-inner" data-reveal>
+          <h2>Business Management Software Built for Nigeria &amp; Africa</h2>
+          <p>
+            <strong>BizlyAI</strong> is an AI business platform for Nigerian businesses that brings your
+            whole operation into one place. Instead of paying for separate CRM software, invoice
+            software, inventory management software and expense tracking software, small businesses in
+            Lagos, Abuja, Port Harcourt and across Africa run everything on BizlyAI — from customer
+            records and Paystack invoices to stock levels, expenses and profit &amp; loss reports.
+          </p>
+          <p>
+            Our AI assistant for business answers customer questions from your own documents, a
+            WhatsApp business bot handles chats around the clock, and AI-drafted follow-ups keep your
+            leads warm. BizlyAI is designed for how African SMEs actually work: naira pricing,
+            mobile-first, offline-tolerant and quick to set up — start free, no card required.
+          </p>
+          <ul className="lp-seo-tags">
+            <li>CRM software Nigeria</li>
+            <li>Invoice software Nigeria</li>
+            <li>Inventory management software Nigeria</li>
+            <li>Expense tracking software Nigeria</li>
+            <li>WhatsApp business bot Nigeria</li>
+            <li>Small business software Africa</li>
+          </ul>
         </div>
       </section>
 
@@ -736,20 +643,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── CTA ────────────────────────────────────────────────── */}
-      <section className="lp-cta">
-        <div className="lp-container lp-cta-inner" data-reveal>
-          <h2>Ready to Transform Your Business?</h2>
-          <p>Join hundreds of businesses already using BizlyAI.</p>
-          <Link to="/register" className="lp-btn lp-btn-lg lp-btn-onbrand">
-            Start Free Trial <RiArrowRightLine />
-          </Link>
-          <span className="lp-cta-note">No credit card required. 14-day free trial.</span>
-        </div>
-      </section>
-
       {/* ── Contact ────────────────────────────────────────────── */}
-      <section id="contact" className="lp-section lp-section-alt">
+      <section id="contact" className="lp-section">
         <div className="lp-container">
           <div className="lp-head" data-reveal>
             <h2>Get In Touch</h2>
@@ -759,7 +654,7 @@ export default function Landing() {
             {CONTACT_CARDS.map((c, i) => {
               const Icon = c.icon;
               return (
-                <article key={c.title} className="lp-card lp-feature lp-contact-card" data-reveal style={{ transitionDelay: `${(i % 3) * 60}ms` }}>
+                <article key={c.title} className="lp-card lp-feature lp-contact-card" data-reveal style={{ '--d': `${(i % 3) * 60}ms` }}>
                   <span className="lp-feature-icon"><Icon /></span>
                   <h3>{c.title}</h3>
                   <p>{c.text}</p>
@@ -799,6 +694,19 @@ export default function Landing() {
             <div><RiGlobalLine /> Website: <a href="https://bislyai.com" target="_blank" rel="noopener noreferrer">bislyai.com</a></div>
             <div><RiTimeLine /> Hours: Monday – Friday, 8am – 6pm WAT</div>
           </div>
+        </div>
+      </section>
+
+      {/* ── CTA ────────────────────────────────────────────────── */}
+      <section className="lp-cta">
+        <div className="lp-hero-grid" aria-hidden="true" />
+        <div className="lp-container lp-cta-inner" data-reveal>
+          <h2>Ready to Transform Your Business?</h2>
+          <p>Join hundreds of businesses already using BizlyAI.</p>
+          <Link to="/register" className="lp-btn lp-btn-lg lp-btn-onbrand">
+            Start Free Trial <RiArrowRightLine />
+          </Link>
+          <span className="lp-cta-note">No credit card required. 14-day free trial.</span>
         </div>
       </section>
 

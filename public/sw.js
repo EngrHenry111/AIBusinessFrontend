@@ -5,7 +5,7 @@
 // stock, payments must always hit the network). Only two things are cached:
 //   • /assets/*  — Vite's content-hashed bundles, so cache-first is safe.
 //   • page loads — network-first; the last good HTML is the offline fallback.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = `bizly-shell-${VERSION}`;
 const PAGE_CACHE = `bizly-pages-${VERSION}`;
 const ASSET_CACHE = `bizly-assets-${VERSION}`;

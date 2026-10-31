@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { RiLoader4Line, RiCheckboxCircleFill, RiErrorWarningFill } from 'react-icons/ri';
 import { authService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
+import BrandMark from '../../components/brand/BrandMark';
 import './Auth.css';
 
 export default function VerifyEmail() {
@@ -53,7 +54,7 @@ export default function VerifyEmail() {
     <div className="auth-page">
       <div className="auth-card" style={{ textAlign: 'center' }}>
         <div className="auth-brand">
-          <div className="auth-logo"><span style={{ fontWeight: 800 }}>B</span></div>
+          <BrandMark className="auth-mark" />
           <h1>BizlyAI</h1>
         </div>
 

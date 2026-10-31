@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { RiRobot2Line, RiEyeLine, RiEyeOffLine, RiLockLine, RiMailLine } from 'react-icons/ri';
+import { RiEyeLine, RiEyeOffLine, RiLockLine, RiMailLine } from 'react-icons/ri';
+import BrandMark from '../../components/brand/BrandMark';
 import './Auth.css';
 
 export default function Login() {
@@ -35,7 +36,7 @@ export default function Login() {
       <div className="auth-card">
         {/* Brand */}
         <div className="auth-brand">
-          <div className="auth-logo"><RiRobot2Line /></div>
+          <BrandMark className="auth-mark" />
           <h1>EngrHenryTech BusinessAI</h1>
           <p>Sign in to your workspace</p>
         </div>

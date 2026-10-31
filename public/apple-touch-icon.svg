@@ -1,10 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#8b5cf6"/>
-      <stop offset="1" stop-color="#6366f1"/>
-    </linearGradient>
-  </defs>
-  <rect width="180" height="180" rx="40" fill="url(#g)"/>
-  <path d="M60 42h44a26 26 0 0 1 7.6 51A28 28 0 0 1 106 146H60V42Zm23 20v25h18a12.5 12.5 0 0 0 0-25H83Zm0 42v27h18a13.5 13.5 0 0 0 0-27H83Z" fill="#fff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#0E2A22"/>
+  <g transform="translate(4.5 3) scale(.86)">
+    <path fill="#F2A93B" fill-rule="evenodd" d="M19 11h17.5C43.4 11 48 15.8 48 21.8c0 3.6-1.7 6.5-4.4 8.4 3.7 1.8 6.4 5.4 6.4 10 0 6.8-5.3 11.8-12.4 11.8H25l-8.5 7c-.6.5-1.5 0-1.5-.8V15c0-2.2 1.800-4 4-4Zm6.500 9v8H35a4 4 0 0 0 0-8h-9.500Zm9.500 13.500c-.6 3.900-2.600 5.900-6.500 6.500 3.900.6 5.900 2.600 6.500 6.500.6-3.900 2.600-5.900 6.500-6.500-3.900-.6-5.900-2.600-6.500-6.500Z"/>
+  </g>
 </svg>

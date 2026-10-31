@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { authService } from '../../services';
-import { RiRobot2Line, RiLockLine, RiEyeLine, RiEyeOffLine, RiCheckLine } from 'react-icons/ri';
+import { RiLockLine, RiEyeLine, RiEyeOffLine, RiCheckLine } from 'react-icons/ri';
+import BrandMark from '../../components/brand/BrandMark';
 import './Auth.css';
 
 export default function ResetPassword() {
@@ -69,7 +70,7 @@ export default function ResetPassword() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-brand">
-          <div className="auth-logo"><RiRobot2Line /></div>
+          <BrandMark className="auth-mark" />
           <h1>Set New Password</h1>
           <p>Choose a strong password for your account</p>
         </div>

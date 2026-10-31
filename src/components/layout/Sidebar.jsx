@@ -6,7 +6,7 @@ import {
   RiDashboardLine, RiRobot2Line, RiFileTextLine, RiUserLine,
   RiCalendarLine, RiMoneyDollarCircleLine, RiBarChartLine,
   RiTeamLine, RiSettings4Line, RiMenuFoldLine, RiMenuUnfoldLine,
-  RiShoppingBagLine, RiVideoLine, RiMegaphoneLine, RiBriefcaseLine,
+  RiShoppingBagLine, RiVideoLine, RiMegaphoneLine,
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
   RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine, RiStoreLine,
   RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine, RiGovernmentLine, RiBankCardLine, RiGiftLine,
@@ -19,6 +19,7 @@ import useSchoolMe from '../../pages/school/useSchoolMe';
 import useHospitalMe from '../../pages/hospital/useHospitalMe';
 import { INDUSTRY_TOOLS } from '../../constants/industries';
 import { useGroupAccess } from '../../pages/group/GroupGate';
+import BrandMark from '../brand/BrandMark';
 import './Sidebar.css';
 
 const NAV_ITEMS = [
@@ -355,9 +356,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
       {/* Header */}
       <div className="sidebar-header">
         <div className="sidebar-brand">
-          <div className="brand-icon">
-            <RiBriefcaseLine />
-          </div>
+          <BrandMark className="brand-mark" size={36} />
           {!collapsed && (
             <div className="brand-text">
               <span className="brand-name">BusinessAI</span>

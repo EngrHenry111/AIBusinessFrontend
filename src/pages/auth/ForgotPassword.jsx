@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authService } from '../../services';
-import { RiRobot2Line, RiMailLine, RiArrowLeftLine, RiCheckLine } from 'react-icons/ri';
+import { RiMailLine, RiArrowLeftLine, RiCheckLine } from 'react-icons/ri';
+import BrandMark from '../../components/brand/BrandMark';
 import './Auth.css';
 
 export default function ForgotPassword() {
@@ -56,7 +57,7 @@ export default function ForgotPassword() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-brand">
-          <div className="auth-logo"><RiRobot2Line /></div>
+          <BrandMark className="auth-mark" />
           <h1>Forgot Password?</h1>
           <p>Enter your email and we'll send you a reset link</p>
         </div>
