@@ -136,7 +136,7 @@ function AddStaffModal({ helpers, onClose, onSaved }) {
     <Modal title="Add staff" size="sc-modal-sm" onClose={onClose} onSubmit={submit}
       footer={<><button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button><button className="btn btn-primary" disabled={busy}>{busy ? 'Adding…' : 'Add staff'}</button></>}>
       <p className="cell-sub" style={{ marginTop: 0, marginBottom: 12 }}>
-        For staff without a phone or email. They appear in the class, timetable and payroll lists like anyone else, but they can't sign in and don't use a plan seat.
+        For staff without a phone or email. You can assign them to classes and subjects like anyone else, but they can't sign in and don't use a plan seat.
       </p>
       <Field label="Full name"><input className="form-input" required minLength={2} maxLength={100} autoFocus value={form.name} onChange={(e) => set('name', e.target.value)} /></Field>
       <Field label="Phone" hint="(optional)"><input className="form-input" type="tel" maxLength={40} value={form.phone} onChange={(e) => set('phone', e.target.value)} /></Field>
