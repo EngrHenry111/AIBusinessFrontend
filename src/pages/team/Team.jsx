@@ -212,10 +212,14 @@ export default function Team() {
                   <div className="member-name">
                     {member.name}
                     {member._id===currentUser?._id && <span className="you-tag">You</span>}
-                    {!member.lastLogin && <span className="badge badge-warning" style={{marginLeft:8,fontSize:11}}>Pending</span>}
+                    {member.noLogin
+                      ? <span className="badge badge-neutral" style={{marginLeft:8,fontSize:11}}>No login</span>
+                      : !member.lastLogin && <span className="badge badge-warning" style={{marginLeft:8,fontSize:11}}>Pending</span>}
                   </div>
-                  <div className="member-email"><RiMailLine /> {member.email}</div>
-                  {member.lastLogin ? (
+                  {!member.noLogin && <div className="member-email"><RiMailLine /> {member.email}</div>}
+                  {member.noLogin ? (
+                    <div className="member-last-login">Added by the school. Can't sign in, and doesn't use a plan seat</div>
+                  ) : member.lastLogin ? (
                     <div className="member-last-login">
                       Last login: {new Date(member.lastLogin).toLocaleDateString()}
                     </div>
@@ -240,7 +244,7 @@ export default function Team() {
                       <span className={`badge badge-${ROLE_COLORS[member.role]||'neutral'}`}>
                         {ROLE_LABELS[member.role] || member.role}
                       </span>
-                      {isOwner && member._id!==currentUser?._id && member.role!=='company_owner' && (
+                      {isOwner && member._id!==currentUser?._id && member.role!=='company_owner' && !member.noLogin && (
                         <button className="btn btn-ghost btn-icon btn-sm" title="Change role (owner only)"
                           onClick={()=>setEditingRole(member._id)}>
                           <RiEditLine />
@@ -273,7 +277,7 @@ export default function Team() {
                   )}
                 </div>
 
-                {!member.lastLogin && (
+                {!member.lastLogin && !member.noLogin && (
                   <button className="btn btn-ghost btn-icon btn-sm" title="Resend invite reminder"
                     disabled={resendingId===member._id}
                     onClick={()=>handleResendInvite(member._id, member.email)}>
@@ -323,7 +327,7 @@ export default function Team() {
                 <div className="member-avatar"><span>{member.name?.[0]?.toUpperCase()}</span></div>
                 <div className="member-info">
                   <div className="member-name">{member.name}</div>
-                  <div className="member-email"><RiMailLine /> {member.email}</div>
+                  {!member.noLogin && <div className="member-email"><RiMailLine /> {member.email}</div>}
                 </div>
                 <span className="badge badge-neutral">Inactive</span>
               </div>

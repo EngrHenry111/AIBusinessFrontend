@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { RiSettings3Line, RiLoader4Line, RiFileCopyLine, RiExternalLinkLine, RiAddLine, RiCloseLine } from 'react-icons/ri';
 import { schoolService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
+import LogoField from '../../components/common/LogoField';
 import { Field } from './SchoolForms';
 import useSchoolLive from './useSchoolLive';
 import { TERMS, toInputDate, errMsg, publicLink } from './schoolConstants';
@@ -104,7 +105,7 @@ export default function SchoolSettings() {
             <Field label="Address" span><input className="form-input" value={form.address || ''} onChange={(e) => set('address', e.target.value)} /></Field>
             <Field label="Phone"><input className="form-input" value={form.phone || ''} onChange={(e) => set('phone', e.target.value)} /></Field>
             <Field label="Email"><input className="form-input" type="email" value={form.email || ''} onChange={(e) => set('email', e.target.value)} /></Field>
-            <Field label="Logo URL" span><input className="form-input" placeholder="https://…" value={form.logo || ''} onChange={(e) => set('logo', e.target.value)} /></Field>
+            <Field label="Logo" span><LogoField value={form.logo} onChange={(v) => set('logo', v)} upload={schoolService.uploadLogo} /></Field>
             <Field label="Admission number prefix" hint={`(e.g. ${form.admissionNumberPrefix || 'STU'}/${new Date().getFullYear()}/0001)`}><input className="form-input" maxLength={12} value={form.admissionNumberPrefix || ''} onChange={(e) => set('admissionNumberPrefix', e.target.value.toUpperCase())} /></Field>
           </div>
         </div>

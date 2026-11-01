@@ -35,7 +35,9 @@ export default function TeacherHome({ me }) {
               <div key={c._id} className="card card-pad">
                 <div className="sc-card-title" style={{ marginBottom: 6 }}>
                   <span style={{ color: 'var(--text-primary)', fontSize: 16, textTransform: 'none', letterSpacing: 0 }}>{c.name}</span>
-                  {c.classTeacher && <span className="badge badge-brand">Class teacher</span>}
+                  {c.helpingFor?.length > 0
+                    ? <span className="badge badge-neutral">Helping {c.helpingFor.join(', ')}</span>
+                    : c.classTeacher && <span className="badge badge-brand">Class teacher</span>}
                 </div>
                 <div className="sc-actions" style={{ marginTop: 8 }}>
                   <Link to={`/school/attendance?classId=${c._id}`} className="btn btn-secondary btn-sm"><RiCalendarCheckLine /> Take register</Link>

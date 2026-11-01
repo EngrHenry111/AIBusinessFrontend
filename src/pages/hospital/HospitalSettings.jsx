@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { RiSettings3Line, RiLoader4Line, RiAddLine, RiDeleteBinLine } from 'react-icons/ri';
 import { hospitalService } from '../../services';
 import useHospitalMe from './useHospitalMe';
+import LogoField from '../../components/common/LogoField';
 import { Field } from './HospitalForms';
 import { CHARGE_CATEGORIES, money, errMsg } from './hospitalConstants';
 import '../school/School.css';
@@ -60,7 +61,7 @@ export default function HospitalSettings() {
               <Field label="Address" span><input className="form-input" value={form.address || ''} onChange={(e) => set('address', e.target.value)} /></Field>
               <Field label="Phone"><input className="form-input" value={form.phone || ''} onChange={(e) => set('phone', e.target.value)} /></Field>
               <Field label="Email"><input className="form-input" type="email" value={form.email || ''} onChange={(e) => set('email', e.target.value)} /></Field>
-              <Field label="Logo URL" span><input className="form-input" placeholder="https://…" value={form.logo || ''} onChange={(e) => set('logo', e.target.value)} /></Field>
+              <Field label="Logo" span><LogoField value={form.logo} onChange={(v) => set('logo', v)} upload={hospitalService.uploadLogo} /></Field>
               <Field label="Hospital number prefix" hint={`(e.g. ${form.patientNumberPrefix || 'PT'}/${new Date().getFullYear()}/00001)`}><input className="form-input" maxLength={12} value={form.patientNumberPrefix || ''} onChange={(e) => set('patientNumberPrefix', e.target.value.toUpperCase())} /></Field>
             </div>
           </div>
