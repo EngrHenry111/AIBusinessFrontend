@@ -463,7 +463,7 @@ function SettingsTab({ program, onSaved }) {
         </label>
         <label className="ce-field">
           <span>Points per ₦1 spent</span>
-          <input type="number" step="0.1" min={0} value={pointsPerNaira} onChange={(e) => setPointsPerNaira(e.target.value)} />
+          <input type="number" step="0.01" min={0} value={pointsPerNaira} onChange={(e) => setPointsPerNaira(e.target.value)} />
         </label>
         <label className="ce-field">
           <span>₦ value per point</span>
@@ -503,7 +503,7 @@ function SettingsTab({ program, onSaved }) {
             </label>
             <label>
               <span>Discount %</span>
-              <input type="number" min={0} max={100} value={t.discountPercent} onChange={(e) => updateTier(i, { discountPercent: e.target.value })} />
+              <input type="number" min={0} max={100} step="0.1" value={t.discountPercent} onChange={(e) => updateTier(i, { discountPercent: e.target.value })} />
             </label>
             <label className="tier-edit-benefits">
               <span>Benefits</span>

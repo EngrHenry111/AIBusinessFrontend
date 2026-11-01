@@ -10,7 +10,7 @@ export default function LoyaltySetup({ onComplete }) {
   const { company } = useAuth();
   const [step, setStep] = useState(0);
   const [name, setName] = useState(company?.name ? `${company.name} Rewards` : 'Rewards Program');
-  const [pointsPerNaira, setPointsPerNaira] = useState(1);
+  const [pointsPerNaira, setPointsPerNaira] = useState(0.01);
   const [nairaPerPoint, setNairaPerPoint] = useState(0.5);
   const [minimumRedemption, setMinimumRedemption] = useState(100);
   const [launching, setLaunching] = useState(false);
@@ -56,8 +56,8 @@ export default function LoyaltySetup({ onComplete }) {
       {step === 1 && (
         <div className="setup-panel">
           <h2>Set your earning rate</h2>
-          <p className="loyalty-hint">How many points does a customer earn per ₦1 spent?</p>
-          <input className="setup-input" type="number" min={0.1} step={0.1} value={pointsPerNaira} onChange={(e) => setPointsPerNaira(e.target.value)} />
+          <p className="loyalty-hint">How many points does a customer earn per ₦1 spent? 0.01 means 1 point for every ₦100.</p>
+          <input className="setup-input" type="number" min={0.01} step={0.01} value={pointsPerNaira} onChange={(e) => setPointsPerNaira(e.target.value)} />
           <p className="setup-example">Example: spending ₦1,000 earns <strong>{Math.floor(1000 * (Number(pointsPerNaira) || 0))} points</strong></p>
         </div>
       )}
