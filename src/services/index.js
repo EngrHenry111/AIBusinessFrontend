@@ -473,6 +473,17 @@ export const advancedAnalyticsService = {
   getInsights: () => api.get('/analytics/ai-insights'),
 };
 
+// ─── Business agent ───────────────────────────────────────────────────────────
+// A turn can take several AI steps, so these get longer than the default timeout.
+export const assistantService = {
+  list: () => api.get('/assistant/conversations'),
+  get: (id) => api.get(`/assistant/conversations/${id}`),
+  remove: (id) => api.delete(`/assistant/conversations/${id}`),
+  chat: (message, conversationId) => api.post('/assistant/chat', { message, conversationId }, { timeout: 120000 }),
+  approve: (id, actionId) => api.post(`/assistant/conversations/${id}/actions/${actionId}/approve`, null, { timeout: 120000 }),
+  reject: (id, actionId) => api.post(`/assistant/conversations/${id}/actions/${actionId}/reject`),
+};
+
 // ─── Agents ───────────────────────────────────────────────────────────────────
 export const agentService = {
   getAll: () => api.get('/agents'),

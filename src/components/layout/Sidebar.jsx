@@ -13,7 +13,7 @@ import {
   RiGroupLine, RiScales3Line, RiCalendarEventLine, RiGraduationCapLine, RiUserAddLine,
   RiCalendarCheckLine, RiFileList3Line, RiBook2Line, RiTimeLine, RiUserSettingsLine, RiPieChartLine,
   RiBuilding2Line, RiRadarLine, RiFileCheckLine, RiClipboardLine, RiArchiveLine, RiHandCoinLine, RiLineChartLine, RiBankCard2Line,
-  RiArrowDownSLine, RiMoreLine, RiHospitalLine, RiUserHeartLine, RiListOrdered, RiTestTubeLine, RiCapsuleLine, RiHotelBedLine,
+  RiArrowDownSLine, RiMoreLine, RiHospitalLine, RiSparkling2Line, RiUserHeartLine, RiListOrdered, RiTestTubeLine, RiCapsuleLine, RiHotelBedLine,
 } from 'react-icons/ri';
 import useSchoolMe from '../../pages/school/useSchoolMe';
 import useHospitalMe from '../../pages/hospital/useHospitalMe';
@@ -24,6 +24,7 @@ import './Sidebar.css';
 
 const NAV_ITEMS = [
   { label: 'Overview', icon: RiDashboardLine, path: '/dashboard' },
+  { label: 'Business Agent', icon: RiSparkling2Line, path: '/assistant', roles: ['company_owner', 'manager', 'employee', 'super_admin'] },
   { label: 'AI Assistant', icon: RiRobot2Line, path: '/chat' },
   { label: 'Knowledge', icon: RiBookOpenLine, path: '/knowledge' },
   { label: 'AI Agents', icon: RiRobot2Line, path: '/agents' },
