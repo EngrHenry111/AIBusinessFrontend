@@ -97,6 +97,7 @@ const SchoolStaffPage = lazy(() => import('./pages/school/SchoolStaff'));
 const SchoolTermReport = lazy(() => import('./pages/school/TermReport'));
 const SchoolPublicApply = lazy(() => import('./pages/school/PublicApply'));
 const SchoolPublicPay = lazy(() => import('./pages/school/PublicPay'));
+const InvoicePay = lazy(() => import('./pages/pay/InvoicePay'));
 const HospitalDashboard = lazy(() => import('./pages/hospital/HospitalDashboard'));
 const HospitalPatients = lazy(() => import('./pages/hospital/Patients'));
 const HospitalPatientDetail = lazy(() => import('./pages/hospital/PatientDetail'));
@@ -228,6 +229,9 @@ function AppRoutes() {
       <Route path="/schools/:slug/apply" element={<Suspense fallback={<PageLoader />}><SchoolPublicApply /></Suspense>} />
       <Route path="/schools/:slug/portal" element={<Suspense fallback={<PageLoader />}><SchoolPublicPay /></Suspense>} />
       <Route path="/schools/:slug/pay" element={<Suspense fallback={<PageLoader />}><SchoolPublicPay /></Suspense>} />
+
+      {/* Public invoice pay page — opened from invoice emails, SMS and shared links */}
+      <Route path="/pay/:token" element={<Suspense fallback={<PageLoader />}><InvoicePay /></Suspense>} />
 
       {/* Protected app routes */}
       <Route path="/*" element={

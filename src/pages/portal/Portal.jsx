@@ -189,9 +189,15 @@ export default function Portal() {
                       <tr key={inv._id}>
                         <td className="pt-num">{inv.invoiceNumber}</td>
                         <td>{day(inv.issuedAt)}</td>
-                        <td>{money(inv.total, inv.currency)}</td>
+                        <td>
+                          {money(inv.total, inv.currency)}
+                          {inv.balance > 0 && inv.balance < inv.total && <div className="pt-sub">{money(inv.balance, inv.currency)} left</div>}
+                        </td>
                         <td><span className={`pt-badge ${inv.status}`}>{inv.status}</span></td>
-                        <td style={{ textAlign: 'right' }}>
+                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          {inv.payUrl && (
+                            <a className="pt-pay" href={inv.payUrl}>Pay {money(inv.balance, inv.currency)}</a>
+                          )}
                           <button
                             className="pt-dl"
                             onClick={() => window.open(portalService.invoicePdfUrl(inv._id, token()), '_blank', 'noopener')}

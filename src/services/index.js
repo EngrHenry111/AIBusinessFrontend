@@ -134,6 +134,16 @@ export const invoiceService = {
   getRecurring: () => api.get('/invoices/recurring'),
   toggleRecurring: (id, data) => api.patch(`/invoices/${id}/recurring`, data),
   generateNow: (id) => api.post(`/invoices/${id}/recurring/generate-now`),
+  recordPayment: (id, data) => api.post(`/invoices/${id}/payments`, data),
+  payLink: (id) => api.get(`/invoices/${id}/pay-link`),
+  setAutoReminders: (enabled) => api.patch('/invoices/settings/reminders', { enabled }),
+};
+
+// ─── Public invoice pay page (no login; the link's token is the key) ─────────
+export const payService = {
+  get: (token) => api.get(`/pay/${token}`),
+  start: (token, data) => api.post(`/pay/${token}/start`, data),
+  verify: (token, reference) => api.get(`/pay/${token}/verify/${encodeURIComponent(reference)}`),
 };
 
 // ─── AI drafts (edit, save, send with attachments) ───────────────────────────

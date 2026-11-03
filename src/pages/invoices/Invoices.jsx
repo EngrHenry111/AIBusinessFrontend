@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { invoiceService, portalService, currencyService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
@@ -8,6 +9,7 @@ import {
   RiMailLine, RiAlertLine, RiCheckLine, RiTimeLine, RiDownloadLine,
   RiShareForwardLine, RiMailSendLine, RiCheckboxCircleLine, RiRepeatLine,
   RiPlayLine, RiPauseLine, RiFlashlightLine, RiFileTextLine, RiShoppingBagLine,
+  RiLinkM, RiHandCoinLine, RiNotification3Line, RiNotificationOffLine,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import { SkeletonTable } from '../../components/ui/Skeleton';
@@ -66,10 +68,23 @@ function toNGN(amount, currency, rates) {
   return rate ? amount / rate : null;
 }
 
+// Mirrors utils/invoicePayments.balanceOf on the backend.
+const balanceOf = (inv) => (['paid', 'cancelled'].includes(inv.status) ? 0 : Math.max(0, Math.round(((inv.total || 0) - (inv.amountPaid || 0)) * 100) / 100));
+const isOverdue = (inv) => ['sent', 'viewed', 'partial', 'overdue'].includes(inv.status) && new Date(inv.dueAt) < new Date() && balanceOf(inv) > 0;
+// Matches SCHEDULE in utils/invoiceReminders.js.
+const AUTO_REMINDER_STEPS = 4;
+const autoRemindersSent = (inv) => (inv.reminders || []).filter((r) => r.auto || /^Automatic overdue reminder/.test(r.messagePreview || '')).length;
+const PAYMENT_METHOD_LABELS = { paystack: 'Paystack', bank_transfer: 'Bank transfer', cash: 'Cash', pos: 'POS', other: 'Other', marked_paid: 'Marked as paid' };
+
 export default function Invoices() {
   const navigate = useNavigate();
-  const { company } = useAuth();
+  const { company, user, updateCompany } = useAuth();
   const companyId = company?.id || company?._id;
+  const isManager = ['manager', 'company_owner', 'super_admin'].includes(user?.role);
+  const autoRemindersOn = company?.invoiceReminders?.enabled !== false;
+  const [paymentFor, setPaymentFor] = useState(null);
+  const [linkId, setLinkId] = useState(null);
+  const [savingSetting, setSavingSetting] = useState(false);
   const [tab, setTab] = useState('invoices');
   const [invoices, setInvoices] = useState([]);
   const [stats, setStats] = useState([]);
@@ -227,6 +242,37 @@ export default function Invoices() {
     }
   }
 
+  async function handleCopyPayLink(inv) {
+    setLinkId(inv._id);
+    try {
+      const { data } = await invoiceService.payLink(inv._id);
+      setInvoices(prev => prev.map(i => i._id === inv._id ? data.data.invoice : i));
+      try { await navigator.clipboard.writeText(data.data.url); } catch { window.prompt('Copy this payment link:', data.data.url); }
+      toast.success(data.data.canPayOnline
+        ? 'Payment link copied. Share it on WhatsApp, SMS or email.'
+        : 'Link copied. It shows your bank details. Connect payments in Store settings to take card payments.', { duration: 6000 });
+    } catch (err) { toast.error(err.response?.data?.message || 'Could not get the payment link'); }
+    finally { setLinkId(null); }
+  }
+
+  async function handleToggleInvoiceReminders(inv) {
+    try {
+      const { data } = await invoiceService.update(inv._id, { remindersPaused: !inv.remindersPaused });
+      setInvoices(prev => prev.map(i => i._id === inv._id ? data.data : i));
+      toast.success(data.data.remindersPaused ? 'Automatic reminders paused for this invoice' : 'Automatic reminders back on for this invoice');
+    } catch { toast.error('Failed to update'); }
+  }
+
+  async function handleToggleAutoReminders() {
+    setSavingSetting(true);
+    try {
+      const { data } = await invoiceService.setAutoReminders(!autoRemindersOn);
+      updateCompany({ invoiceReminders: { enabled: data.data.enabled } });
+      toast.success(data.data.enabled ? 'Automatic overdue reminders are on' : 'Automatic overdue reminders are off');
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to update'); }
+    finally { setSavingSetting(false); }
+  }
+
   async function handleDelete(id) {
     if (!confirm('Delete this invoice?')) return;
     try {
@@ -237,17 +283,19 @@ export default function Invoices() {
   }
 
   const fmt = (dt) => dt ? new Date(dt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
-  const fmtMoney = (n, cur='USD') => new Intl.NumberFormat('en-US',{style:'currency',currency:cur}).format(n||0);
+  const baseCurrency = company?.defaultCurrency || 'NGN';
+  const fmtMoney = (n, cur = baseCurrency) => new Intl.NumberFormat('en-NG',{style:'currency',currency:cur}).format(n||0);
 
   const daysOverdue = (dueAt) => {
     const diff = Math.floor((Date.now() - new Date(dueAt)) / (1000*60*60*24));
     return diff;
   };
 
-  const totalOutstanding = invoices
-    .filter(i => ['sent','viewed','partial','overdue'].includes(i.status))
-    .reduce((s,i) => s + (i.total||0), 0);
-  const totalPaid = invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+(i.total||0),0);
+  // Totals in the business's own currency; invoices in other currencies are
+  // left out rather than added as if they were the same money.
+  const inBase = invoices.filter(i => (i.currency || 'NGN') === baseCurrency);
+  const totalOutstanding = inBase.filter(i => !['draft','cancelled'].includes(i.status)).reduce((s,i) => s + balanceOf(i), 0);
+  const totalPaid = inBase.reduce((s,i) => s + (i.status === 'paid' ? (i.total||0) : (i.amountPaid||0)), 0);
 
   return (
     <div className="invoices-page fade-in">
@@ -255,7 +303,15 @@ export default function Invoices() {
         <div className="page-header-row">
           <div><h1>Invoices</h1><p>{invoices.length} invoices · AI-powered payment reminders</p></div>
           {tab === 'invoices' && (
-            <button className="btn btn-primary" onClick={() => setShowForm(v => !v)}><RiAddLine /> New Invoice</button>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {isManager && (
+                <button className="btn btn-secondary" onClick={handleToggleAutoReminders} disabled={savingSetting}
+                  title="Overdue invoices get a reminder by email and SMS at 1, 3, 7 and 14 days overdue, then reminders stop.">
+                  {autoRemindersOn ? <RiNotification3Line /> : <RiNotificationOffLine />} Auto reminders: {autoRemindersOn ? 'On' : 'Off'}
+                </button>
+              )}
+              <button className="btn btn-primary" onClick={() => setShowForm(v => !v)}><RiAddLine /> New Invoice</button>
+            </div>
           )}
         </div>
       </div>
@@ -286,7 +342,7 @@ export default function Invoices() {
         <div className="invoice-stat-card">
           <span className="stat-label">Overdue</span>
           <span className="stat-value danger">
-            {invoices.filter(i=>i.status==='overdue'||(['sent','viewed'].includes(i.status)&&new Date(i.dueAt)<new Date())).length}
+            {invoices.filter(isOverdue).length}
           </span>
         </div>
       </div>
@@ -437,8 +493,10 @@ export default function Invoices() {
       ) : (
         <div className="invoices-list">
           {invoices.map(inv => {
-            const overdue = ['sent','viewed','partial'].includes(inv.status) && new Date(inv.dueAt) < new Date();
+            const overdue = isOverdue(inv);
             const days = overdue ? daysOverdue(inv.dueAt) : 0;
+            const balance = balanceOf(inv);
+            const partlyPaid = balance > 0 && (inv.amountPaid || 0) > 0;
             return (
               <div key={inv._id} className={`invoice-card card ${overdue?'overdue-card':''}`}>
                 <div className="invoice-header" onClick={()=>setExpanded(expanded===inv._id?null:inv._id)}>
@@ -465,7 +523,10 @@ export default function Invoices() {
                     <span><RiCalendarLine /> Due: {fmt(inv.dueAt)}</span>
                     {overdue && <span className="overdue-tag"><RiAlertLine /> {days}d overdue</span>}
                   </div>
-                  <div className="invoice-amount">{fmtMoney(inv.total, inv.currency)}</div>
+                  <div className="invoice-amount">
+                    {fmtMoney(inv.total, inv.currency)}
+                    {partlyPaid && <span className="inv-balance">{fmtMoney(balance, inv.currency)} left</span>}
+                  </div>
                   <div className="invoice-actions" onClick={e=>e.stopPropagation()}>
                     <select className="status-select" value={inv.status}
                       onChange={e=>handleStatusChange(inv._id,e.target.value)}>
@@ -474,6 +535,17 @@ export default function Invoices() {
                       ))}
                     </select>
                     <span className={`badge badge-${STATUS_COLORS[inv.status]||'neutral'}`}>{inv.status}</span>
+                    {balance > 0 && inv.status !== 'cancelled' && (
+                      <>
+                        <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setPaymentFor(inv)} title="Record a payment received">
+                          <RiHandCoinLine />
+                        </button>
+                        <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleCopyPayLink(inv)} disabled={linkId===inv._id}
+                          title="Copy the customer's payment link">
+                          {linkId===inv._id ? <RiLoader4Line className="spin" /> : <RiLinkM />}
+                        </button>
+                      </>
+                    )}
                     <button className="btn btn-ghost btn-icon btn-sm"
                       onClick={()=>handleDraftReminder(inv)} disabled={draftingReminder===inv._id} title="AI Draft Reminder">
                       {draftingReminder===inv._id ? <RiLoader4Line className="spin" /> : <RiRobot2Line />}
@@ -541,6 +613,39 @@ export default function Invoices() {
 
                     {inv.notes && <p className="inv-notes">{inv.notes}</p>}
 
+                    {/* Payments received */}
+                    {(inv.payments?.length > 0 || partlyPaid) && (
+                      <div className="inv-payments">
+                        <h4>Payments</h4>
+                        {(inv.payments || []).map((p, i) => (
+                          <div key={p._id || i} className="inv-payment-row">
+                            <span>{fmt(p.paidAt)} · {PAYMENT_METHOD_LABELS[p.method] || p.method}{p.note && p.method !== 'marked_paid' ? ` · ${p.note}` : ''}</span>
+                            <strong>{fmtMoney(p.amount, inv.currency)}</strong>
+                          </div>
+                        ))}
+                        <div className="inv-payment-row total">
+                          <span>{balance > 0 ? 'Balance due' : 'Fully paid'}</span>
+                          <strong>{fmtMoney(balance > 0 ? balance : inv.total, inv.currency)}</strong>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Automatic overdue reminders */}
+                    {balance > 0 && !['draft', 'cancelled'].includes(inv.status) && (
+                      <div className="inv-auto-reminders">
+                        <span>
+                          {!autoRemindersOn ? 'Automatic reminders are off for your business.'
+                            : inv.remindersPaused ? 'Automatic reminders are paused for this invoice.'
+                              : `Automatic reminders: ${Math.min(autoRemindersSent(inv), AUTO_REMINDER_STEPS)} of ${AUTO_REMINDER_STEPS} sent${autoRemindersSent(inv) >= AUTO_REMINDER_STEPS ? ' (finished)' : ' — at 1, 3, 7 and 14 days overdue'}.`}
+                        </span>
+                        {autoRemindersOn && (
+                          <button className="btn btn-ghost btn-sm" onClick={() => handleToggleInvoiceReminders(inv)}>
+                            {inv.remindersPaused ? <><RiPlayLine /> Resume</> : <><RiPauseLine /> Pause for this invoice</>}
+                          </button>
+                        )}
+                      </div>
+                    )}
+
                     {/* AI Reminder */}
                     {inv.ai?.reminderDraft && (
                       <AIDraftEditor
@@ -576,7 +681,80 @@ export default function Invoices() {
       )}
       </>
       )}
+
+      {paymentFor && (
+        <RecordPaymentModal
+          invoice={paymentFor}
+          balance={balanceOf(paymentFor)}
+          fmtMoney={fmtMoney}
+          onClose={() => setPaymentFor(null)}
+          onSaved={(updated) => { setInvoices(prev => prev.map(i => i._id === updated._id ? updated : i)); setPaymentFor(null); }}
+        />
+      )}
     </div>
+  );
+}
+
+// Money received outside Paystack: a transfer, cash or POS. A part-payment
+// leaves the invoice "Partial" with the rest still chased.
+function RecordPaymentModal({ invoice, balance, fmtMoney, onClose, onSaved }) {
+  const [form, setForm] = useState({ amount: balance, method: 'bank_transfer', paidAt: new Date().toISOString().slice(0, 10), note: '' });
+  const [busy, setBusy] = useState(false);
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const { data } = await invoiceService.recordPayment(invoice._id, { ...form, amount: Number(form.amount) });
+      toast.success(data.data.status === 'paid' ? `${invoice.invoiceNumber} is now fully paid` : `Payment recorded. ${fmtMoney(balanceOf(data.data), invoice.currency)} still due`);
+      onSaved(data.data);
+    } catch (err) { toast.error(err.response?.data?.message || 'Could not record the payment'); }
+    finally { setBusy(false); }
+  }
+
+  // Portalled: the page's fade-in transform would otherwise trap the fixed
+  // overlay inside the content area instead of covering the screen.
+  return createPortal(
+    <div className="modal-overlay" onClick={onClose}>
+      <form className="modal" style={{ maxWidth: 440 }} onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+        <div className="modal-header">
+          <h2>Record payment · {invoice.invoiceNumber}</h2>
+          <button type="button" className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Close">×</button>
+        </div>
+        <div className="modal-body">
+          <p className="cell-sub" style={{ marginTop: 0, marginBottom: 14 }}>{fmtMoney(balance, invoice.currency)} is still due from {invoice.customer?.name}.</p>
+          <div className="form-group">
+            <label className="form-label">Amount received</label>
+            <input className="form-input" type="number" min="0.01" step="0.01" max={balance} required autoFocus value={form.amount} onChange={(e) => set('amount', e.target.value)} />
+          </div>
+          <div className="form-grid-2">
+            <div className="form-group">
+              <label className="form-label">Paid by</label>
+              <select className="form-input form-select" value={form.method} onChange={(e) => set('method', e.target.value)}>
+                <option value="bank_transfer">Bank transfer</option>
+                <option value="cash">Cash</option>
+                <option value="pos">POS</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Date received</label>
+              <input className="form-input" type="date" required max={new Date().toISOString().slice(0, 10)} value={form.paidAt} onChange={(e) => set('paidAt', e.target.value)} />
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Note <span className="form-hint">(optional, e.g. the transfer reference)</span></label>
+            <input className="form-input" maxLength={300} value={form.note} onChange={(e) => set('note', e.target.value)} />
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" disabled={busy}>{busy ? 'Saving…' : 'Record payment'}</button>
+        </div>
+      </form>
+    </div>,
+    document.body,
   );
 }
 

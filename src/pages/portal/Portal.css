@@ -156,6 +156,12 @@
   padding: 6px 11px; cursor: pointer; font-family: inherit;
 }
 .pt-dl:hover { background: #e0e7ff; }
+.pt-pay {
+  display: inline-flex; align-items: center; margin-right: 8px; font-size: 12.5px; font-weight: 700;
+  color: #fff; background: #0e2a22; border-radius: 8px; padding: 6px 11px; text-decoration: none;
+}
+.pt-pay:hover { background: #16392e; }
+.pt-table .pt-sub { font-size: 12px; color: var(--pt-ink-mute); }
 
 .pt-appts { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; padding: 16px; }
 .pt-appt {

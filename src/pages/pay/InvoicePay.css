@@ -1,0 +1,63 @@
+/* Public invoice pay page — standalone, theme-independent. */
+.ip-page {
+  --ip-ink: #13231e; --ip-soft: #52625b; --ip-line: #e4ddd0; --ip-bg: #f5f0e8; --ip-brand: #0e2a22; --ip-amber: #f2a93b;
+  min-height: 100vh; background: var(--ip-bg); color: var(--ip-ink);
+  font-family: 'DM Sans', 'Inter', system-ui, sans-serif; display: flex; flex-direction: column;
+}
+.ip-page *, .ip-page *::before, .ip-page *::after { box-sizing: border-box; }
+.ip-top { display: flex; align-items: center; gap: 12px; padding: 18px 16px; max-width: 640px; width: 100%; margin: 0 auto; }
+.ip-logo { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; background: #fff; }
+.ip-biz { font-size: 17px; font-weight: 700; }
+.ip-main { flex: 1; max-width: 640px; width: 100%; margin: 0 auto; padding: 0 16px 32px; display: flex; flex-direction: column; gap: 12px; }
+.ip-card { background: #fff; border: 1px solid var(--ip-line); border-radius: 18px; padding: 22px; box-shadow: 0 12px 30px -22px rgba(14, 42, 34, 0.35); }
+.ip-center { text-align: center; padding: 48px 22px; }
+.ip-big { font-size: 40px; color: var(--ip-soft); }
+.ip-big.warn { color: #b45309; }
+.ip-card h1 { margin: 2px 0 4px; font-size: 22px; letter-spacing: -0.01em; }
+.ip-muted { color: var(--ip-soft); font-size: 14px; margin: 0; }
+.ip-small { font-size: 12.5px; }
+.ip-eyebrow { font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ip-soft); }
+.ip-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.ip-status { flex-shrink: 0; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: #e8efe9; color: #1f5f45; }
+.ip-status.paid { background: #d1fae5; color: #065f46; }
+.ip-status.overdue { background: #fee2e2; color: #991b1b; }
+.ip-amount { margin: 20px 0; padding: 16px 18px; border-radius: 14px; background: var(--ip-bg); display: flex; flex-direction: column; gap: 2px; }
+.ip-amount span { font-size: 13px; color: var(--ip-soft); }
+.ip-amount strong { font-size: 30px; letter-spacing: -0.02em; }
+.ip-amount small { font-size: 13px; color: var(--ip-soft); }
+.ip-pay { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.ip-pay label { font-size: 13px; font-weight: 600; }
+.ip-pay input { height: 46px; border: 1px solid var(--ip-line); border-radius: 10px; padding: 0 12px; font-size: 15px; font-family: inherit; }
+.ip-pay input:focus { outline: 2px solid var(--ip-amber); outline-offset: 1px; }
+.ip-btn {
+  height: 52px; border: 0; border-radius: 12px; background: var(--ip-brand); color: #fff; font-size: 16px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font-family: inherit;
+}
+.ip-btn:hover:not(:disabled) { background: #16392e; }
+.ip-btn:disabled { opacity: 0.7; cursor: wait; }
+.ip-bank { border: 1px solid var(--ip-line); border-radius: 14px; padding: 14px 16px; margin-bottom: 18px; display: flex; flex-direction: column; gap: 8px; }
+.ip-bank-title { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; }
+.ip-row { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.ip-row span { color: var(--ip-soft); }
+.ip-row strong { display: inline-flex; align-items: center; gap: 6px; text-align: right; word-break: break-word; }
+.ip-copy { border: 0; background: none; color: var(--ip-soft); cursor: pointer; font-size: 13px; padding: 2px; display: inline-flex; }
+.ip-copy:hover { color: var(--ip-ink); }
+.ip-items { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ip-items th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ip-soft); padding: 8px 0; border-bottom: 1px solid var(--ip-line); }
+.ip-items td { padding: 10px 0; border-bottom: 1px solid #f1ece3; vertical-align: top; }
+.ip-items .num { text-align: right; padding-left: 12px; white-space: nowrap; }
+.ip-items tfoot td { border-bottom: 0; color: var(--ip-soft); }
+.ip-items tfoot .grand td { color: var(--ip-ink); font-weight: 800; font-size: 15px; border-top: 2px solid var(--ip-line); }
+.ip-notes { margin: 14px 0 0; padding: 12px; background: var(--ip-bg); border-radius: 10px; font-size: 13.5px; color: var(--ip-soft); white-space: pre-wrap; }
+.ip-banner > svg { flex-shrink: 0; font-size: 18px; margin-top: 1px; }
+.ip-banner { display: flex; align-items: flex-start; gap: 8px; padding: 12px 14px; border-radius: 12px; background: #fff; border: 1px solid var(--ip-line); font-size: 14px; }
+.ip-banner.ok { background: #d1fae5; border-color: #a7f3d0; color: #065f46; font-weight: 600; }
+.ip-banner.bad { background: #fef3c7; border-color: #fde68a; color: #92400e; }
+.ip-link { border: 0; background: none; color: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; font-family: inherit; font-size: 14px; padding: 0; }
+.ip-foot { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 18px; font-size: 12px; color: var(--ip-soft); }
+.ip-page .spin { animation: ip-spin 1s linear infinite; }
+@keyframes ip-spin { to { transform: rotate(360deg); } }
+@media (max-width: 480px) {
+  .ip-card { padding: 18px 16px; }
+  .ip-amount strong { font-size: 26px; }
+}
