@@ -8,7 +8,7 @@ import {
   RiTeamLine, RiSettings4Line, RiMenuFoldLine, RiMenuUnfoldLine,
   RiShoppingBagLine, RiVideoLine, RiMegaphoneLine,
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
-  RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiUserStarLine, RiStoreLine,
+  RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiShoppingCart2Line, RiUserStarLine, RiStoreLine,
   RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine, RiGovernmentLine, RiBankCardLine, RiGiftLine,
   RiGroupLine, RiScales3Line, RiCalendarEventLine, RiGraduationCapLine, RiUserAddLine,
   RiCalendarCheckLine, RiFileList3Line, RiBook2Line, RiTimeLine, RiUserSettingsLine, RiPieChartLine,
@@ -25,6 +25,7 @@ import './Sidebar.css';
 const NAV_ITEMS = [
   { label: 'Overview', icon: RiDashboardLine, path: '/dashboard' },
   { label: 'Business Agent', icon: RiSparkling2Line, path: '/assistant', roles: ['company_owner', 'manager', 'employee', 'super_admin'] },
+  { label: 'Quick Sale', icon: RiShoppingCart2Line, path: '/pos', roles: ['company_owner', 'manager', 'employee', 'super_admin'] },
   { label: 'AI Assistant', icon: RiRobot2Line, path: '/chat' },
   { label: 'Knowledge', icon: RiBookOpenLine, path: '/knowledge' },
   { label: 'AI Agents', icon: RiRobot2Line, path: '/agents' },

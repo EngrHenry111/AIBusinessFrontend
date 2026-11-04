@@ -66,6 +66,7 @@ const AuditLog = lazy(() => import('./pages/settings/AuditLog'));
 const Reports = lazy(() => import('./pages/reports/Reports'));
 const Agents = lazy(() => import('./pages/agents/Agents'));
 const Assistant = lazy(() => import('./pages/assistant/Assistant'));
+const QuickSale = lazy(() => import('./pages/pos/QuickSale'));
 const WhatsApp = lazy(() => import('./pages/whatsapp/WhatsApp'));
 const WidgetInbox = lazy(() => import('./pages/widget/WidgetInbox'));
 const WidgetSettings = lazy(() => import('./pages/widget/WidgetSettings'));
@@ -247,6 +248,7 @@ function AppRoutes() {
                 <Route path="knowledge" element={<Knowledge />} />
                 <Route path="agents" element={<Agents />} />
                 <Route path="assistant" element={<Assistant />} />
+                <Route path="pos" element={<QuickSale />} />
                 <Route path="leads" element={<Leads />} />
                 <Route path="leads/:id" element={<LeadDetail />} />
                 <Route path="meetings" element={<Meetings />} />

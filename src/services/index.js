@@ -484,6 +484,15 @@ export const assistantService = {
   reject: (id, actionId) => api.post(`/assistant/conversations/${id}/actions/${actionId}/reject`),
 };
 
+// ─── Quick Sale (selling at the counter) ─────────────────────────────────────
+export const posService = {
+  products: () => api.get('/pos/products'),
+  sell: (data) => api.post('/pos/sales', data),
+  sales: (params) => api.get('/pos/sales', { params }),
+  sale: (id) => api.get(`/pos/sales/${id}`),
+  voidSale: (id, reason) => api.post(`/pos/sales/${id}/void`, { reason }),
+};
+
 // ─── Agents ───────────────────────────────────────────────────────────────────
 export const agentService = {
   getAll: () => api.get('/agents'),
