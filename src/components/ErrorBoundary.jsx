@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import { isStaleBuildError, reloadForNewBuild } from '../utils/staleBuild';
 
 export default class ErrorBoundary extends Component {
   constructor(props) {
@@ -7,16 +8,27 @@ export default class ErrorBoundary extends Component {
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true, error };
+    return { hasError: true, error, reloading: isStaleBuildError(error) };
   }
 
   componentDidCatch(error, info) {
+    // An old tab trying to open a page from before the last deploy: reload
+    // onto the new version instead of showing an error.
+    if (isStaleBuildError(error) && reloadForNewBuild()) return;
+    if (this.state.reloading) this.setState({ reloading: false });
     // eslint-disable-next-line no-console
     console.error('ErrorBoundary caught:', error, info?.componentStack);
   }
 
   render() {
     if (!this.state.hasError) return this.props.children;
+    if (this.state.reloading) {
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', system-ui, sans-serif", color: '#64748b', fontSize: 14 }}>
+          Updating to the latest version…
+        </div>
+      );
+    }
 
     return (
       <div style={{
