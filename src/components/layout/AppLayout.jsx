@@ -95,11 +95,13 @@ export default function AppLayout({ children }) {
 
 // Inline expired component to avoid circular imports
 function SubscriptionExpiredInline() {
-  const { company, logout } = useAuth();
+  const { company, logout, trialEndsAt } = useAuth();
   const navigate = useNavigate_();
   const plan = company?.subscription?.plan || 'plan';
-  const endDate = company?.subscription?.currentPeriodEnd
-    ? new Date(company.subscription.currentPeriodEnd).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  const trialOver = (company?.subscription?.plan || 'trial') === 'trial';
+  const ended = trialOver ? trialEndsAt : company?.subscription?.currentPeriodEnd;
+  const endDate = ended
+    ? new Date(ended).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
     : 'recently';
 
   return (
@@ -110,9 +112,11 @@ function SubscriptionExpiredInline() {
         boxShadow:'var(--shadow-xl)'
       }}>
         <div style={{ width:72, height:72, borderRadius:'50%', background:'#fee2e2', color:'#dc2626', display:'flex', alignItems:'center', justifyContent:'center', fontSize:32, margin:'0 auto 20px' }}>⚠️</div>
-        <h1 style={{ fontSize:24, fontWeight:800, marginBottom:8 }}>Your Subscription Has Expired</h1>
+        <h1 style={{ fontSize:24, fontWeight:800, marginBottom:8 }}>{trialOver ? 'Your Free Trial Has Ended' : 'Your Subscription Has Expired'}</h1>
         <p style={{ color:'var(--text-muted)', marginBottom:20 }}>
-          Your <strong>{plan}</strong> plan ended on <strong>{endDate}</strong>
+          {trialOver
+            ? <>Your 14-day free trial ended on <strong>{endDate}</strong>. Choose a plan to keep using BizlyAI.</>
+            : <>Your <strong>{plan}</strong> plan ended on <strong>{endDate}</strong></>}
         </p>
         <div style={{ background:'#f0fdf4', border:'1px solid #86efac', borderRadius:10, padding:'12px 16px', marginBottom:20, fontSize:13, color:'#166534', display:'flex', alignItems:'center', gap:8 }}>
           🛡️ Your data is completely safe and will be restored immediately after payment
@@ -120,7 +124,7 @@ function SubscriptionExpiredInline() {
         <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:24 }}>
           <button className="btn btn-primary" style={{ padding:'14px', fontSize:15, justifyContent:'center' }}
             onClick={() => navigate('/billing')}>
-            💳 Renew Subscription →
+            💳 {trialOver ? 'Choose a Plan' : 'Renew Subscription'} →
           </button>
           <a href="mailto:henryengrakpan@gmail.com?subject=Subscription Help"
             className="btn btn-secondary" style={{ justifyContent:'center' }}>

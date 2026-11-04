@@ -41,7 +41,7 @@ function ApprovalProgress({ chain, currentApprovalLevel }) {
 
 export default function Procurement() {
   const navigate = useNavigate();
-  const { company } = useAuth();
+  const { company, subscriptionState } = useAuth();
   const [tab, setTab] = useState('requisitions');
   const [requisitions, setRequisitions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,7 +77,7 @@ export default function Procurement() {
 
   const departments = useMemo(() => [...new Set(requisitions.map((r) => r.department).filter(Boolean))], [requisitions]);
 
-  if (company && company.subscription?.plan !== 'business' && company.role !== 'super_admin') {
+  if (company && company.subscription?.plan !== 'business' && subscriptionState !== 'trial' && company.role !== 'super_admin') {
     return (
       <div className="procurement-page fade-in">
         <div className="upgrade-card card card-pad">

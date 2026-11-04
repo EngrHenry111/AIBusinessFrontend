@@ -5,11 +5,36 @@ import { RiAlertLine, RiCloseLine, RiArrowRightLine } from 'react-icons/ri';
 import './GracePeriodBanner.css';
 
 export default function GracePeriodBanner() {
-  const { subscriptionState, graceDays, company } = useAuth();
+  const { subscriptionState, graceDays, company, trialDaysLeft, trialEndsAt } = useAuth();
   const navigate = useNavigate();
   const [dismissed, setDismissed] = useState(false);
 
   if (dismissed) return null;
+  // Last week of the free trial: a countdown, so it never ends by surprise.
+  if (subscriptionState === 'trial' && trialDaysLeft > 0 && trialDaysLeft <= 7) {
+    const until = trialEndsAt ? new Date(trialEndsAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+    return (
+      <div className={`grace-banner ${trialDaysLeft <= 2 ? 'urgent' : 'warning'}`}>
+        <div className="grace-banner-inner">
+          <div className="grace-banner-left">
+            <RiAlertLine className="grace-icon" />
+            <div className="grace-text">
+              <strong>{trialDaysLeft === 1 ? 'Last day of your free trial. ' : `${trialDaysLeft} days left in your free trial. `}</strong>
+              <span>Every feature is unlocked until {until}. Choose a plan to keep using BizlyAI after that.</span>
+            </div>
+          </div>
+          <div className="grace-banner-right">
+            <button className="grace-renew-btn" onClick={() => navigate('/billing')}>
+              Choose a plan <RiArrowRightLine />
+            </button>
+            <button className="grace-dismiss" onClick={() => setDismissed(true)} title="Dismiss">
+              <RiCloseLine />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (subscriptionState !== 'grace') return null;
 
   const plan = company?.subscription?.plan || 'plan';

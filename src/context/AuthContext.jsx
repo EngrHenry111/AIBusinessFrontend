@@ -11,6 +11,8 @@ const initialState = {
   error: null,
   subscriptionState: 'active', // active | grace | expired | suspended | trial
   graceDays: null,
+  trialEndsAt: null, // free trial only: when it ends, and whole days left
+  trialDaysLeft: null,
 };
 
 // Normalise the user: OAuth accounts and users predating email verification
@@ -26,7 +28,7 @@ function authReducer(state, action) {
     case 'AUTH_START':
       return { ...state, isLoading: true, error: null };
     case 'AUTH_SUCCESS':
-      return { ...state, isLoading: false, isAuthenticated: true, user: normalizeUser(action.payload.user), company: action.payload.company, subscriptionState: action.payload.subscriptionState || 'active', graceDays: action.payload.graceDays || null, error: null };
+      return { ...state, isLoading: false, isAuthenticated: true, user: normalizeUser(action.payload.user), company: action.payload.company, subscriptionState: action.payload.subscriptionState || 'active', graceDays: action.payload.graceDays || null, trialEndsAt: action.payload.trialEndsAt || null, trialDaysLeft: action.payload.trialDaysLeft ?? null, error: null };
     case 'AUTH_FAILURE':
       return { ...state, isLoading: false, isAuthenticated: false, user: null, company: null, error: action.payload };
     case 'LOGOUT':
@@ -53,7 +55,7 @@ export function AuthProvider({ children }) {
     const init = async () => {
       try {
         const { data } = await authService.getMe();
-        dispatch({ type: 'AUTH_SUCCESS', payload: { user: data.user, company: data.company, subscriptionState: data.subscriptionState, graceDays: data.graceDays } });
+        dispatch({ type: 'AUTH_SUCCESS', payload: { user: data.user, company: data.company, subscriptionState: data.subscriptionState, graceDays: data.graceDays, trialEndsAt: data.trialEndsAt, trialDaysLeft: data.trialDaysLeft } });
       } catch {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
@@ -71,7 +73,7 @@ export function AuthProvider({ children }) {
         return data;
       }
       try { sessionStorage.removeItem('evb_dismissed'); } catch { /* ignore */ }
-      dispatch({ type: 'AUTH_SUCCESS', payload: { user: data.user, company: data.company, subscriptionState: data.subscriptionState, graceDays: data.graceDays } });
+      dispatch({ type: 'AUTH_SUCCESS', payload: { user: data.user, company: data.company, subscriptionState: data.subscriptionState, graceDays: data.graceDays, trialEndsAt: data.trialEndsAt, trialDaysLeft: data.trialDaysLeft } });
       return data;
     } catch (err) {
       const message = err.response?.data?.message || 'Login failed. Please try again.';
@@ -84,7 +86,7 @@ export function AuthProvider({ children }) {
     dispatch({ type: 'AUTH_START' });
     try {
       const { data } = await authService.register(formData);
-      dispatch({ type: 'AUTH_SUCCESS', payload: { user: data.user, company: data.company, subscriptionState: data.subscriptionState, graceDays: data.graceDays } });
+      dispatch({ type: 'AUTH_SUCCESS', payload: { user: data.user, company: data.company, subscriptionState: data.subscriptionState, graceDays: data.graceDays, trialEndsAt: data.trialEndsAt, trialDaysLeft: data.trialDaysLeft } });
       return data;
     } catch (err) {
       const message = err.response?.data?.message || 'Registration failed.';
@@ -118,6 +120,8 @@ export function AuthProvider({ children }) {
         company: data.company,
         subscriptionState: data.subscriptionState,
         graceDays: data.graceDays,
+        trialEndsAt: data.trialEndsAt,
+        trialDaysLeft: data.trialDaysLeft,
       },
     });
   }, []);

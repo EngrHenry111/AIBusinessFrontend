@@ -46,7 +46,7 @@ const STATUS_BADGE = {
 };
 
 export default function Billing() {
-  const { company, user } = useAuth();
+  const { company, user, trialEndsAt, trialDaysLeft } = useAuth();
   const userIsOwner = ['company_owner', 'super_admin'].includes(user?.role);
   const [searchParams] = useSearchParams();
   const [plans, setPlans] = useState([]);
@@ -206,7 +206,12 @@ export default function Billing() {
         </div>
         <div className="cp-right">
           {currentPlan === 'trial' && (
-            <div className="trial-notice"><RiAlertLine /> Free trial — subscribe to unlock all features</div>
+            <div className="trial-notice">
+              <RiAlertLine />{' '}
+              {trialDaysLeft > 0
+                ? `Free trial: every feature is unlocked for ${trialDaysLeft} more day${trialDaysLeft === 1 ? '' : 's'}${trialEndsAt ? ` (until ${fmtDate(trialEndsAt)})` : ''}. Choose a plan to keep going after that.`
+                : 'Your free trial has ended. Choose a plan to keep using BizlyAI.'}
+            </div>
           )}
           {isPaidPlan && status === 'active' && paysByTransfer && userIsOwner && (
             <button className="btn btn-primary" onClick={() => handleSubscribe(currentPlan, 'transfer')} disabled={paying === currentPlan}>

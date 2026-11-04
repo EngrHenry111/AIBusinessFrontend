@@ -121,7 +121,7 @@ function sectionForPath(sections, pathname) {
 }
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
-  const { user, company, logout } = useAuth();
+  const { user, company, logout, subscriptionState } = useAuth();
   const schoolMe = useSchoolMe(company?.industry === 'education');
   const hospitalMe = useHospitalMe(company?.industry === 'healthcare');
   const location = useLocation();
@@ -237,7 +237,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     return () => { alive = false; clearInterval(iv); };
   }, []);
 
-  const isBusinessPlan = company?.subscription?.plan === 'business';
+  // The free trial unlocks Business-plan features too, until it ends.
+  const isBusinessPlan = company?.subscription?.plan === 'business' || subscriptionState === 'trial';
 
   // Poll for procurement requisitions awaiting approval (Business plan only)
   useEffect(() => {

@@ -76,10 +76,11 @@ export default function Terms() {
         <section className="legal-section">
           <h2>4. Free Trial</h2>
           <p>
-            New workspaces start on a free trial with usage limits (for example on team members,
-            documents and AI questions). No payment details are needed for the trial. We may change the
-            trial’s limits or length, or end the free trial, by giving notice in the Service or by email.
-            Moving to a paid plan is your choice; nothing is charged unless you subscribe.
+            New workspaces start on a 14-day free trial with access to all features. No payment details
+            are needed for the trial. When it ends, the workspace is paused until you choose a plan; your
+            data is kept and comes back as soon as you subscribe. We may change the trial’s length or
+            features, or end the free trial, by giving notice in the Service or by email. Moving to a paid
+            plan is your choice; nothing is charged unless you subscribe.
           </p>
         </section>
 
