@@ -1,5 +1,6 @@
 // One list for sign-up and Settings. The values are stored on the company:
-// "legal" turns on Legal Practice and "education" turns on School in the sidebar.
+// "legal" turns on Legal Practice, "education" School, "healthcare" Hospital,
+// "laundry" Laundry and "cleaning" Cleaning Jobs in the sidebar.
 export const INDUSTRIES = [
   { value: 'technology', label: 'Technology' },
   { value: 'finance', label: 'Finance & Banking' },
@@ -12,6 +13,8 @@ export const INDUSTRIES = [
   { value: 'government', label: 'Government' },
   { value: 'logistics', label: 'Logistics' },
   { value: 'agriculture', label: 'Agriculture' },
+  { value: 'laundry', label: 'Laundry & Dry Cleaning' },
+  { value: 'cleaning', label: 'Cleaning Services (homes & offices)' },
   { value: 'other', label: 'Other' },
 ];
 
@@ -29,5 +32,7 @@ export const INDUSTRY_TOOLS = {
   education: ['/invoices', '/expenses', '/payroll', '/procurement', '/contracts', '/meetings', '/social', '/reports'],
   government: ['/procurement', '/contracts', '/expenses', '/payroll', '/meetings', '/invoices', '/reports'],
   logistics: ['/orders', '/customers', '/invoices', '/contracts', '/expenses', '/payroll', '/procurement', '/leads', '/reports'],
+  laundry: ['/customers', '/invoices', '/loyalty', '/expenses', '/payroll', '/social', '/reports'],
+  cleaning: ['/customers', '/leads', '/invoices', '/contracts', '/expenses', '/payroll', '/social', '/reports'],
   agriculture: ['/products', '/orders', '/customers', '/group-buys', '/invoices', '/expenses', '/payroll', '/procurement', '/contracts', '/reports'],
 };

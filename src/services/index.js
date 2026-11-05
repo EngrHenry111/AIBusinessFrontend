@@ -493,6 +493,37 @@ export const posService = {
   voidSale: (id, reason) => api.post(`/pos/sales/${id}/void`, { reason }),
 };
 
+// ─── Laundry & dry cleaning ──────────────────────────────────────────────────
+export const laundryService = {
+  settings: () => api.get('/laundry/settings'),
+  saveSettings: (data) => api.put('/laundry/settings', data),
+  findCustomer: (phone) => api.get('/laundry/customers', { params: { phone } }),
+  list: (params) => api.get('/laundry/orders', { params }),
+  create: (data) => api.post('/laundry/orders', data),
+  get: (id) => api.get(`/laundry/orders/${id}`),
+  update: (id, data) => api.put(`/laundry/orders/${id}`, data),
+  setStatus: (id, status, allowBalance) => api.post(`/laundry/orders/${id}/status`, { status, allowBalance }),
+  pay: (id, data) => api.post(`/laundry/orders/${id}/payments`, data),
+  notify: (id) => api.post(`/laundry/orders/${id}/notify`),
+  cancel: (id, reason) => api.post(`/laundry/orders/${id}/cancel`, { reason }),
+};
+
+// ─── Cleaning services ───────────────────────────────────────────────────────
+export const cleaningService = {
+  settings: () => api.get('/cleaning/settings'),
+  saveSettings: (data) => api.put('/cleaning/settings', data),
+  team: () => api.get('/cleaning/team'),
+  list: (params) => api.get('/cleaning/jobs', { params }),
+  create: (data) => api.post('/cleaning/jobs', data),
+  get: (id) => api.get(`/cleaning/jobs/${id}`),
+  update: (id, data) => api.put(`/cleaning/jobs/${id}`, data),
+  setStatus: (id, status) => api.post(`/cleaning/jobs/${id}/status`, { status }),
+  toggleTask: (id, index, done) => api.post(`/cleaning/jobs/${id}/checklist/${index}`, { done }),
+  addPhotos: (id, formData) => api.post(`/cleaning/jobs/${id}/photos`, formData, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 120000 }),
+  pay: (id, data) => api.post(`/cleaning/jobs/${id}/payments`, data),
+  cancel: (id, reason, stopSeries) => api.post(`/cleaning/jobs/${id}/cancel`, { reason, stopSeries }),
+};
+
 // ─── Agents ───────────────────────────────────────────────────────────────────
 export const agentService = {
   getAll: () => api.get('/agents'),

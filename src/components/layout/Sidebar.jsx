@@ -13,7 +13,7 @@ import {
   RiGroupLine, RiScales3Line, RiCalendarEventLine, RiGraduationCapLine, RiUserAddLine,
   RiCalendarCheckLine, RiFileList3Line, RiBook2Line, RiTimeLine, RiUserSettingsLine, RiPieChartLine,
   RiBuilding2Line, RiRadarLine, RiFileCheckLine, RiClipboardLine, RiArchiveLine, RiHandCoinLine, RiLineChartLine, RiBankCard2Line,
-  RiArrowDownSLine, RiMoreLine, RiHospitalLine, RiSparkling2Line, RiUserHeartLine, RiListOrdered, RiTestTubeLine, RiCapsuleLine, RiHotelBedLine,
+  RiArrowDownSLine, RiMoreLine, RiHospitalLine, RiShirtLine, RiPriceTag3Line, RiBrushLine, RiCalendarScheduleLine, RiAddCircleLine, RiListSettingsLine, RiSparkling2Line, RiUserHeartLine, RiListOrdered, RiTestTubeLine, RiCapsuleLine, RiHotelBedLine,
 } from 'react-icons/ri';
 import useSchoolMe from '../../pages/school/useSchoolMe';
 import useHospitalMe from '../../pages/hospital/useHospitalMe';
@@ -39,6 +39,16 @@ const NAV_ITEMS = [
   { label: 'POS Settlement', icon: RiBankCard2Line, path: '/group/pos', enterprise: true },
   { label: 'Profit', icon: RiLineChartLine, path: '/group/profit', roles: ['company_owner', 'super_admin'], enterprise: true },
   { label: 'Branches', icon: RiBuilding2Line, path: '/group/branches', roles: ['company_owner', 'super_admin'], enterprise: true },
+  // Laundry & dry cleaning — shown to companies whose industry is "laundry".
+  { type: 'divider', label: 'Laundry', laundryOnly: true },
+  { label: 'Laundry Board', icon: RiShirtLine, path: '/laundry', laundryOnly: true },
+  { label: 'New Ticket', icon: RiAddCircleLine, path: '/laundry/new', laundryOnly: true },
+  { label: 'Price List', icon: RiPriceTag3Line, path: '/laundry/prices', laundryOnly: true },
+  // Cleaning services — shown to companies whose industry is "cleaning".
+  { type: 'divider', label: 'Cleaning', cleaningOnly: true },
+  { label: 'Cleaning Schedule', icon: RiCalendarScheduleLine, path: '/cleaning', cleaningOnly: true },
+  { label: 'Book a Clean', icon: RiBrushLine, path: '/cleaning/new', cleaningOnly: true, roles: ['company_owner', 'manager', 'super_admin'] },
+  { label: 'Services & Prices', icon: RiListSettingsLine, path: '/cleaning/services', cleaningOnly: true, roles: ['company_owner', 'manager', 'super_admin'] },
   // Legal practice — shown to companies whose industry is "legal".
   { type: 'divider', label: 'Legal Practice', legalOnly: true },
   { label: 'Matters', icon: RiScales3Line, path: '/matters', legalOnly: true },
@@ -287,6 +297,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     if (item.schoolRoles && schoolMe && !item.schoolRoles.includes(schoolMe.role)) return false;
     if (item.schoolManagerOnly && schoolMe && !schoolMe.manager) return false;
     if (item.healthOnly && company?.industry !== 'healthcare') return false;
+    if (item.laundryOnly && company?.industry !== 'laundry') return false;
+    if (item.cleaningOnly && company?.industry !== 'cleaning') return false;
     if (item.hospitalRoles && hospitalMe && hospitalMe.role !== 'admin' && !item.hospitalRoles.includes(hospitalMe.role)) return false;
     if (item.hospitalManagerOnly && hospitalMe && !hospitalMe.manager) return false;
     return true;

@@ -11,7 +11,9 @@ import './ReferralFab.css';
 // Hidden on pages whose own controls sit at the bottom of the screen (chat
 // composers, the Quick Sale cart), on the Referrals page itself, and for a
 // week after the owner hides it.
-const HIDE_ON = ['/referrals', '/assistant', '/chat', '/messages', '/whatsapp', '/widget-inbox', '/pos'];
+// '/laundry/' and '/cleaning/' (with the slash) are the ticket, job and form
+// pages, whose payment buttons sit bottom-right; the boards keep the button.
+const HIDE_ON = ['/referrals', '/assistant', '/chat', '/messages', '/whatsapp', '/widget-inbox', '/pos', '/laundry/', '/cleaning/'];
 const HIDE_KEY = 'bizly-referral-fab-hidden-until';
 const HIDE_DAYS = 7;
 

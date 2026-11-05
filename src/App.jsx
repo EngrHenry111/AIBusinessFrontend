@@ -67,6 +67,14 @@ const Reports = lazy(() => import('./pages/reports/Reports'));
 const Agents = lazy(() => import('./pages/agents/Agents'));
 const Assistant = lazy(() => import('./pages/assistant/Assistant'));
 const QuickSale = lazy(() => import('./pages/pos/QuickSale'));
+const LaundryBoard = lazy(() => import('./pages/laundry/LaundryBoard'));
+const LaundryNew = lazy(() => import('./pages/laundry/LaundryNew'));
+const LaundryTicket = lazy(() => import('./pages/laundry/LaundryTicket'));
+const LaundryPrices = lazy(() => import('./pages/laundry/LaundryPrices'));
+const CleaningSchedule = lazy(() => import('./pages/cleaning/CleaningSchedule'));
+const CleaningBook = lazy(() => import('./pages/cleaning/CleaningBook'));
+const CleaningJob = lazy(() => import('./pages/cleaning/CleaningJob'));
+const CleaningServices = lazy(() => import('./pages/cleaning/CleaningServices'));
 const WhatsApp = lazy(() => import('./pages/whatsapp/WhatsApp'));
 const WidgetInbox = lazy(() => import('./pages/widget/WidgetInbox'));
 const WidgetSettings = lazy(() => import('./pages/widget/WidgetSettings'));
@@ -249,6 +257,14 @@ function AppRoutes() {
                 <Route path="agents" element={<Agents />} />
                 <Route path="assistant" element={<Assistant />} />
                 <Route path="pos" element={<QuickSale />} />
+                <Route path="laundry" element={<LaundryBoard />} />
+                <Route path="laundry/new" element={<LaundryNew />} />
+                <Route path="laundry/prices" element={<LaundryPrices />} />
+                <Route path="laundry/:id" element={<LaundryTicket />} />
+                <Route path="cleaning" element={<CleaningSchedule />} />
+                <Route path="cleaning/new" element={<CleaningBook />} />
+                <Route path="cleaning/services" element={<CleaningServices />} />
+                <Route path="cleaning/jobs/:id" element={<CleaningJob />} />
                 <Route path="leads" element={<Leads />} />
                 <Route path="leads/:id" element={<LeadDetail />} />
                 <Route path="meetings" element={<Meetings />} />

@@ -75,6 +75,7 @@ export default function ProfitLoss() {
       ['REVENUE', 'Amount'],
       ['Invoice payments', data.revenue.invoices],
       ['Order revenue', data.revenue.orders],
+      ...(data.revenue.services ? [['Laundry & cleaning payments', data.revenue.services]] : []),
       ['Total revenue', data.revenue.total],
       [],
       ['EXPENSES', 'Amount', 'Count'],
@@ -155,6 +156,7 @@ export default function ProfitLoss() {
               <tbody>
                 <tr><td>Invoice payments</td><td className="num">{naira(data.revenue.invoices)}</td><td className="num">{revTotal ? Math.round((data.revenue.invoices / revTotal) * 100) : 0}%</td></tr>
                 <tr><td>Order revenue</td><td className="num">{naira(data.revenue.orders)}</td><td className="num">{revTotal ? Math.round((data.revenue.orders / revTotal) * 100) : 0}%</td></tr>
+                {data.revenue.services > 0 && <tr><td>Laundry & cleaning payments</td><td className="num">{naira(data.revenue.services)}</td><td className="num">{revTotal ? Math.round((data.revenue.services / revTotal) * 100) : 0}%</td></tr>}
               </tbody>
               <tfoot><tr><td>Total</td><td className="num">{naira(data.revenue.total)}</td><td className="num">100%</td></tr></tfoot>
             </table>
