@@ -7,6 +7,7 @@ import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import GracePeriodBanner from '../subscription/GracePeriodBanner';
 import EmailVerificationBanner from '../EmailVerificationBanner';
+import ReferralFab from '../ReferralFab';
 import './AppLayout.css';
 
 // Pages accessible even when subscription is expired
@@ -89,6 +90,7 @@ export default function AppLayout({ children }) {
           {children}
         </div>
       </main>
+      <ReferralFab />
     </div>
   );
 }

@@ -1,0 +1,81 @@
+.rfab {
+  position: fixed;
+  right: calc(20px + env(safe-area-inset-right, 0px));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index: 800; /* under modals and the install prompt */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  font-family: inherit;
+}
+
+.rfab-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 0; border-radius: 999px; padding: 12px 18px 12px 14px; cursor: pointer;
+  background: linear-gradient(135deg, #f59e0b, #ea580c); color: #fff;
+  font-weight: 800; font-size: 14px; letter-spacing: 0.01em;
+  box-shadow: 0 10px 24px -6px rgba(234, 88, 12, 0.55);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  animation: rfab-in 0.4s ease-out both, rfab-nudge 0.9s ease-in-out 1.2s 2;
+}
+.rfab-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 28px -6px rgba(234, 88, 12, 0.6); }
+.rfab-btn:focus-visible { outline: 3px solid #fdba74; outline-offset: 2px; }
+.rfab-btn.open { animation: none; }
+.rfab-gift { font-size: 20px; }
+
+.rfab-panel {
+  position: relative; width: min(340px, calc(100vw - 32px));
+  background: var(--bg-card, #fff); color: var(--text-primary, #0f172a);
+  border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 18px;
+  box-shadow: 0 20px 48px -12px rgba(15, 23, 42, 0.3);
+  animation: rfab-pop 0.18s ease-out;
+}
+.rfab-x {
+  position: absolute; top: 10px; right: 10px; border: 0; background: transparent; cursor: pointer;
+  color: var(--text-muted, #64748b); font-size: 20px; display: flex; padding: 2px;
+}
+.rfab-icon {
+  width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  background: #fff7ed; color: #ea580c; font-size: 22px; margin-bottom: 10px;
+}
+.rfab-panel h3 { margin: 0 0 6px; font-size: 16px; }
+.rfab-panel p { margin: 0 0 12px; font-size: 13px; line-height: 1.5; color: var(--text-secondary, #475569); }
+.rfab-link { display: flex; border: 1px solid var(--border-strong, #cbd5e1); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+.rfab-link input {
+  flex: 1; min-width: 0; border: 0; padding: 9px 10px; font-size: 13px;
+  background: var(--bg-secondary, #f8fafc); color: var(--text-primary, #0f172a);
+}
+.rfab-link button {
+  border: 0; border-left: 1px solid var(--border-strong, #cbd5e1); background: var(--bg-card, #fff);
+  color: var(--color-brand, #6366f1); padding: 0 12px; cursor: pointer; font-size: 16px; display: flex; align-items: center;
+}
+.rfab-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.rfab-actions .btn { flex: 1 1 auto; justify-content: center; font-size: 13px; }
+.rfab-hide {
+  display: block; margin: 12px auto 0; border: 0; background: transparent; cursor: pointer;
+  color: var(--text-muted, #64748b); font-size: 12px; text-decoration: underline;
+}
+
+[data-theme='dark'] .rfab-icon { background: #431407; color: #fdba74; }
+
+@keyframes rfab-in { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: none; } }
+@keyframes rfab-nudge { 0%, 100% { transform: none; } 30% { transform: translateY(-4px) rotate(-2deg); } 60% { transform: translateY(0) rotate(2deg); } }
+@keyframes rfab-pop { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+/* Phones: a round button with just the gift and the percentage */
+@media (max-width: 600px) {
+  .rfab { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  .rfab-btn { padding: 11px 14px 11px 12px; font-size: 13px; }
+}
+
+/* The install prompt spans the bottom of a phone screen: sit above it. */
+@media (max-width: 700px) {
+  body:has(.install-prompt) .rfab { bottom: calc(108px + env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rfab-btn, .rfab-panel { animation: none; }
+}
+
+@media print { .rfab { display: none; } }
