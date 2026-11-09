@@ -779,29 +779,29 @@ export const referralService = {
   withdraw: (data) => api.post('/referrals/withdraw', data),
 };
 
-// ─── WhatsApp ─────────────────────────────────────────────────────────────────
+// ─── Inbox (every customer chat channel) ──────────────────────────────────────
+export const inboxService = {
+  getConversations: (params) => api.get('/inbox/conversations', { params }),
+  getUnclaimedCount: () => api.get('/inbox/unclaimed-count'),
+  getConversation: (id) => api.get(`/inbox/conversations/${id}`),
+  reply: (id, message) => api.post(`/inbox/conversations/${id}/reply`, { message }),
+  takeover: (id) => api.post(`/inbox/conversations/${id}/takeover`),
+  resolve: (id) => api.post(`/inbox/conversations/${id}/resolve`),
+  sendToAI: (id) => api.post(`/inbox/conversations/${id}/send-to-ai`),
+  updateContactNotes: (contactId, notes) => api.patch(`/inbox/contacts/${contactId}/notes`, { notes }),
+};
+
+// ─── WhatsApp (connection only — chats live in the Inbox) ────────────────────
 export const whatsappService = {
   getStatus: () => api.get('/whatsapp/status'),
   initialize: () => api.post('/whatsapp/initialize'),
   disconnect: () => api.post('/whatsapp/disconnect'),
   sendTest: (phone) => api.post('/whatsapp/send-test', { phone }),
-  getConversations: (params) => api.get('/whatsapp/conversations', { params }),
-  getConversation: (id) => api.get(`/whatsapp/conversations/${id}`),
-  sendMessage: (id, message) => api.post(`/whatsapp/conversations/${id}/message`, { message }),
-  takeover: (id) => api.post(`/whatsapp/conversations/${id}/takeover`),
-  resolve: (id) => api.post(`/whatsapp/conversations/${id}/resolve`),
-  sendToAI: (id) => api.post(`/whatsapp/conversations/${id}/send-to-ai`),
   getQR: () => api.get('/whatsapp/qr'),
 };
 
 // ─── Website Chat Widget (embeddable, knowledge-base powered) ────────────────
 export const widgetService = {
-  getConversations: (params) => api.get('/widget/conversations', { params }),
-  getConversation: (id) => api.get(`/widget/conversations/${id}`),
-  humanReply: (id, message) => api.post(`/widget/conversations/${id}/reply`, { message }),
-  takeover: (id) => api.post(`/widget/conversations/${id}/takeover`),
-  resolve: (id) => api.post(`/widget/conversations/${id}/resolve`),
-  sendToAI: (id) => api.post(`/widget/conversations/${id}/send-to-ai`),
   getSettings: () => api.get('/widget/settings'),
   updateSettings: (data) => api.patch('/widget/settings', data),
 };

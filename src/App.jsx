@@ -76,7 +76,7 @@ const CleaningBook = lazy(() => import('./pages/cleaning/CleaningBook'));
 const CleaningJob = lazy(() => import('./pages/cleaning/CleaningJob'));
 const CleaningServices = lazy(() => import('./pages/cleaning/CleaningServices'));
 const WhatsApp = lazy(() => import('./pages/whatsapp/WhatsApp'));
-const WidgetInbox = lazy(() => import('./pages/widget/WidgetInbox'));
+const Inbox = lazy(() => import('./pages/inbox/Inbox'));
 const WidgetSettings = lazy(() => import('./pages/widget/WidgetSettings'));
 const Payroll = lazy(() => import('./pages/payroll/Payroll'));
 const PayrollDetail = lazy(() => import('./pages/payroll/PayrollDetail'));
@@ -348,7 +348,8 @@ function AppRoutes() {
                 <Route path="" element={<Navigate to="dashboard" replace />} />
                 <Route path="*" element={<Navigate to="dashboard" replace />} />
                 <Route path="whatsapp" element={<WhatsApp />} />
-                <Route path="widget-inbox" element={<WidgetInbox />} />
+                <Route path="inbox" element={<Inbox />} />
+                <Route path="widget-inbox" element={<Navigate to="/inbox?channel=widget" replace />} />
                 <Route path="widget-settings" element={<WidgetSettings />} />
                 <Route path="payroll" element={<Payroll />} />
                 <Route path="payroll/:id" element={<PayrollDetail />} />

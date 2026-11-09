@@ -13,7 +13,7 @@ import './ReferralFab.css';
 // week after the owner hides it.
 // '/laundry/' and '/cleaning/' (with the slash) are the ticket, job and form
 // pages, whose payment buttons sit bottom-right; the boards keep the button.
-const HIDE_ON = ['/referrals', '/assistant', '/chat', '/messages', '/whatsapp', '/widget-inbox', '/pos', '/laundry/', '/cleaning/'];
+const HIDE_ON = ['/referrals', '/assistant', '/chat', '/messages', '/whatsapp', '/widget-inbox', '/inbox', '/pos', '/laundry/', '/cleaning/'];
 const HIDE_KEY = 'bizly-referral-fab-hidden-until';
 const HIDE_DAYS = 7;
 

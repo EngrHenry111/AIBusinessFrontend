@@ -55,6 +55,8 @@
           '.bai-msg { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }' +
           '.bai-msg.user { background: ' + esc(c.primaryColor) + '; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }' +
           '.bai-msg.bot { background: #f1f5f9; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 4px; }' +
+          '.bai-agent { display: block; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px; }' +
+          '.bai-notice { align-self: center; max-width: 90%; text-align: center; font-size: 12px; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 4px 10px; }' +
           '.bai-typing { background: #f1f5f9; padding: 10px 14px; border-radius: 16px; align-self: flex-start; font-size: 14px; color: #64748b; }' +
           '#bai-input-area { padding: 12px; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; flex-shrink: 0; }' +
           '#bai-input { flex: 1; padding: 8px 12px; border-radius: 20px; border: 1px solid #e2e8f0; outline: none; font-size: 14px; min-width: 0; }' +
@@ -74,7 +76,7 @@
             '<div id="bai-avatar">' + (c.avatar ? '<img src="' + esc(c.avatar) + '" alt="">' : esc((c.companyName || 'B')[0])) + '</div>' +
             '<div style="min-width:0">' +
               '<div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(c.companyName) + '</div>' +
-              '<div style="font-size:12px;opacity:0.8">● Online — replies instantly</div>' +
+              '<div id="bai-status" style="font-size:12px;opacity:0.8">● Online — replies instantly</div>' +
             '</div>' +
             '<button id="bai-close" aria-label="Close chat" style="margin-left:auto;background:none;border:none;color:white;cursor:pointer;font-size:18px;flex-shrink:0">✕</button>' +
           '</div>' +
@@ -107,44 +109,101 @@
       input.addEventListener('keydown', function (e) { if (e.key === 'Enter') send(); });
       sendBtn.addEventListener('click', send);
 
+      // The server is the source of truth: history comes back with message
+      // ids, so the widget re-renders from it after every send and on a poll.
+      // That is how a team member's reply (they answer from the BizlyAI
+      // Inbox) reaches the visitor without a page reload.
+      var HISTORY_URL = API + '/widget/' + encodeURIComponent(slug) + '/history/' + encodeURIComponent(sessionId);
+      var lastKey = '';
+      var hasConversation = false;
+      var sending = false;
+      var chatStatus = 'ai';
+      var statusEl = document.getElementById('bai-status');
+
+      function bubble(m) {
+        var el = document.createElement('div');
+        if (m.from === 'notice') {
+          el.className = 'bai-notice';
+          el.textContent = m.content;
+          return el;
+        }
+        el.className = 'bai-msg ' + (m.role === 'user' ? 'user' : 'bot');
+        if (m.from === 'team' && m.agentName) {
+          var who = document.createElement('span');
+          who.className = 'bai-agent';
+          who.textContent = m.agentName;
+          el.appendChild(who);
+        }
+        el.appendChild(document.createTextNode(m.content));
+        return el;
+      }
+
+      function render(msgs, status) {
+        var last = msgs[msgs.length - 1];
+        var key = msgs.length + ':' + (last ? last.id : '') + ':' + status;
+        if (key === lastKey) return false;
+        lastKey = key;
+        messagesEl.innerHTML = '';
+        msgs.forEach(function (m) { messagesEl.appendChild(bubble(m)); });
+        if (status === 'human' && last && last.role === 'user') {
+          messagesEl.appendChild(bubble({ from: 'notice', content: 'Our team will reply here shortly.' }));
+        }
+        statusEl.textContent = status === 'human' ? '● Chatting with our team' : '● Online — replies instantly';
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        return true;
+      }
+
+      function sync() {
+        return fetch(HISTORY_URL)
+          .then(function (r) { return r.json(); })
+          .then(function (h) {
+            var msgs = h && h.data && h.data.messages;
+            if (!msgs || !msgs.length || sending) return;
+            hasConversation = true;
+            chatStatus = h.data.status || 'ai';
+            var changed = render(msgs, h.data.status);
+            if (changed && !win.classList.contains('open')) badge.style.display = 'flex';
+          })
+          .catch(function () { /* offline — try again on the next poll */ });
+      }
+
       // Returning visitor within the 24h session window — replay history
       // instead of just showing the greeting again.
-      fetch(API + '/widget/' + encodeURIComponent(slug) + '/history/' + encodeURIComponent(sessionId))
-        .then(function (r) { return r.json(); })
-        .then(function (h) {
-          var msgs = h && h.data && h.data.messages;
-          if (!msgs || !msgs.length) return;
-          messagesEl.innerHTML = '';
-          msgs.forEach(function (m) {
-            var el = document.createElement('div');
-            el.className = 'bai-msg ' + (m.role === 'user' ? 'user' : 'bot');
-            el.textContent = m.content;
-            messagesEl.appendChild(el);
-          });
-          messagesEl.scrollTop = messagesEl.scrollHeight;
-        })
-        .catch(function () { /* ignore — greeting stays as-is */ });
+      sync();
+
+      // Poll only once there is a conversation, never in a background tab:
+      // every 5s while a team member is chatting, every 15s while the AI is
+      // (its replies already come back with each send), every 30s when closed.
+      var ticks = 0;
+      setInterval(function () {
+        ticks += 1;
+        if (!hasConversation || sending || document.hidden) return;
+        var every = !win.classList.contains('open') ? 6 : chatStatus === 'human' ? 1 : 3;
+        if (ticks % every === 0) sync();
+      }, 5000);
 
       setTimeout(function () {
-        if (!win.classList.contains('open')) badge.style.display = 'flex';
+        if (!win.classList.contains('open') && !hasConversation) badge.style.display = 'flex';
       }, 3000);
+
+      function addLocal(el) {
+        messagesEl.appendChild(el);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
 
       function send() {
         var message = input.value.trim();
-        if (!message) return;
+        if (!message || sending) return;
 
         input.value = '';
         sendBtn.disabled = true;
-        var userMsg = document.createElement('div');
-        userMsg.className = 'bai-msg user';
-        userMsg.textContent = message;
-        messagesEl.appendChild(userMsg);
+        sending = true;
+        addLocal(bubble({ role: 'user', content: message }));
 
         var typing = document.createElement('div');
         typing.className = 'bai-typing';
         typing.textContent = 'Typing...';
-        messagesEl.appendChild(typing);
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+        addLocal(typing);
 
         fetch(API + '/widget/' + encodeURIComponent(slug) + '/message', {
           method: 'POST',
@@ -154,21 +213,23 @@
           .then(function (r) { return r.json(); })
           .then(function (data) {
             typing.remove();
-            var botMsg = document.createElement('div');
-            botMsg.className = 'bai-msg bot';
-            botMsg.textContent = (data.data && data.data.reply) || (data.message || 'Sorry, I could not find an answer. Please contact us directly.');
-            messagesEl.appendChild(botMsg);
-            messagesEl.scrollTop = messagesEl.scrollHeight;
+            if (!data.success) {
+              addLocal(bubble({ from: 'bot', content: data.message || 'Sorry, something went wrong. Please try again.' }));
+              return;
+            }
+            hasConversation = true;
+            sending = false;
+            lastKey = '';
+            return sync().then(function () {
+              // History unavailable for some reason — still show the reply.
+              if (lastKey === '' && data.data && data.data.reply) addLocal(bubble({ from: 'ai', content: data.data.reply }));
+            });
           })
           .catch(function () {
             typing.remove();
-            var errMsg = document.createElement('div');
-            errMsg.className = 'bai-msg bot';
-            errMsg.textContent = 'Connection error. Please try again.';
-            messagesEl.appendChild(errMsg);
-            messagesEl.scrollTop = messagesEl.scrollHeight;
+            addLocal(bubble({ from: 'bot', content: 'Connection error. Please try again.' }));
           })
-          .finally(function () { sendBtn.disabled = false; });
+          .finally(function () { sending = false; sendBtn.disabled = false; });
       }
     })
     .catch(function () { /* config failed (widget disabled, plan limit, etc.) — stay silent, no widget renders */ });

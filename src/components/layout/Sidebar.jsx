@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { whatsappService, productService, widgetService, loyaltyService, contractService, procurementService, groupService } from '../../services';
+import { inboxService, productService, loyaltyService, contractService, procurementService, groupService } from '../../services';
 import {
   RiDashboardLine, RiRobot2Line, RiFileTextLine, RiUserLine,
   RiCalendarLine, RiMoneyDollarCircleLine, RiBarChartLine,
@@ -9,7 +9,7 @@ import {
   RiShoppingBagLine, RiVideoLine, RiMegaphoneLine,
   RiQuestionLine, RiFileChartLine, RiBookOpenLine, RiLogoutBoxLine,
   RiWhatsappLine, RiShieldLine, RiHistoryLine, RiStore2Line, RiShoppingCart2Line, RiUserStarLine, RiStoreLine,
-  RiChat3Line, RiCodeLine, RiContactsLine, RiAwardLine, RiGovernmentLine, RiBankCardLine, RiGiftLine,
+  RiInboxLine, RiCodeLine, RiContactsLine, RiAwardLine, RiGovernmentLine, RiBankCardLine, RiGiftLine,
   RiGroupLine, RiScales3Line, RiCalendarEventLine, RiGraduationCapLine, RiUserAddLine,
   RiCalendarCheckLine, RiFileList3Line, RiBook2Line, RiTimeLine, RiUserSettingsLine, RiPieChartLine,
   RiBuilding2Line, RiRadarLine, RiFileCheckLine, RiClipboardLine, RiArchiveLine, RiHandCoinLine, RiLineChartLine, RiBankCard2Line,
@@ -103,8 +103,8 @@ const NAV_ITEMS = [
   { label: 'Referrals', icon: RiGiftLine, path: '/referrals', roles: ['company_owner', 'super_admin'] },
   { label: 'Analytics', icon: RiBarChartLine, path: '/analytics' },
   { label: 'Team', icon: RiTeamLine, path: '/team' },
+  { label: 'Inbox', icon: RiInboxLine, path: '/inbox' },
   { label: 'WhatsApp', icon: RiWhatsappLine, path: '/whatsapp' },
-  { label: 'Chat Inbox', icon: RiChat3Line, path: '/widget-inbox' },
   { label: 'Widget Settings', icon: RiCodeLine, path: '/widget-settings' },
   { label: 'Settings', icon: RiSettings4Line, path: '/settings' },
   { label: 'Activity Log', icon: RiHistoryLine, path: '/settings/audit-log', roles: ['company_owner', 'manager', 'super_admin'] },
@@ -136,8 +136,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const schoolMe = useSchoolMe(company?.industry === 'education');
   const hospitalMe = useHospitalMe(company?.industry === 'healthcare');
   const location = useLocation();
-  const [waNeedsHuman, setWaNeedsHuman] = useState(0);
-  const [widgetNeedsHuman, setWidgetNeedsHuman] = useState(0);
+  const [inboxNeedsReply, setInboxNeedsReply] = useState(0);
   const [outOfStock, setOutOfStock] = useState(0);
   const [loyaltyMembers, setLoyaltyMembers] = useState(0);
   const [draftContracts, setDraftContracts] = useState(0);
@@ -178,27 +177,13 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
     return () => { alive = false; clearInterval(iv); };
   }, [groupAccess?.allowed]);
 
-  // Poll for WhatsApp conversations waiting on a human
+  // Poll for customer chats (any channel) waiting on the team
   useEffect(() => {
     let alive = true;
     const check = async () => {
       try {
-        const { data } = await whatsappService.getConversations({ filter: 'human' });
-        if (alive) setWaNeedsHuman(data.counts?.human || 0);
-      } catch { /* ignore */ }
-    };
-    check();
-    const iv = setInterval(check, 45000);
-    return () => { alive = false; clearInterval(iv); };
-  }, []);
-
-  // Poll for widget chat conversations waiting on a human
-  useEffect(() => {
-    let alive = true;
-    const check = async () => {
-      try {
-        const { data } = await widgetService.getConversations({ filter: 'needs_human' });
-        if (alive) setWidgetNeedsHuman(data.counts?.needsHuman || 0);
+        const { data } = await inboxService.getUnclaimedCount();
+        if (alive) setInboxNeedsReply(data.data?.unclaimed || 0);
       } catch { /* ignore */ }
     };
     check();
@@ -275,8 +260,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onClose }) {
   const isNewFeature = (Date.now() - CARD_FEATURE_LAUNCHED_AT) / 86400000 <= 7;
 
   const badgeFor = (item) => {
-    if (item.path === '/whatsapp') return waNeedsHuman > 0 ? waNeedsHuman : null;
-    if (item.path === '/widget-inbox') return widgetNeedsHuman > 0 ? widgetNeedsHuman : null;
+    if (item.path === '/inbox') return inboxNeedsReply > 0 ? inboxNeedsReply : null;
     if (item.path === '/products') return outOfStock > 0 ? outOfStock : null;
     if (item.path === '/settings/store') return storeNeedsSetup ? 'Setup' : null;
     if (item.path === '/settings/card') return isNewFeature ? 'New' : null;
