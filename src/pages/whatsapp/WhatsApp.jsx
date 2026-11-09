@@ -3,15 +3,27 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { whatsappService } from '../../services';
 import { connectSocket } from '../../services/socket';
-import { RiWhatsappLine, RiLoader4Line, RiLink, RiLinkUnlink, RiRefreshLine, RiInboxLine, RiArrowRightLine } from 'react-icons/ri';
+import {
+  RiWhatsappLine, RiLoader4Line, RiLink, RiLinkUnlink, RiRefreshLine, RiInboxLine, RiArrowRightLine,
+  RiShieldCheckLine, RiQrCodeLine, RiSendPlaneLine, RiErrorWarningLine, RiFileCopyLine, RiExternalLinkLine,
+} from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import './WhatsApp.css';
+
+const MANAGERS = ['company_owner', 'manager', 'super_admin'];
 
 // Connecting the business's WhatsApp number. The chats themselves are
 // answered in the shared Inbox, alongside every other channel.
 export default function WhatsApp() {
   const { user, company } = useAuth();
   const companyId = company?.id || company?._id;
+  const canManage = MANAGERS.includes(user?.role);
+
+  const [cloud, setCloud] = useState(null);
+  const [form, setForm] = useState({ phoneNumberId: '', wabaId: '', accessToken: '' });
+  const [saving, setSaving] = useState(false);
+  const [testPhone, setTestPhone] = useState('');
+  const [testing, setTesting] = useState(false);
 
   const [waStatus, setWaStatus] = useState('disconnected');
   const [qr, setQr] = useState(null);
@@ -26,12 +38,13 @@ export default function WhatsApp() {
       setQr(data.data.qr || null);
       setWaError(data.data.error || null);
       setWaPhone(data.data.phone || null);
+      setCloud(data.data.cloud || null);
     } catch { /* ignore */ }
   }, []);
 
   useEffect(() => { loadStatus(); }, [loadStatus]);
   useEffect(() => {
-    if (waStatus === 'connected' || waStatus === 'disconnected') return undefined;
+    if (waStatus === 'connected' || waStatus === 'disconnected' || waStatus === 'error') return undefined;
     const iv = setInterval(loadStatus, 4000);
     return () => clearInterval(iv);
   }, [waStatus, loadStatus]);
@@ -53,7 +66,46 @@ export default function WhatsApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId, user._id]);
 
-  async function connect() {
+  // ── Official WhatsApp ────────────────────────────────────────────────────
+  async function connectCloud(e) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const { data } = await whatsappService.connectCloud(form);
+      setCloud(data.data);
+      setForm({ phoneNumberId: '', wabaId: '', accessToken: '' });
+      toast.success(data.message || 'WhatsApp connected');
+      loadStatus();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not connect WhatsApp', { duration: 7000 });
+    } finally { setSaving(false); }
+  }
+
+  async function disconnectCloud() {
+    if (!window.confirm('Disconnect this WhatsApp number? The AI will stop answering it.')) return;
+    try {
+      const { data } = await whatsappService.disconnectCloud();
+      setCloud(data.data);
+      toast.success('WhatsApp disconnected');
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to disconnect'); }
+  }
+
+  async function sendTest(e) {
+    e.preventDefault();
+    if (!testPhone.trim()) return;
+    setTesting(true);
+    try {
+      const { data } = await whatsappService.sendTest(testPhone.trim());
+      toast.success(data.message || 'Test message sent');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Test message failed', { duration: 7000 });
+    } finally { setTesting(false); }
+  }
+
+  const copy = (text) => { navigator.clipboard?.writeText(text); toast.success('Copied'); };
+
+  // ── QR code (unofficial) ─────────────────────────────────────────────────
+  async function connectQr() {
     setConnecting(true);
     try {
       const { data } = await whatsappService.initialize();
@@ -64,7 +116,7 @@ export default function WhatsApp() {
     } finally { setConnecting(false); }
   }
 
-  async function disconnectWa() {
+  async function disconnectQr() {
     if (!window.confirm('Disconnect this WhatsApp number?')) return;
     try {
       await whatsappService.disconnect();
@@ -73,7 +125,8 @@ export default function WhatsApp() {
     } catch { toast.error('Failed to disconnect'); }
   }
 
-  const connected = waStatus === 'connected';
+  const cloudOn = Boolean(cloud?.connected);
+  const qrOn = waStatus === 'connected';
 
   return (
     <div className="wa-page fade-in">
@@ -89,41 +142,130 @@ export default function WhatsApp() {
         </div>
       </div>
 
-      {!connected ? (
-        <div className="wa-connect card card-pad">
-          <div className="wa-connect-info">
-            <div className={`wa-status-dot ${waStatus}`} />
-            <div>
-              <strong>
-                {waStatus === 'qr_ready' ? 'Scan the QR code'
-                  : waStatus === 'connecting' ? 'Starting WhatsApp…'
-                    : waStatus === 'error' ? 'Connection error'
-                      : 'WhatsApp not connected'}
-              </strong>
-              <p>
-                {waError || (waStatus === 'qr_ready'
-                  ? 'Open WhatsApp on your phone → Linked devices → Link a device'
-                  : 'Connect your business WhatsApp number so the AI can reply to customers.')}
-              </p>
+      {/* ── Official WhatsApp (Cloud API) ─────────────────────────────── */}
+      <section className="wa-card card card-pad">
+        <div className="wa-card-head">
+          <RiShieldCheckLine className="wa-card-icon" />
+          <div>
+            <h2>Official WhatsApp <span className="wa-pill">Recommended</span></h2>
+            <p>Meta's WhatsApp Business Platform. Free to receive and reply, no phone needs to stay online, and no QR code to re-scan.</p>
+          </div>
+        </div>
+
+        {cloud && !cloud.webhookReady && (
+          <div className="wa-alert">
+            <RiErrorWarningLine />
+            <span>Incoming messages can't reach BizlyAI yet: the platform's WhatsApp webhook isn't configured on the server. Sending works; receiving starts once it is set up.</span>
+          </div>
+        )}
+
+        {cloudOn ? (
+          <>
+            <div className="wa-connected-row">
+              <span className="wa-status-dot connected" />
+              <div className="wa-connected-text">
+                <strong>{cloud.displayPhone || 'Connected'}</strong>
+                <span>{[cloud.verifiedName, cloud.connectedAt && `connected ${new Date(cloud.connectedAt).toLocaleDateString()}`].filter(Boolean).join(' · ')}</span>
+              </div>
+              {canManage && <button className="btn btn-sm btn-secondary" onClick={disconnectCloud}><RiLinkUnlink /> Disconnect</button>}
             </div>
+            <form className="wa-test" onSubmit={sendTest}>
+              <label htmlFor="wa-test-phone">Send a test message</label>
+              <div className="wa-test-row">
+                <input id="wa-test-phone" className="form-input" placeholder="Your WhatsApp number, e.g. 0801 234 5678" value={testPhone} onChange={(e) => setTestPhone(e.target.value)} />
+                <button className="btn btn-secondary" disabled={testing || !testPhone.trim()}>
+                  {testing ? <RiLoader4Line className="spin" /> : <RiSendPlaneLine />} Send
+                </button>
+              </div>
+              <small>Sends Meta's "hello_world" template. With a test number, the recipient must be on the test number's allowed list in your Meta app.</small>
+            </form>
+          </>
+        ) : canManage ? (
+          <form className="wa-cloud-form" onSubmit={connectCloud}>
+            <ol className="wa-steps">
+              <li>Open your app at <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener noreferrer">developers.facebook.com/apps <RiExternalLinkLine /></a> → <strong>WhatsApp → API Setup</strong>.</li>
+              <li>Copy the <strong>Phone number ID</strong> and the <strong>WhatsApp Business Account ID</strong> into the fields below.</li>
+              <li>Paste an <strong>access token</strong>. For a connection that never expires, use a System User token (Business settings → System users) with the <em>whatsapp_business_messaging</em> and <em>whatsapp_business_management</em> permissions.</li>
+            </ol>
+            <div className="wa-fields">
+              <label>
+                Phone number ID
+                <input className="form-input" inputMode="numeric" placeholder="e.g. 1446066501920917" value={form.phoneNumberId}
+                  onChange={(e) => setForm((f) => ({ ...f, phoneNumberId: e.target.value.replace(/\s/g, '') }))} required />
+              </label>
+              <label>
+                WhatsApp Business Account ID
+                <input className="form-input" inputMode="numeric" placeholder="e.g. 924215253977795" value={form.wabaId}
+                  onChange={(e) => setForm((f) => ({ ...f, wabaId: e.target.value.replace(/\s/g, '') }))} required />
+              </label>
+              <label className="wa-field-wide">
+                Access token
+                <input className="form-input" type="password" autoComplete="off" placeholder="Paste the token (kept secret, never shown again)" value={form.accessToken}
+                  onChange={(e) => setForm((f) => ({ ...f, accessToken: e.target.value.trim() }))} required />
+              </label>
+            </div>
+            <button className="btn btn-primary" disabled={saving}>
+              {saving ? <RiLoader4Line className="spin" /> : <RiLink />} Connect WhatsApp
+            </button>
+          </form>
+        ) : (
+          <p className="wa-muted">Not connected. Ask your business owner or a manager to connect WhatsApp.</p>
+        )}
+
+        {cloud?.webhookUrl && user?.role === 'super_admin' && (
+          <div className="wa-webhook">
+            <span>Platform webhook (set once in the Meta app → WhatsApp → Configuration):</span>
+            <code>{cloud.webhookUrl}</code>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => copy(cloud.webhookUrl)}><RiFileCopyLine /> Copy</button>
           </div>
-          <div className="wa-connect-action">
-            {qr && waStatus === 'qr_ready' ? (
-              <img className="wa-qr" src={qr} alt="WhatsApp QR code" />
-            ) : (
-              <button className="btn btn-primary" onClick={connect} disabled={connecting || waStatus === 'connecting'}>
-                {connecting || waStatus === 'connecting' ? <RiLoader4Line className="spin" /> : <RiLink />}
-                {waStatus === 'error' ? 'Retry connection' : 'Connect WhatsApp'}
-              </button>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="wa-connected card">
-          <span className="wa-status-dot connected" />
-          <span>Connected{waPhone ? ` · +${waPhone}` : ''}</span>
-          <button className="btn btn-sm btn-secondary" onClick={disconnectWa}><RiLinkUnlink /> Disconnect</button>
-        </div>
+        )}
+      </section>
+
+      {/* ── QR code (unofficial, whatsapp-web.js) ─────────────────────── */}
+      {!cloudOn && (
+        <details className="wa-card card wa-qr-section" open={qrOn || waStatus === 'qr_ready' || waStatus === 'connecting'}>
+          <summary>
+            <RiQrCodeLine /> Link with a QR code instead <span className="wa-muted">(unofficial: your phone must stay online, and Meta may restrict the number)</span>
+          </summary>
+          {!qrOn ? (
+            <div className="wa-connect">
+              <div className="wa-connect-info">
+                <div className={`wa-status-dot ${waStatus}`} />
+                <div>
+                  <strong>
+                    {waStatus === 'qr_ready' ? 'Scan the QR code'
+                      : waStatus === 'connecting' ? 'Starting WhatsApp…'
+                        : waStatus === 'error' ? 'Connection error'
+                          : 'Not linked'}
+                  </strong>
+                  <p>
+                    {waError || (waStatus === 'qr_ready'
+                      ? 'Open WhatsApp on your phone → Linked devices → Link a device'
+                      : 'Links your WhatsApp like WhatsApp Web does.')}
+                  </p>
+                </div>
+              </div>
+              {canManage && (
+                <div className="wa-connect-action">
+                  {qr && waStatus === 'qr_ready' ? (
+                    <img className="wa-qr" src={qr} alt="WhatsApp QR code" />
+                  ) : (
+                    <button className="btn btn-secondary" onClick={connectQr} disabled={connecting || waStatus === 'connecting'}>
+                      {connecting || waStatus === 'connecting' ? <RiLoader4Line className="spin" /> : <RiQrCodeLine />}
+                      {waStatus === 'error' ? 'Try again' : 'Show QR code'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="wa-connected-row">
+              <span className="wa-status-dot connected" />
+              <span>Linked{waPhone ? ` · +${waPhone}` : ''}</span>
+              {canManage && <button className="btn btn-sm btn-secondary" onClick={disconnectQr}><RiLinkUnlink /> Unlink</button>}
+            </div>
+          )}
+        </details>
       )}
 
       <Link to="/inbox?channel=whatsapp" className="wa-inbox-link card card-pad">

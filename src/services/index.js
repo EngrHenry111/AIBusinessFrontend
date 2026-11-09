@@ -798,6 +798,8 @@ export const whatsappService = {
   disconnect: () => api.post('/whatsapp/disconnect'),
   sendTest: (phone) => api.post('/whatsapp/send-test', { phone }),
   getQR: () => api.get('/whatsapp/qr'),
+  connectCloud: (data) => api.post('/whatsapp/cloud/connect', data),
+  disconnectCloud: () => api.post('/whatsapp/cloud/disconnect'),
 };
 
 // ─── Website Chat Widget (embeddable, knowledge-base powered) ────────────────
