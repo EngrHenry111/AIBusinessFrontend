@@ -43,7 +43,11 @@ export default function WhatsAppTab() {
   }, [assigning, search]);
 
   async function connect(number, company) {
-    if (!window.confirm(`Connect ${number.displayPhone} to ${company.companyName}?\n\nTheir AI starts answering this number. If they already have WhatsApp connected, this replaces it.`)) return;
+    const sameNumber = number.company && String(number.company._id) === String(company._id);
+    const question = sameNumber
+      ? `Move ${company.companyName} onto the BizlyAI platform token?\n\nSame number and chats; their own token is removed and nothing expires for them any more.`
+      : `Connect ${number.displayPhone} to ${company.companyName}?\n\nTheir AI starts answering this number. If they already have WhatsApp connected, this replaces it.`;
+    if (!window.confirm(question)) return;
     setBusy(true);
     try {
       const { data: res } = await adminService.connectWhatsapp(company._id, number.id);
@@ -164,6 +168,11 @@ export default function WhatsAppTab() {
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                         {n.company?.managed && (
                           <button className="btn btn-secondary btn-sm" disabled={busy} onClick={() => disconnect(n)}>Disconnect</button>
+                        )}
+                        {n.company && !n.company.managed && (
+                          <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => connect(n, n.company)} title="Replies use the platform token from now on; their own token is removed.">
+                            Switch to BizlyAI token
+                          </button>
                         )}
                         {!n.company && assigning !== n.id && (
                           <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => { setAssigning(n.id); setSearch(''); setMatches([]); }}>
