@@ -862,6 +862,9 @@ export const adminService = {
   getReferralEarnings: (companyId) => api.get(`/admin/referrals/${companyId}/earnings`),
   settleReferralPayout: (id, action, note) => api.patch(`/admin/referrals/payouts/${id}`, { action, note }),
   reverseReferralEarning: (id, reason) => api.patch(`/admin/referrals/earnings/${id}/reverse`, { reason }),
+  getWhatsapp: () => api.get('/admin/whatsapp'),
+  connectWhatsapp: (companyId, phoneNumberId) => api.post('/admin/whatsapp/connect', { companyId, phoneNumberId }),
+  disconnectWhatsapp: (companyId) => api.post('/admin/whatsapp/disconnect', { companyId }),
   reconcileOrders: (days) => api.post('/admin/reconcile-orders', null, { params: { days }, timeout: 120000 }),
 };
 

@@ -9,8 +9,9 @@ import {
   RiMoneyDollarCircleLine, RiPulseLine, RiRefreshLine, RiMailSendLine,
   RiDatabase2Line, RiServerLine, RiCpuLine, RiTimeLine, RiEyeLine,
   RiSearchEyeLine, RiStore2Line, RiStarFill, RiStarLine, RiExternalLinkLine,
-  RiShoppingBag3Line, RiGiftLine, RiAlertLine,
+  RiShoppingBag3Line, RiGiftLine, RiAlertLine, RiWhatsappLine,
 } from 'react-icons/ri';
+import WhatsAppTab from './WhatsAppTab';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid, Cell,
@@ -30,6 +31,7 @@ const TABS = [
   { id: 'revenue', label: 'Revenue', icon: RiMoneyDollarCircleLine },
   { id: 'marketplace', label: 'Marketplace', icon: RiStore2Line },
   { id: 'referrals', label: 'Referrals', icon: RiGiftLine },
+  { id: 'whatsapp', label: 'WhatsApp', icon: RiWhatsappLine },
   { id: 'system', label: 'System', icon: RiPulseLine },
 ];
 const STORE_URL = (slug) => `https://bislyai.com/store/${slug}`;
@@ -97,6 +99,7 @@ export default function Admin() {
       {tab === 'revenue' && <RevenueTab />}
       {tab === 'marketplace' && <MarketplaceTab />}
       {tab === 'referrals' && <ReferralsTab />}
+      {tab === 'whatsapp' && <WhatsAppTab />}
       {tab === 'system' && <SystemTab />}
     </div>
   );

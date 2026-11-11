@@ -98,7 +98,8 @@ export default function Inbox() {
   const checkWhatsApp = useCallback(async () => {
     try {
       const { data } = await whatsappService.getStatus();
-      setWaTokenProblem(Boolean(data.data?.cloud?.needsReconnect));
+      const c = data.data?.cloud;
+      setWaTokenProblem(c?.needsReconnect ? (c.managed ? 'managed' : 'own') : false);
     } catch { /* banner only */ }
   }, []);
   useEffect(() => { checkWhatsApp(); }, [checkWhatsApp]);
@@ -244,8 +245,14 @@ export default function Inbox() {
       {waTokenProblem && (
         <div className="ibx-banner" role="alert">
           <RiErrorWarningLine />
-          <span><strong>WhatsApp replies have stopped.</strong> Meta no longer accepts your access token, so WhatsApp customers won't receive answers. New messages still arrive here.</span>
-          <Link to="/whatsapp" className="btn btn-sm btn-primary">Fix it</Link>
+          {waTokenProblem === 'managed' ? (
+            <span><strong>WhatsApp replies have paused.</strong> BizlyAI's team has been alerted and is fixing the connection. New messages still arrive here.</span>
+          ) : (
+            <>
+              <span><strong>WhatsApp replies have stopped.</strong> Meta no longer accepts your access token, so WhatsApp customers won't receive answers. New messages still arrive here.</span>
+              <Link to="/whatsapp" className="btn btn-sm btn-primary">Fix it</Link>
+            </>
+          )}
         </div>
       )}
 

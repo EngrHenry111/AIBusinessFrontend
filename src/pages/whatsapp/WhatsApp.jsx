@@ -148,8 +148,10 @@ export default function WhatsApp() {
   const cloudOn = Boolean(cloud?.connected);
   const expiresAt = cloud?.tokenExpiresAt ? new Date(cloud.tokenExpiresAt) : null;
   const daysLeft = expiresAt ? Math.ceil((expiresAt - Date.now()) / 86400000) : null;
-  const expiringSoon = daysLeft !== null && daysLeft <= 7;
-  const tokenFormOpen = cloudOn && canManage && (cloud.needsReconnect || expiringSoon || showTokenForm);
+  // managed: BizlyAI connected this number on its own account and keeps the token.
+  const managed = Boolean(cloud?.managed);
+  const expiringSoon = !managed && daysLeft !== null && daysLeft <= 7;
+  const tokenFormOpen = cloudOn && canManage && !managed && (cloud.needsReconnect || expiringSoon || showTokenForm);
   const qrOn = waStatus === 'connected';
 
   return (
@@ -194,7 +196,15 @@ export default function WhatsApp() {
               {canManage && <button className="btn btn-sm btn-secondary" onClick={disconnectCloud}><RiLinkUnlink /> Disconnect</button>}
             </div>
 
-            {cloud.needsReconnect ? (
+            {cloud.needsReconnect && managed ? (
+              <div className="wa-alert wa-alert-danger" role="alert">
+                <RiErrorWarningLine />
+                <span>
+                  <strong>Replies have paused.</strong> There's a problem with the connection BizlyAI manages for this number. Our team has been alerted and is fixing it — you don't need to do anything.
+                  Customers' messages still reach your Inbox.
+                </span>
+              </div>
+            ) : cloud.needsReconnect ? (
               <div className="wa-alert wa-alert-danger" role="alert">
                 <RiErrorWarningLine />
                 <span>
@@ -210,6 +220,8 @@ export default function WhatsApp() {
                   Paste a new one below — a System User token set to <em>Never expire</em> means you won't need to do this again.
                 </span>
               </div>
+            ) : managed ? (
+              <p className="wa-token-line">Connected and looked after by BizlyAI — nothing for you to renew.</p>
             ) : (
               <p className="wa-token-line">
                 {expiresAt ? `Access token valid until ${expiresAt.toLocaleDateString()}.` : 'Access token never expires.'}
