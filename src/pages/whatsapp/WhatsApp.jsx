@@ -24,6 +24,8 @@ export default function WhatsApp() {
   const [saving, setSaving] = useState(false);
   const [testPhone, setTestPhone] = useState('');
   const [testing, setTesting] = useState(false);
+  const [showTokenForm, setShowTokenForm] = useState(false);
+  const [newToken, setNewToken] = useState('');
 
   const [waStatus, setWaStatus] = useState('disconnected');
   const [qr, setQr] = useState(null);
@@ -62,6 +64,8 @@ export default function WhatsApp() {
       setWaError(p.error || null);
       if (p.status === 'connected') { setQr(null); setWaPhone(p.phone || null); toast.success('WhatsApp connected'); }
     });
+    // Official WhatsApp token stopped working / expiring soon.
+    socket.on('whatsapp:token_status', () => loadStatus());
     return () => socket.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId, user._id]);
@@ -78,6 +82,22 @@ export default function WhatsApp() {
       loadStatus();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not connect WhatsApp', { duration: 7000 });
+    } finally { setSaving(false); }
+  }
+
+  // Replace the token on a connected number (expired, or moving to a never-expiring one).
+  async function updateToken(e) {
+    e.preventDefault();
+    if (!newToken) return;
+    setSaving(true);
+    try {
+      const { data } = await whatsappService.connectCloud({ phoneNumberId: cloud.phoneNumberId, wabaId: cloud.wabaId, accessToken: newToken });
+      setCloud(data.data);
+      setNewToken('');
+      setShowTokenForm(false);
+      toast.success('Access token updated. Replies are working again.');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not update the token', { duration: 7000 });
     } finally { setSaving(false); }
   }
 
@@ -126,6 +146,10 @@ export default function WhatsApp() {
   }
 
   const cloudOn = Boolean(cloud?.connected);
+  const expiresAt = cloud?.tokenExpiresAt ? new Date(cloud.tokenExpiresAt) : null;
+  const daysLeft = expiresAt ? Math.ceil((expiresAt - Date.now()) / 86400000) : null;
+  const expiringSoon = daysLeft !== null && daysLeft <= 7;
+  const tokenFormOpen = cloudOn && canManage && (cloud.needsReconnect || expiringSoon || showTokenForm);
   const qrOn = waStatus === 'connected';
 
   return (
@@ -169,6 +193,45 @@ export default function WhatsApp() {
               </div>
               {canManage && <button className="btn btn-sm btn-secondary" onClick={disconnectCloud}><RiLinkUnlink /> Disconnect</button>}
             </div>
+
+            {cloud.needsReconnect ? (
+              <div className="wa-alert wa-alert-danger" role="alert">
+                <RiErrorWarningLine />
+                <span>
+                  <strong>Replies have stopped.</strong> Meta no longer accepts this number's access token{cloud.lastError ? ` (${cloud.lastError.replace(/\.$/, '')})` : ''}.
+                  Customers' messages still reach your Inbox, but neither the AI nor your team can answer until you paste a new token below.
+                </span>
+              </div>
+            ) : expiringSoon ? (
+              <div className="wa-alert" role="alert">
+                <RiErrorWarningLine />
+                <span>
+                  Your access token {daysLeft <= 0 ? 'expires today' : `expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`} ({expiresAt.toLocaleDateString()}).
+                  Paste a new one below — a System User token set to <em>Never expire</em> means you won't need to do this again.
+                </span>
+              </div>
+            ) : (
+              <p className="wa-token-line">
+                {expiresAt ? `Access token valid until ${expiresAt.toLocaleDateString()}.` : 'Access token never expires.'}
+                {canManage && !showTokenForm && <button type="button" className="wa-link-btn" onClick={() => setShowTokenForm(true)}>Update token</button>}
+              </p>
+            )}
+
+            {tokenFormOpen && (
+              <form className="wa-test" onSubmit={updateToken}>
+                <label htmlFor="wa-new-token">New access token</label>
+                <div className="wa-test-row">
+                  <input id="wa-new-token" className="form-input" type="password" autoComplete="off" placeholder="Paste the new token (kept secret)" value={newToken} onChange={(e) => setNewToken(e.target.value.trim())} />
+                  <button className="btn btn-primary" disabled={saving || newToken.length < 20}>
+                    {saving ? <RiLoader4Line className="spin" /> : <RiLink />} Save token
+                  </button>
+                  {showTokenForm && !cloud.needsReconnect && !expiringSoon && (
+                    <button type="button" className="btn btn-ghost" onClick={() => { setShowTokenForm(false); setNewToken(''); }}>Cancel</button>
+                  )}
+                </div>
+                <small>Same number, new token: your chats and settings stay as they are.</small>
+              </form>
+            )}
             <form className="wa-test" onSubmit={sendTest}>
               <label htmlFor="wa-test-phone">Send a test message</label>
               <div className="wa-test-row">

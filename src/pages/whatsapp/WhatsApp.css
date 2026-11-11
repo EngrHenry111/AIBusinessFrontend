@@ -36,6 +36,12 @@
 .wa-muted { font-size: 13px; color: var(--text-muted); font-weight: 400; }
 .wa-alert { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: var(--radius-md); background: #f59e0b18; color: var(--text-secondary); font-size: 13px; margin-bottom: 14px; }
 .wa-alert svg { color: #f59e0b; flex-shrink: 0; margin-top: 2px; }
+.wa-alert-danger { background: #ef444418; }
+.wa-alert-danger svg { color: #ef4444; }
+.wa-alert-danger strong { color: var(--text-primary); }
+.wa-token-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin: 0 0 14px; }
+.wa-link-btn { background: none; border: 0; padding: 0; color: var(--primary, #6366f1); font: inherit; font-weight: 600; cursor: pointer; }
+.wa-link-btn:hover { text-decoration: underline; }
 
 .wa-steps { margin: 0 0 14px 18px; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
 .wa-steps a { color: var(--color-brand); display: inline-flex; align-items: center; gap: 2px; }

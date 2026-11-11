@@ -121,3 +121,9 @@
 .ibx-notes:focus { border-color: var(--color-brand); }
 .ibx-muted { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
 .ibx-small { font-size: 11px; }
+
+/* WhatsApp token problem */
+.ibx-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; margin-bottom: 14px; border-radius: var(--radius-md, 10px); background: #ef444418; border: 1px solid #ef444440; color: var(--text-secondary); font-size: 13px; }
+.ibx-banner svg { color: #ef4444; flex-shrink: 0; font-size: 18px; }
+.ibx-banner span { flex: 1; min-width: 200px; }
+.ibx-banner strong { color: var(--text-primary); }

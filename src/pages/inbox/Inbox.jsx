@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { inboxService } from '../../services';
+import { inboxService, whatsappService } from '../../services';
 import { connectSocket } from '../../services/socket';
 import { formatMoney } from '../../constants/leads';
 import {
@@ -93,6 +93,16 @@ export default function Inbox() {
     finally { setListLoading(false); }
   }, [status, channel, search]);
 
+  // Official WhatsApp token stopped working → replies can't be sent.
+  const [waTokenProblem, setWaTokenProblem] = useState(false);
+  const checkWhatsApp = useCallback(async () => {
+    try {
+      const { data } = await whatsappService.getStatus();
+      setWaTokenProblem(Boolean(data.data?.cloud?.needsReconnect));
+    } catch { /* banner only */ }
+  }, []);
+  useEffect(() => { checkWhatsApp(); }, [checkWhatsApp]);
+
   const loadRef = useRef(loadConversations);
   useEffect(() => { loadRef.current = loadConversations; }, [loadConversations]);
   const openRef = useRef(null);
@@ -131,6 +141,7 @@ export default function Inbox() {
       }
       loadRef.current?.();
     });
+    socket.on('whatsapp:token_status', () => checkWhatsApp());
     socket.on('inbox:conversation_updated', (p) => {
       loadRef.current?.();
       if (String(p.conversationId) === String(activeIdRef.current)) openRef.current?.(activeIdRef.current, true);
@@ -229,6 +240,14 @@ export default function Inbox() {
           </div>
         </div>
       </div>
+
+      {waTokenProblem && (
+        <div className="ibx-banner" role="alert">
+          <RiErrorWarningLine />
+          <span><strong>WhatsApp replies have stopped.</strong> Meta no longer accepts your access token, so WhatsApp customers won't receive answers. New messages still arrive here.</span>
+          <Link to="/whatsapp" className="btn btn-sm btn-primary">Fix it</Link>
+        </div>
+      )}
 
       <div className={`ibx-layout card ${activeId ? 'has-active' : ''} ${showProfile ? 'show-profile' : ''}`}>
         {/* LEFT — conversation list */}
