@@ -3,10 +3,10 @@
 export const SOURCE_LABELS = {
   website: 'Website', referral: 'Referral', social: 'Social', email: 'Email',
   cold_call: 'Cold call', event: 'Event', other: 'Other',
-  chat_widget: 'Website chat', whatsapp: 'WhatsApp', store: 'Online store', business_card: 'Business card',
+  chat_widget: 'Website chat', whatsapp: 'WhatsApp', telegram: 'Telegram', store: 'Online store', business_card: 'Business card',
 };
 export const MANUAL_SOURCES = ['website', 'referral', 'social', 'email', 'cold_call', 'event', 'other'];
-export const AUTO_SOURCES = ['chat_widget', 'whatsapp', 'store', 'business_card'];
+export const AUTO_SOURCES = ['chat_widget', 'whatsapp', 'telegram', 'store', 'business_card'];
 export const sourceLabel = (s) => SOURCE_LABELS[s] || SOURCE_LABELS.other;
 
 // Pipeline stages in the words a shop owner uses. (Stored values stay the same.)

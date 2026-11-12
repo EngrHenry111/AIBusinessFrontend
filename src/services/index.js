@@ -792,6 +792,12 @@ export const inboxService = {
 };
 
 // ─── WhatsApp (connection only — chats live in the Inbox) ────────────────────
+export const telegramService = {
+  getStatus: () => api.get('/telegram/status'),
+  connect: (botToken) => api.post('/telegram/connect', { botToken }),
+  disconnect: () => api.post('/telegram/disconnect'),
+};
+
 export const whatsappService = {
   getStatus: () => api.get('/whatsapp/status'),
   initialize: () => api.post('/whatsapp/initialize'),

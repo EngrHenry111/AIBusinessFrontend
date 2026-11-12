@@ -338,6 +338,7 @@ export default function Inbox() {
                     {convo.phone && <span><RiPhoneLine /> {fmtPhone(convo.phone)}</span>}
                     {convo.email && <span><RiMailLine /> {convo.email}</span>}
                     {convo.meta?.originHost && <span><RiGlobalLine /> {convo.meta.originHost}</span>}
+                    {convo.channel === 'telegram' && convo.meta?.username && <a href={`https://t.me/${convo.meta.username}`} target="_blank" rel="noreferrer"><RiTelegramLine /> @{convo.meta.username}</a>}
                     <span className={`ibx-badge ${statusMeta(convo).cls}`}>{statusMeta(convo).label}</span>
                     {convo.assignedTo?.name && <span>· {convo.assignedTo.name}</span>}
                   </div>

@@ -257,13 +257,14 @@ export default function Leads() {
 const AUTOMATION_ROWS = [
   { key: 'chat', title: 'Website chat', text: 'A visitor who leaves an email in the chat widget, or types an email or phone number into a message.' },
   { key: 'whatsapp', title: 'WhatsApp', text: 'Anyone who messages your connected WhatsApp number.' },
+  { key: 'telegram', title: 'Telegram', text: 'A customer who taps “Share my phone number” in your Telegram bot, or types their phone number or email.' },
   { key: 'store', title: 'Online store', text: 'Shoppers who start or complete checkout, or create an account on your store.' },
   { key: 'card', title: 'Business card', text: 'Visitors who share their details on a team member’s digital business card (assigned to that member).' },
   { key: 'aiScoring', title: 'AI scoring on arrival', text: 'Each new captured lead gets a score, a suggested next step and a follow-up email draft (up to 30 a day).' },
 ];
 const SALES_ROWS = [
   { key: 'aiStages', title: 'AI moves leads along the pipeline', text: 'After a chat, the AI notes what the customer wants and moves their lead forward: Contacted → Interested → Ready to buy. It never marks anyone lost; a purchase marks them won.' },
-  { key: 'followUps', title: 'AI follows up on WhatsApp', text: 'When an interested customer goes quiet, the AI sends them one friendly reminder with the product’s current price and stock. Free: it’s sent within WhatsApp’s 24-hour reply window. Never more than one until they write again, and never after they say no.' },
+  { key: 'followUps', title: 'AI follows up on WhatsApp and Telegram', text: 'When an interested customer goes quiet, the AI sends them one friendly reminder with the product’s current price and stock. Free: on WhatsApp it’s sent within the 24-hour reply window. Never more than one until they write again, and never after they say no.' },
   { key: 'teamReminders', title: 'Remind the team about waiting customers', text: 'If a customer who wants to buy has waited over an hour for your team to reply, whoever has the chat (or the owner) gets an email.' },
 ];
 
