@@ -8,7 +8,7 @@ import {
   RiFileList3Line, RiCalendarCheckLine, RiExchangeLine, RiFlashlightLine,
   RiWhatsappLine, RiShoppingBag3Line, RiMessage3Line, RiRobot2Fill,
 } from 'react-icons/ri';
-import { SOURCE_LABELS, MANUAL_SOURCES, sourceLabel, formatMoney } from '../../constants/leads';
+import { SOURCE_LABELS, MANUAL_SOURCES, sourceLabel, formatMoney, stageLabel } from '../../constants/leads';
 import toast from 'react-hot-toast';
 import AIDraftEditor from '../../components/AIDraftEditor';
 import './LeadDetail.css';
@@ -189,9 +189,9 @@ export default function LeadDetail() {
                 <b>{lead.score || 0}</b><span>AI Score</span>
               </div>
               <select className="ld-status-select" value={lead.status} onChange={(e) => changeStatus(e.target.value)}>
-                {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+                {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{stageLabel(s)}</option>)}
               </select>
-              <span className={`badge badge-${STATUS_COLORS[lead.status] || 'neutral'}`}>{lead.status}</span>
+              <span className={`badge badge-${STATUS_COLORS[lead.status] || 'neutral'}`}>{stageLabel(lead.status)}</span>
               <button className="btn btn-secondary btn-sm" onClick={startEdit}><RiEditLine /> Edit</button>
               {lead.status !== 'converted' && (
                 <button className="btn btn-primary btn-sm" onClick={convertToCustomer} disabled={converting}>

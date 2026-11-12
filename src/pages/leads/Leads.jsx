@@ -5,11 +5,13 @@ import { createPortal } from 'react-dom';
 import { leadService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import { connectSocket } from '../../services/socket';
-import { MANUAL_SOURCES, SOURCE_LABELS, AUTO_SOURCES, sourceLabel, formatMoney } from '../../constants/leads';
+import { MANUAL_SOURCES, SOURCE_LABELS, AUTO_SOURCES, sourceLabel, formatMoney, stageLabel } from '../../constants/leads';
+import PipelineBoard from './PipelineBoard';
 import {
   RiAddLine, RiSearchLine, RiRobot2Line, RiUserLine, RiMailLine, RiPhoneLine,
   RiDeleteBinLine, RiLoader4Line, RiUploadCloud2Line, RiCloseLine, RiArrowRightSLine,
   RiArrowLeftSLine, RiCheckLine, RiArrowRightLine, RiFileTextLine, RiFlashlightLine, RiAlarmWarningLine,
+  RiLayoutColumnLine, RiListCheck2,
 } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import { SkeletonTable } from '../../components/ui/Skeleton';
@@ -30,6 +32,10 @@ export default function Leads() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', source: 'website', value: '', description: '' });
   const [sourceFilter, setSourceFilter] = useState('');
   const [showAutomation, setShowAutomation] = useState(false);
+  // List or pipeline board — remembered on this device.
+  const [view, setView] = useState(() => { try { return localStorage.getItem('leads:view') || 'list'; } catch { return 'list'; } });
+  const [boardKey, setBoardKey] = useState(0);
+  const chooseView = (v) => { setView(v); try { localStorage.setItem('leads:view', v); } catch { /* not saved */ } };
   const { user, company } = useAuth();
   const canManage = ['company_owner', 'manager', 'super_admin'].includes(user?.role);
 
@@ -46,7 +52,7 @@ export default function Leads() {
     socket.on('leads:update', (p) => {
       if (p?.created) toast.success('New lead captured automatically', { icon: '⚡' });
       clearTimeout(reloadTimer.current);
-      reloadTimer.current = setTimeout(() => loadLeads({ quiet: true }), 800);
+      reloadTimer.current = setTimeout(() => { loadLeads({ quiet: true }); setBoardKey((k) => k + 1); }, 800);
     });
     return () => { clearTimeout(reloadTimer.current); socket.disconnect(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -103,6 +109,10 @@ export default function Leads() {
         <div className="page-header-row">
           <div><h1>Leads</h1><p>{leads.length} total leads{autoCount > 0 && ` · ${autoCount} captured automatically`}{dueCount > 0 && ` · ${dueCount} follow-up${dueCount === 1 ? '' : 's'} due`}</p></div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <div className="leads-view-toggle" role="group" aria-label="View">
+              <button className={`btn btn-sm ${view === 'list' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => chooseView('list')} aria-pressed={view === 'list'}><RiListCheck2 /> List</button>
+              <button className={`btn btn-sm ${view === 'board' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => chooseView('board')} aria-pressed={view === 'board'}><RiLayoutColumnLine /> Pipeline</button>
+            </div>
             <button className="btn btn-secondary" onClick={() => setShowAutomation(true)}><RiFlashlightLine /> Automation</button>
             <button className="btn btn-secondary" onClick={() => setShowImport(true)}><RiUploadCloud2Line /> Import CSV</button>
             <button className="btn btn-primary" onClick={() => setShowForm(v => !v)}><RiAddLine /> Add Lead</button>
@@ -115,7 +125,7 @@ export default function Leads() {
       {showImport && (
         <CsvImportModal
           onClose={() => setShowImport(false)}
-          onDone={() => { setShowImport(false); loadLeads(); }}
+          onDone={() => { setShowImport(false); loadLeads(); setBoardKey((k) => k + 1); }}
         />
       )}
 
@@ -125,14 +135,14 @@ export default function Leads() {
           <RiSearchLine />
           <input placeholder="Search leads..." value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && loadLeads()} />
         </div>
-        <div className="status-filters">
+        {view === 'list' && <div className="status-filters">
           <button className={`filter-btn ${!statusFilter ? 'active' : ''}`} onClick={() => setStatusFilter('')}>All</button>
           {STATUS_OPTIONS.map(s => (
             <button key={s} className={`filter-btn ${statusFilter === s ? 'active' : ''}`} onClick={() => setStatusFilter(s)}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
+              {stageLabel(s)}
             </button>
           ))}
-        </div>
+        </div>}
         <select className="form-input form-select leads-source-filter" value={sourceFilter} onChange={e => setSourceFilter(e.target.value)}>
           <option value="">All sources</option>
           <option value="due">Follow-up due</option>
@@ -167,8 +177,10 @@ export default function Leads() {
         </div>
       )}
 
-      {/* Lead List */}
-      {loading ? (
+      {/* Pipeline board or lead list */}
+      {view === 'board' ? (
+        <PipelineBoard search={search} sourceFilter={sourceFilter} refreshKey={boardKey} />
+      ) : loading ? (
         <div className="card"><SkeletonTable rows={6} cols={4} /></div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
@@ -203,7 +215,7 @@ export default function Leads() {
                   </div>
                 </div>
                 <div className="lead-meta">
-                  <span className={`badge badge-${STATUS_COLORS[lead.status] || 'neutral'}`}>{lead.status}</span>
+                  <span className={`badge badge-${STATUS_COLORS[lead.status] || 'neutral'}`}>{stageLabel(lead.status)}</span>
                   {lead.value > 0 && <span className="lead-value">{formatMoney(lead.value, lead.currency)}</span>}
                   {lead.score > 0 && <span className="lead-score">Score: {lead.score}</span>}
                 </div>
@@ -249,6 +261,11 @@ const AUTOMATION_ROWS = [
   { key: 'card', title: 'Business card', text: 'Visitors who share their details on a team member’s digital business card (assigned to that member).' },
   { key: 'aiScoring', title: 'AI scoring on arrival', text: 'Each new captured lead gets a score, a suggested next step and a follow-up email draft (up to 30 a day).' },
 ];
+const SALES_ROWS = [
+  { key: 'aiStages', title: 'AI moves leads along the pipeline', text: 'After a chat, the AI notes what the customer wants and moves their lead forward: Contacted → Interested → Ready to buy. It never marks anyone lost; a purchase marks them won.' },
+  { key: 'followUps', title: 'AI follows up on WhatsApp', text: 'When an interested customer goes quiet, the AI sends them one friendly reminder with the product’s current price and stock. Free: it’s sent within WhatsApp’s 24-hour reply window. Never more than one until they write again, and never after they say no.' },
+  { key: 'teamReminders', title: 'Remind the team about waiting customers', text: 'If a customer who wants to buy has waited over an hour for your team to reply, whoever has the chat (or the owner) gets an email.' },
+];
 
 function AutomationModal({ canManage, onClose }) {
   const [settings, setSettings] = useState(null);
@@ -258,8 +275,8 @@ function AutomationModal({ canManage, onClose }) {
     leadService.getCaptureSettings().then(({ data }) => setSettings(data.data)).catch(() => toast.error('Could not load automation settings'));
   }, []);
 
-  async function toggle(key) {
-    const next = !settings[key];
+  const toggle = (key) => save(key, !settings[key]);
+  async function save(key, next) {
     setSaving(key);
     try {
       const { data } = await leadService.updateCaptureSettings({ [key]: next });
@@ -290,6 +307,31 @@ function AutomationModal({ canManage, onClose }) {
                 </label>
               ))}
             </div>
+          )}
+          {settings && (
+            <>
+              <h3 className="automation-subhead">Sales follow-up</h3>
+              <div className="automation-list">
+                {SALES_ROWS.map((row) => (
+                  <label key={row.key} className="automation-row">
+                    <div>
+                      <strong>{row.title}</strong>
+                      <p>{row.text}</p>
+                      {row.key === 'followUps' && settings.followUps && (
+                        <p className="automation-inline" onClick={(e) => e.preventDefault()}>
+                          Send it
+                          <select className="form-input form-select" value={settings.followUpAfterHours} disabled={!canManage || saving === 'followUpAfterHours'} onChange={(e) => save('followUpAfterHours', Number(e.target.value))}>
+                            {[1, 2, 3, 4, 6, 8, 12].map((h) => <option key={h} value={h}>{h} hour{h === 1 ? '' : 's'}</option>)}
+                          </select>
+                          after their last message.
+                        </p>
+                      )}
+                    </div>
+                    <input type="checkbox" className="automation-switch" checked={settings[row.key]} disabled={!canManage || saving === row.key} onChange={() => toggle(row.key)} />
+                  </label>
+                ))}
+              </div>
+            </>
           )}
           {!canManage && <p className="csv-hint">Only managers and the owner can change these.</p>}
         </div>

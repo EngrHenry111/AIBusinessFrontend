@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { inboxService, whatsappService } from '../../services';
 import { connectSocket } from '../../services/socket';
-import { formatMoney } from '../../constants/leads';
+import { formatMoney, stageLabel, BUYING_SIGNAL } from '../../constants/leads';
 import {
   RiInboxLine, RiSearchLine, RiSendPlane2Line, RiLoader4Line, RiRobot2Line, RiUser3Line,
   RiCustomerService2Line, RiCheckDoubleLine, RiHand, RiArrowLeftLine, RiWhatsappLine,
@@ -28,11 +28,6 @@ const STATUS_FILTERS = [
   { id: 'ai', label: 'AI handling' },
   { id: 'resolved', label: 'Resolved' },
 ];
-
-const LEAD_STATUS = {
-  new: 'New', contacted: 'Contacted', qualified: 'Qualified', proposal: 'Proposal',
-  negotiation: 'Negotiation', won: 'Won', lost: 'Lost', converted: 'Converted',
-};
 
 const statusMeta = (c) => {
   if (c.status === 'resolved') return { label: 'Resolved', cls: 'resolved' };
@@ -392,7 +387,7 @@ export default function Inbox() {
                   return (
                     <div key={msg._id || i} className={`ibx-msg ${side}`}>
                       <div className={`ibx-bubble ${msg.from} ${msg.temp ? 'sending' : ''}`}>
-                        {msg.from === 'ai' && <span className="ibx-msg-label"><RiRobot2Line /> AI Assistant</span>}
+                        {msg.from === 'ai' && <span className="ibx-msg-label"><RiRobot2Line /> {msg.followUp ? 'AI follow-up' : 'AI Assistant'}</span>}
                         {msg.from === 'human' && <span className="ibx-msg-label"><RiUser3Line /> {msg.agentName || 'Team'}</span>}
                         <div className="ibx-msg-text">{msg.content}</div>
                         <span className="ibx-msg-time">
@@ -473,7 +468,8 @@ export default function Inbox() {
                   {profile.lead ? (
                     <Link to={`/leads/${profile.lead._id}`} className="ibx-lead-link">
                       <div className="ibx-kv">
-                        <span>Stage</span><strong>{LEAD_STATUS[profile.lead.status] || profile.lead.status}</strong>
+                        <span>Stage</span><strong>{stageLabel(profile.lead.status)}</strong>
+                        {profile.lead.interestedIn?.length > 0 && (<><span>Wants</span><strong>{profile.lead.interestedIn.slice(-3).join(', ')}</strong></>)}
                         {profile.lead.value > 0 && (<><span>Value</span><strong>{formatMoney(profile.lead.value)}</strong></>)}
                         {profile.lead.nextFollowUpAt && (<><span>Follow up</span><strong>{fmtDate(profile.lead.nextFollowUpAt)}</strong></>)}
                       </div>
@@ -481,6 +477,18 @@ export default function Inbox() {
                     </Link>
                   ) : <p className="ibx-muted">Not a lead yet.</p>}
                 </div>
+
+                {convo.sales?.stage && (
+                  <div className="ibx-profile-section">
+                    <h4>Buying signal <span className="ibx-muted ibx-small">(AI)</span></h4>
+                    <div className="ibx-kv">
+                      <span>Now</span><strong>{BUYING_SIGNAL[convo.sales.stage] || convo.sales.stage}</strong>
+                      {convo.sales.products?.length > 0 && (<><span>Asked about</span><strong>{convo.sales.products.join(', ')}</strong></>)}
+                      {convo.followUp?.sentAt && (<><span>Followed up</span><strong>{fmtDate(convo.followUp.sentAt)}</strong></>)}
+                    </div>
+                    {convo.sales.summary && <p className="ibx-muted ibx-small" style={{ marginTop: 6 }}>{convo.sales.summary}</p>}
+                  </div>
+                )}
 
                 {profile.otherConversations.length > 0 && (
                   <div className="ibx-profile-section">

@@ -80,3 +80,52 @@
 .automation-switch:checked { background: var(--color-brand); }
 .automation-switch:checked::after { transform: translateX(16px); }
 .automation-switch:disabled { opacity: .55; cursor: not-allowed; }
+
+/* View toggle */
+.leads-view-toggle { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--border-color); border-radius: 10px; }
+.leads-view-toggle .btn { border-radius: 7px; }
+
+/* Sales follow-up settings */
+.automation-subhead { font-size: 14px; margin: 18px 0 8px; }
+.automation-inline { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px !important; color: var(--text-secondary) !important; cursor: default; }
+.automation-inline select { width: auto; padding: 4px 28px 4px 8px; font-size: 12px; height: auto; }
+
+/* Pipeline board */
+.pipeline-loading { padding: 40px; text-align: center; color: var(--text-muted); }
+.pipeline-summary { font-size: 13px; color: var(--text-secondary); margin: 0; }
+.pipeline-summary span { color: var(--text-muted); }
+.pipeline-board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(240px, 1fr); gap: 12px; overflow-x: auto; padding-bottom: 8px; align-items: start; }
+.pipeline-col { background: var(--bg-secondary, rgba(148,163,184,.08)); border: 1px solid var(--border-color); border-top: 3px solid var(--stage, var(--border-color)); border-radius: 12px; display: flex; flex-direction: column; min-height: 220px; transition: background .12s, border-color .12s; }
+.pipeline-col.is-over { background: var(--color-brand-light, rgba(99,102,241,.1)); border-color: var(--color-brand); }
+.pipeline-col.stage-new { --stage: var(--color-brand); }
+.pipeline-col.stage-contacted { --stage: #0ea5e9; }
+.pipeline-col.stage-qualified { --stage: #f59e0b; }
+.pipeline-col.stage-proposal { --stage: #a855f7; }
+.pipeline-col.stage-negotiation { --stage: #f97316; }
+.pipeline-col.stage-won { --stage: var(--color-success); }
+.pipeline-col.stage-lost { --stage: #94a3b8; }
+.pipeline-col-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding: 10px 12px 8px; }
+.pipeline-col-head h3 { font-size: 13px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 6px; }
+.pipeline-col-head small { font-size: 11px; color: var(--text-muted); }
+.pipeline-count { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--bg-primary, #fff); color: var(--text-secondary); border: 1px solid var(--border-color); }
+.pipeline-total { font-size: 12px; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
+.pipeline-cards { display: flex; flex-direction: column; gap: 8px; padding: 0 8px 10px; overflow-y: auto; max-height: 70vh; }
+.pipeline-card { background: var(--bg-primary, #fff); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: grab; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+.pipeline-card:hover { border-color: var(--color-brand); }
+.pipeline-card:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+.pipeline-card.is-dragging { opacity: .45; }
+.pipeline-card.is-moving { opacity: .7; }
+.pipeline-card-top { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.pipeline-card-top strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pipeline-card-value { font-size: 12px; font-weight: 700; color: var(--color-success); white-space: nowrap; }
+.pipeline-card-wants { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); }
+.pipeline-card-wants svg { flex-shrink: 0; }
+.pipeline-card-summary { font-size: 12px; color: var(--text-muted); margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pipeline-card-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.pipeline-card-foot .lead-source { margin-left: 0; }
+.pipeline-card-move { font-size: 11px; padding: 3px 6px; border: 1px solid var(--border-color); border-radius: 6px; background: transparent; color: var(--text-secondary); align-self: flex-start; cursor: pointer; }
+.pipeline-empty { font-size: 12px; color: var(--text-muted); text-align: center; padding: 16px 0; }
+@media (max-width: 640px) {
+  .pipeline-board { grid-auto-columns: 82vw; scroll-snap-type: x mandatory; }
+  .pipeline-col { scroll-snap-align: start; }
+}

@@ -9,6 +9,19 @@ export const MANUAL_SOURCES = ['website', 'referral', 'social', 'email', 'cold_c
 export const AUTO_SOURCES = ['chat_widget', 'whatsapp', 'store', 'business_card'];
 export const sourceLabel = (s) => SOURCE_LABELS[s] || SOURCE_LABELS.other;
 
+// Pipeline stages in the words a shop owner uses. (Stored values stay the same.)
+export const STAGE_ORDER = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost'];
+export const STAGE_LABELS = {
+  new: 'New', contacted: 'Contacted', qualified: 'Interested', proposal: 'Proposal sent',
+  negotiation: 'Ready to buy', won: 'Won', lost: 'Lost', converted: 'Converted',
+};
+export const stageLabel = (s) => STAGE_LABELS[s] || s;
+// What the AI read from a chat (Conversation.sales.stage).
+export const BUYING_SIGNAL = {
+  browsing: 'Just browsing', interested: 'Interested', ready_to_buy: 'Ready to buy',
+  ordered: 'Says they ordered', not_interested: 'Not interested', support: 'Needs help with an order',
+};
+
 export const formatMoney = (n, currency = 'NGN') => (currency === 'NGN'
   ? `₦${Number(n || 0).toLocaleString()}`
   : `${currency} ${Number(n || 0).toLocaleString()}`);
