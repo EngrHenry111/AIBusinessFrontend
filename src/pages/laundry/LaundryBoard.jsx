@@ -154,6 +154,46 @@ export default function LaundryBoard() {
   );
 }
 
+// One ticket on the board: who, what, when it is due, what is owed, and
+// the button that moves it to the next step.
+function TicketCard({ o, action, busy, onMove, wide }) {
+  const pieces = o.pieces || o.items.length;
+  return (
+    <article className={`ld-ticket ${o.overdue ? 'is-overdue' : ''}`}>
+      <Link to={`/laundry/${o.id}`} className="ld-ticket-main">
+        <div className="ld-ticket-top">
+          <strong>{o.ticketNumber}</strong>
+          {wide ? <span className={`svc-badge ${o.status}`}>{o.statusLabel}</span> : <strong>{money(o.total, o.currency)}</strong>}
+        </div>
+        <span className="ld-ticket-name">{o.customer.name}</span>
+        <span className="svc-muted">
+          {pieces} {o.pieces ? `piece${pieces === 1 ? '' : 's'}` : `item${pieces === 1 ? '' : 's'}`}
+          {' · '}{o.status === 'collected' ? `collected ${fmtDate(o.collectedAt)}` : o.status === 'ready' ? `ready ${fmtDate(o.readyAt)}` : `due ${fmtDate(o.dueAt)}`}
+          {wide && ` · ${money(o.total, o.currency)}`}
+        </span>
+        {(o.express || o.overdue || o.balance > 0 || o.delivery) && (
+          <span className="ld-ticket-tags">
+            {o.express && <span className="svc-badge express">Express</span>}
+            {o.overdue && <span className="svc-badge overdue">Overdue</span>}
+            {o.delivery && <span className="svc-badge">Delivery</span>}
+            {o.balance > 0 && <span className="svc-badge owing">Owes {money(o.balance, o.currency)}</span>}
+          </span>
+        )}
+      </Link>
+      {action?.next && (
+        <div className="ld-ticket-actions">
+          <button className="btn btn-secondary btn-sm" disabled={busy} onClick={() => onMove(o, action.next)}>
+            {busy ? <RiLoader4Line className="spin" /> : null} {action.nextLabel} <RiArrowRightLine />
+          </button>
+          {o.status === 'ready' && o.customer.phone && (
+            <a className="btn btn-ghost btn-sm" href={waLink(o.customer.phone, '')} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${o.customer.name}`}><RiWhatsappLine /></a>
+          )}
+        </div>
+      )}
+    </article>
+  );
+}
+
 // After "Mark ready": one tap to tell the customer on WhatsApp.
 export function ReadyNotice({ o, company, onClose }) {
   return (
