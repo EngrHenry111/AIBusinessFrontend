@@ -48,7 +48,12 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
-    if (error.response?.status === 401 && !original._retry && !original.url?.includes('/auth/')) {
+    // /auth/me must refresh too: it's the first call when the app opens, and
+    // the 15-minute access cookie is usually gone by then (the 7-day refresh
+    // cookie isn't). Skipping it logged people out every time they came back.
+    // Only the calls where a refresh can't help are left alone.
+    const noRefresh = /\/auth\/(login|register|refresh-token|logout|forgot|reset|verify|google|2fa)/.test(original.url || '');
+    if (error.response?.status === 401 && !original._retry && !noRefresh) {
       original._retry = true;
       try {
         await axios.post(`${API_BASE}/auth/refresh-token`, {}, { withCredentials: true });
@@ -57,8 +62,11 @@ api.interceptors.response.use(
         // Only force a hard redirect once the server has explicitly said the
         // session is gone (401/403) — a network blip or a slow cold-start
         // shouldn't kick a still-valid session back to the login page.
+        // The opening /auth/me check fails for every visitor who isn't signed
+        // in (landing page, stores) — that's not a session ending, so no redirect.
         const status = refreshErr.response?.status;
-        if ((status === 401 || status === 403) && !window.location.pathname.startsWith('/login')) {
+        const bootCheck = /\/auth\/me\b/.test(original.url || '');
+        if ((status === 401 || status === 403) && !bootCheck && !window.location.pathname.startsWith('/login')) {
           window.location.href = '/login';
         }
       }
