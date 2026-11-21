@@ -25,11 +25,20 @@ export default function VerifyEmail() {
     if (!token) { setState('error'); setMessage('This verification link is missing its token.'); return; }
 
     authService.verifyEmail(token)
-      .then((res) => {
+      .then(async (res) => {
         setState('success');
         setMessage(res.data.message || 'Email verified!');
-        if (isAuthenticated) updateUser({ emailVerified: true });
-        setTimeout(() => navigate(isAuthenticated ? '/dashboard' : '/login'), 3000);
+        // Ask the server whether this browser is signed in, rather than trusting
+        // isAuthenticated here: on a fresh page load the session is still being
+        // checked when this runs, so it read "signed out", the verified flag never
+        // reached the app, and the "verify your email" banner stayed up.
+        let signedIn = false;
+        try {
+          await authService.getMe();
+          signedIn = true;
+          updateUser({ emailVerified: true });
+        } catch { /* opened in another browser or the mail app — log in next */ }
+        setTimeout(() => navigate(signedIn ? '/dashboard' : '/login'), 3000);
       })
       .catch((err) => {
         setState('error');
